@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tracker
+      POSTGRES_PASSWORD: tracker
+      POSTGRES_DB: tracker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracker"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://tracker:tracker@postgres:5432/tracker
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  swiss-tracker:
+    build:
+      context: .
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    ports:
+      - "8088:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
