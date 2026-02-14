@@ -1,5 +1,6 @@
 import { countryList } from '../data/countries';
 import AuthButton from './AuthButton';
+import CitySearch from './CitySearch';
 
 export default function Sidebar({
   country,
@@ -19,7 +20,10 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-title">Travel Tracker</h1>
+        <h1 className="sidebar-title">
+          <img src="/logo.png" alt="" className="sidebar-logo" />
+          Travel Tracker
+        </h1>
         <p className="sidebar-subtitle">Mark the places you've been</p>
       </div>
 
@@ -38,6 +42,8 @@ export default function Sidebar({
           </button>
         ))}
       </nav>
+
+      <CitySearch country={country} visited={visited} onToggle={onToggle} />
 
       <div className="stats-card" style={{ '--accent': country.visitedColor }}>
         <div className="stats-numbers">

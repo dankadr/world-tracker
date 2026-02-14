@@ -1,5 +1,6 @@
 import cantonsData from './cantons.json';
 import usaData from './usa.json';
+import usParksData from './us-parks.json';
 import norwayData from './norway.json';
 import canadaData from './canada.json';
 
@@ -31,6 +32,21 @@ const countries = {
     data: usaData,
     visitedColor: '#3498db',
     visitedHover: '#2980b9',
+  },
+  usparks: {
+    id: 'usparks',
+    name: 'US Nat. Parks',
+    flag: '🏞️',
+    regionLabel: 'National Parks',
+    regionLabelSingular: 'national park',
+    center: [39.5, -98.35],
+    zoom: 4,
+    minZoom: 2,
+    maxZoom: 15,
+    data: usParksData,
+    visitedColor: '#16a085',
+    visitedHover: '#1abc9c',
+    pointMode: true,
   },
   no: {
     id: 'no',
