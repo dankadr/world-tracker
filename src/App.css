@@ -42,8 +42,14 @@ body {
 }
 
 .sidebar-header {
-  padding: 20px 20px 12px;
+  padding: 16px 20px 10px;
   border-bottom: 1px solid #e8ecf1;
+}
+
+.sidebar-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sidebar-title {
@@ -53,6 +59,21 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.theme-toggle {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.theme-toggle:hover {
+  background: #f0f3f7;
 }
 
 .sidebar-logo {
@@ -478,6 +499,524 @@ body {
 
 .canton-tooltip::before {
   border-top-color: #1a1a2e !important;
+}
+
+/* ======== Overall Progress ======== */
+.overall-progress {
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.overall-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.overall-toggle:hover {
+  background: #f0f3f7;
+}
+
+.overall-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 52px;
+}
+
+.overall-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #95a5a6;
+}
+
+.overall-nums {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.overall-bar {
+  flex: 1;
+  height: 6px;
+  background: #e0e5ec;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.overall-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ecc71, #3498db);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.overall-pct {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2ecc71;
+  min-width: 30px;
+  text-align: right;
+}
+
+.overall-chevron {
+  font-size: 0.7rem;
+  color: #95a5a6;
+  transition: transform 0.2s;
+}
+
+.overall-chevron.open {
+  transform: rotate(180deg);
+}
+
+.overall-detail {
+  padding: 0 20px 8px;
+}
+
+.overall-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 0.78rem;
+}
+
+.overall-row-flag {
+  font-size: 0.9rem;
+}
+
+.overall-row-name {
+  min-width: 60px;
+  color: #7f8c9b;
+  font-size: 0.72rem;
+}
+
+.overall-row-bar {
+  flex: 1;
+  height: 4px;
+  background: #e0e5ec;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.overall-row-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.overall-row-nums {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7f8c9b;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ======== Export Button ======== */
+.export-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2c3e50;
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  background: #f0f3f7;
+  transform: scale(1.05);
+}
+
+.export-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e5ec;
+  border-top-color: #2c3e50;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ======== Date Tags ======== */
+.date-tag {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: #95a5a6;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px dashed #d0d5da;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.date-tag:hover {
+  border-color: #95a5a6;
+  color: #2c3e50;
+}
+
+.canton-label.visited .date-tag {
+  border-color: var(--visit-color, #27ae60);
+  color: var(--visit-color, #27ae60);
+  border-style: solid;
+  opacity: 0.7;
+}
+
+.date-input {
+  margin-left: auto;
+  font-size: 0.72rem;
+  padding: 2px 4px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  background: #fff;
+  color: #2c3e50;
+  font-family: inherit;
+  flex-shrink: 0;
+  max-width: 110px;
+}
+
+/* ======== Achievements ======== */
+.achievements {
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.achievements-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.achievements-toggle:hover {
+  background: #f0f3f7;
+}
+
+.achievements-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2c3e50;
+  flex: 1;
+  text-align: left;
+}
+
+.achievements-count {
+  font-size: 0.72rem;
+  color: #95a5a6;
+  font-weight: 600;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 0 16px 10px;
+}
+
+.achievement-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid #e8ecf1;
+  transition: all 0.2s;
+}
+
+.achievement-badge.unlocked {
+  background: #eafaf1;
+  border-color: #2ecc71;
+}
+
+.achievement-badge.locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.badge-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.badge-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-top: 3px;
+}
+
+.badge-desc {
+  font-size: 0.6rem;
+  color: #95a5a6;
+  margin-top: 1px;
+}
+
+/* ======== Share Button ======== */
+.sidebar-footer {
+  display: flex;
+  gap: 8px;
+  padding: 8px 20px 16px;
+}
+
+.share-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: #1a1a2e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.share-btn:hover {
+  background: #2c3e50;
+}
+
+.sidebar-footer .reset-btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* ======== Share Banner ======== */
+.share-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: #1a1a2e;
+  color: #fff;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+.share-banner-btn {
+  margin-left: 8px;
+  padding: 2px 12px;
+  border: 1px solid #fff;
+  background: transparent;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.share-banner-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ======== Dark Mode ======== */
+[data-theme="dark"] body {
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .sidebar {
+  background: #16213e;
+  border-right-color: #2c3e50;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .sidebar-header {
+  border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .sidebar-title {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .sidebar-subtitle {
+  color: #7f8c9b;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: #2c3e50;
+}
+
+[data-theme="dark"] .auth-section {
+  background: #1a1a2e;
+  border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .auth-name {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .overall-progress {
+  border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .overall-toggle:hover {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .overall-nums {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .overall-bar,
+[data-theme="dark"] .overall-row-bar {
+  background: #2c3e50;
+}
+
+[data-theme="dark"] .country-tabs {
+  background: #1a1a2e;
+  border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .country-tab:hover {
+  background: #2c3e50;
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .country-tab.active {
+  color: #ecf0f1;
+  border-bottom-color: #ecf0f1;
+  background: #16213e;
+}
+
+[data-theme="dark"] .search-input-wrapper {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .search-input-wrapper:focus-within {
+  background: #0f3460;
+  border-color: #3498db;
+}
+
+[data-theme="dark"] .search-input {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .search-results {
+  background: #16213e;
+  border-color: #2c3e50;
+}
+
+[data-theme="dark"] .search-result-btn:hover {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .result-name {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .stats-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+[data-theme="dark"] .stats-numbers {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .progress-bar {
+  background: #2c3e50;
+}
+
+[data-theme="dark"] .achievements {
+  border-bottom-color: #2c3e50;
+}
+
+[data-theme="dark"] .achievements-toggle:hover {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .achievements-label {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .achievement-badge {
+  border-color: #2c3e50;
+}
+
+[data-theme="dark"] .achievement-badge.unlocked {
+  background: #0f3460;
+  border-color: #2ecc71;
+}
+
+[data-theme="dark"] .badge-title {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .list-heading {
+  color: #7f8c9b;
+}
+
+[data-theme="dark"] .canton-label:hover {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .canton-name {
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .reset-btn {
+  background: #16213e;
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+[data-theme="dark"] .reset-btn:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+[data-theme="dark"] .export-btn {
+  background: #16213e;
+  color: #ecf0f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .export-btn:hover {
+  background: #2c3e50;
+}
+
+[data-theme="dark"] .date-input {
+  background: #1a1a2e;
+  color: #ecf0f1;
+  border-color: #2c3e50;
+}
+
+[data-theme="dark"] .canton-tooltip {
+  background: #0f3460;
+}
+
+[data-theme="dark"] .canton-tooltip::before {
+  border-top-color: #0f3460 !important;
 }
 
 /* ======== Responsive ======== */

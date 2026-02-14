@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const STORAGE_PREFIX = 'swiss-tracker-visited-';
+const DATES_PREFIX = 'swiss-tracker-dates-';
 
 // --------------- localStorage helpers ---------------
 function loadLocal(countryId) {
@@ -11,14 +12,24 @@ function loadLocal(countryId) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return new Set(arr);
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
   return new Set();
 }
 
 function saveLocal(countryId, set) {
   localStorage.setItem(STORAGE_PREFIX + countryId, JSON.stringify([...set]));
+}
+
+function loadDates(countryId) {
+  try {
+    const raw = localStorage.getItem(DATES_PREFIX + countryId);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveDates(countryId, dates) {
+  localStorage.setItem(DATES_PREFIX + countryId, JSON.stringify(dates));
 }
 
 // --------------- API helpers ---------------
@@ -41,15 +52,14 @@ async function saveVisitedRemote(countryId, set, token) {
       },
       body: JSON.stringify({ regions: [...set] }),
     });
-  } catch {
-    // silently fail, localStorage is always the backup
-  }
+  } catch { /* silently fail */ }
 }
 
 // --------------- Hook ---------------
 export default function useVisitedRegions(countryId) {
   const { token, isLoggedIn } = useAuth();
   const [visited, setVisited] = useState(() => loadLocal(countryId));
+  const [dates, setDatesState] = useState(() => loadDates(countryId));
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const prevLoggedIn = useRef(isLoggedIn);
 
@@ -57,24 +67,22 @@ export default function useVisitedRegions(countryId) {
   if (countryId !== currentCountry) {
     setCurrentCountry(countryId);
     setVisited(loadLocal(countryId));
+    setDatesState(loadDates(countryId));
   }
 
-  // Sync from server when logged in or when country/login changes
+  // Sync from server when logged in
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
     fetchVisited(countryId, token).then((remote) => {
       if (cancelled || !remote) return;
-
-      // If user just logged in and has local data but remote is empty, push local to remote
       const local = loadLocal(countryId);
       if (!prevLoggedIn.current && local.size > 0 && remote.size === 0) {
         setVisited(local);
         saveVisitedRemote(countryId, local, token);
         saveLocal(countryId, local);
       } else {
-        // Server is source of truth
         setVisited(remote);
         saveLocal(countryId, remote);
       }
@@ -84,7 +92,6 @@ export default function useVisitedRegions(countryId) {
     return () => { cancelled = true; };
   }, [countryId, isLoggedIn, token]);
 
-  // When user logs out, keep showing localStorage data
   useEffect(() => {
     if (!isLoggedIn && prevLoggedIn.current) {
       prevLoggedIn.current = false;
@@ -97,6 +104,13 @@ export default function useVisitedRegions(countryId) {
         const next = new Set(prev);
         if (next.has(regionId)) {
           next.delete(regionId);
+          // Also remove date
+          setDatesState((d) => {
+            const nd = { ...d };
+            delete nd[regionId];
+            saveDates(countryId, nd);
+            return nd;
+          });
         } else {
           next.add(regionId);
         }
@@ -110,14 +124,32 @@ export default function useVisitedRegions(countryId) {
     [countryId, isLoggedIn, token]
   );
 
+  const setDate = useCallback(
+    (regionId, dateStr) => {
+      setDatesState((prev) => {
+        const next = { ...prev };
+        if (dateStr) {
+          next[regionId] = dateStr;
+        } else {
+          delete next[regionId];
+        }
+        saveDates(countryId, next);
+        return next;
+      });
+    },
+    [countryId]
+  );
+
   const reset = useCallback(() => {
     const empty = new Set();
     saveLocal(countryId, empty);
+    saveDates(countryId, {});
     if (isLoggedIn && token) {
       saveVisitedRemote(countryId, empty, token);
     }
     setVisited(empty);
+    setDatesState({});
   }, [countryId, isLoggedIn, token]);
 
-  return { visited, toggle, reset };
+  return { visited, toggle, reset, dates, setDate };
 }

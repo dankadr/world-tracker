@@ -1,6 +1,10 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { useTheme } from '../context/ThemeContext';
+
+const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
 
 const UNVISITED_STYLE = {
   fillColor: '#d5dbe0',
@@ -20,6 +24,7 @@ function MapController({ center, zoom }) {
 export default function RegionMap({ country, visited, onToggle }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
+  const { dark } = useTheme();
 
   const visitedStyle = {
     fillColor: country.visitedColor,
@@ -126,8 +131,9 @@ export default function RegionMap({ country, visited, onToggle }) {
     >
       <MapController center={country.center} zoom={country.zoom} />
       <TileLayer
+        key={dark ? 'dark' : 'light'}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+        url={dark ? DARK_TILES : LIGHT_TILES}
       />
       <GeoJSON
         key={country.id + '-' + JSON.stringify([...visited])}

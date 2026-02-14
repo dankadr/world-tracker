@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import { countryList } from '../data/countries';
+import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
 import CitySearch from './CitySearch';
+import OverallProgress from './OverallProgress';
+import Achievements from './Achievements';
+import ShareButton from './ShareButton';
 
 export default function Sidebar({
   country,
@@ -8,7 +13,13 @@ export default function Sidebar({
   onToggle,
   onReset,
   onCountryChange,
+  readOnly,
+  dates,
+  onSetDate,
 }) {
+  const { dark, toggle: toggleTheme } = useTheme();
+  const [editingDate, setEditingDate] = useState(null);
+
   const regionList = country.data.features
     .map((f) => ({ id: f.properties.id, name: f.properties.name }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -20,14 +31,25 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-title">
-          <img src="/logo.png" alt="" className="sidebar-logo" />
-          Travel Tracker
-        </h1>
+        <div className="sidebar-header-top">
+          <h1 className="sidebar-title">
+            <img src="/logo.png" alt="" className="sidebar-logo" />
+            Travel Tracker
+          </h1>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? '☀️' : '🌙'}
+          </button>
+        </div>
         <p className="sidebar-subtitle">Mark the places you've been</p>
       </div>
 
-      <AuthButton />
+      {!readOnly && <AuthButton />}
+
+      <OverallProgress />
 
       <nav className="country-tabs">
         {countryList.map((c) => (
@@ -43,7 +65,9 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <CitySearch country={country} visited={visited} onToggle={onToggle} />
+      {!readOnly && (
+        <CitySearch country={country} visited={visited} onToggle={onToggle} />
+      )}
 
       <div className="stats-card" style={{ '--accent': country.visitedColor }}>
         <div className="stats-numbers">
@@ -66,11 +90,14 @@ export default function Sidebar({
         </p>
       </div>
 
+      {!readOnly && <Achievements />}
+
       <div className="canton-list">
         <h2 className="list-heading">All {country.regionLabel}</h2>
         <ul>
           {regionList.map(({ id, name }) => {
             const isVisited = visited.has(id);
+            const dateVal = dates?.[id] || '';
             return (
               <li key={id} className="canton-item">
                 <label
@@ -80,11 +107,38 @@ export default function Sidebar({
                   <input
                     type="checkbox"
                     checked={isVisited}
-                    onChange={() => onToggle(id)}
+                    onChange={() => !readOnly && onToggle(id)}
+                    disabled={readOnly}
                     style={{ accentColor: country.visitedColor }}
                   />
                   <span className="canton-abbr">{id}</span>
                   <span className="canton-name">{name}</span>
+                  {isVisited && !readOnly && (
+                    editingDate === id ? (
+                      <input
+                        type="month"
+                        className="date-input"
+                        value={dateVal}
+                        onChange={(e) => {
+                          onSetDate(id, e.target.value);
+                        }}
+                        onBlur={() => setEditingDate(null)}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span
+                        className="date-tag"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingDate(id);
+                        }}
+                      >
+                        {dateVal || '+ date'}
+                      </span>
+                    )
+                  )}
                 </label>
               </li>
             );
@@ -92,9 +146,14 @@ export default function Sidebar({
         </ul>
       </div>
 
-      <button className="reset-btn" onClick={onReset}>
-        Reset {country.regionLabel}
-      </button>
+      <div className="sidebar-footer">
+        {!readOnly && <ShareButton />}
+        {!readOnly && (
+          <button className="reset-btn" onClick={onReset}>
+            Reset {country.regionLabel}
+          </button>
+        )}
+      </div>
     </aside>
   );
 }
