@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "/api" },
+    { "source": "/nominatim/:path*", "destination": "https://nominatim.openstreetmap.org/:path*" }
+  ],
+  "functions": {
+    "api/**/*.py": {
+      "excludeFiles": "node_modules/**"
+    }
+  }
+}

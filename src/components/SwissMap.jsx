@@ -1,10 +1,8 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
-
-const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
-const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
+import MapLayerControl, { LAYERS } from './MapLayerControl';
 
 const UNVISITED_STYLE = {
   fillColor: '#d5dbe0',
@@ -25,6 +23,18 @@ export default function RegionMap({ country, visited, onToggle }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
+  const [tileUrl, setTileUrl] = useState(
+    dark ? LAYERS[0].dark : LAYERS[0].light
+  );
+
+  // Sync default tile when theme changes
+  useEffect(() => {
+    setTileUrl((prev) => {
+      const layer = LAYERS.find((l) => l.light === prev || l.dark === prev);
+      if (layer) return dark ? layer.dark : layer.light;
+      return dark ? LAYERS[0].dark : LAYERS[0].light;
+    });
+  }, [dark]);
 
   const visitedStyle = {
     fillColor: country.visitedColor,
@@ -45,7 +55,6 @@ export default function RegionMap({ country, visited, onToggle }) {
     weight: 3,
   };
 
-  // Style for polygons
   const style = useCallback(
     (feature) => {
       if (feature.geometry.type === 'Point') return {};
@@ -55,7 +64,6 @@ export default function RegionMap({ country, visited, onToggle }) {
     [visited, country.visitedColor]
   );
 
-  // Convert Point features to circle markers
   const pointToLayer = useCallback(
     (feature, latlng) => {
       const id = feature.properties.id;
@@ -76,7 +84,11 @@ export default function RegionMap({ country, visited, onToggle }) {
     (feature, layer) => {
       const { id, name } = feature.properties;
 
-      layer.bindTooltip(name, {
+      const tooltipText = feature.properties.borough
+        ? `${name} (${feature.properties.borough})`
+        : name;
+
+      layer.bindTooltip(tooltipText, {
         sticky: true,
         className: 'canton-tooltip',
         direction: 'top',
@@ -87,11 +99,7 @@ export default function RegionMap({ country, visited, onToggle }) {
         mouseover: (e) => {
           const target = e.target;
           if (feature.geometry.type === 'Point') {
-            target.setStyle({
-              radius: isPointMode ? 11 : 8,
-              fillOpacity: 0.9,
-              weight: 3,
-            });
+            target.setStyle({ radius: isPointMode ? 11 : 8, fillOpacity: 0.9, weight: 3 });
           } else {
             target.setStyle(visited.has(id) ? hoverVisited : hoverUnvisited);
             target.bringToFront();
@@ -111,13 +119,39 @@ export default function RegionMap({ country, visited, onToggle }) {
             target.setStyle(visited.has(id) ? visitedStyle : UNVISITED_STYLE);
           }
         },
-        click: () => {
-          onToggle(id);
-        },
+        click: () => { onToggle(id); },
       });
     },
     [visited, onToggle, country.visitedColor, isPointMode]
   );
+
+  // Split data: regions (interactive) vs borough outlines (non-interactive)
+  const regionData = {
+    type: 'FeatureCollection',
+    features: country.data.features.filter((f) => !f.properties.isBorough),
+  };
+  const boroughData = {
+    type: 'FeatureCollection',
+    features: country.data.features.filter((f) => f.properties.isBorough),
+  };
+  const hasBoroughs = boroughData.features.length > 0;
+
+  const boroughStyle = {
+    fillColor: 'transparent',
+    fillOpacity: 0,
+    color: dark ? '#ecf0f1' : '#1a1a2e',
+    weight: 3,
+  };
+
+  const boroughOnEach = useCallback((feature, layer) => {
+    layer.bindTooltip(feature.properties.name, {
+      sticky: false,
+      className: 'canton-tooltip',
+      direction: 'center',
+    });
+    // Make non-interactive: clicks pass through to regions below
+    layer.options.interactive = false;
+  }, []);
 
   return (
     <MapContainer
@@ -131,18 +165,27 @@ export default function RegionMap({ country, visited, onToggle }) {
     >
       <MapController center={country.center} zoom={country.zoom} />
       <TileLayer
-        key={dark ? 'dark' : 'light'}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
-        url={dark ? DARK_TILES : LIGHT_TILES}
+        key={tileUrl}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+        url={tileUrl}
       />
       <GeoJSON
         key={country.id + '-' + JSON.stringify([...visited])}
         ref={geoJsonRef}
-        data={country.data}
+        data={regionData}
         style={style}
         pointToLayer={pointToLayer}
         onEachFeature={onEachFeature}
       />
+      {hasBoroughs && (
+        <GeoJSON
+          key={country.id + '-boroughs'}
+          data={boroughData}
+          style={() => boroughStyle}
+          onEachFeature={boroughOnEach}
+        />
+      )}
+      <MapLayerControl onLayerChange={setTileUrl} />
     </MapContainer>
   );
 }

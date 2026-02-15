@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 const STORAGE_PREFIX = 'swiss-tracker-visited-';
 const DATES_PREFIX = 'swiss-tracker-dates-';
+const NOTES_PREFIX = 'swiss-tracker-notes-';
 
 // --------------- localStorage helpers ---------------
 function loadLocal(countryId) {
@@ -30,6 +31,18 @@ function loadDates(countryId) {
 
 function saveDates(countryId, dates) {
   localStorage.setItem(DATES_PREFIX + countryId, JSON.stringify(dates));
+}
+
+function loadNotes(countryId) {
+  try {
+    const raw = localStorage.getItem(NOTES_PREFIX + countryId);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveNotes(countryId, notes) {
+  localStorage.setItem(NOTES_PREFIX + countryId, JSON.stringify(notes));
 }
 
 // --------------- API helpers ---------------
@@ -60,6 +73,7 @@ export default function useVisitedRegions(countryId) {
   const { token, isLoggedIn } = useAuth();
   const [visited, setVisited] = useState(() => loadLocal(countryId));
   const [dates, setDatesState] = useState(() => loadDates(countryId));
+  const [notes, setNotesState] = useState(() => loadNotes(countryId));
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const prevLoggedIn = useRef(isLoggedIn);
 
@@ -68,6 +82,7 @@ export default function useVisitedRegions(countryId) {
     setCurrentCountry(countryId);
     setVisited(loadLocal(countryId));
     setDatesState(loadDates(countryId));
+    setNotesState(loadNotes(countryId));
   }
 
   // Sync from server when logged in
@@ -104,12 +119,17 @@ export default function useVisitedRegions(countryId) {
         const next = new Set(prev);
         if (next.has(regionId)) {
           next.delete(regionId);
-          // Also remove date
           setDatesState((d) => {
             const nd = { ...d };
             delete nd[regionId];
             saveDates(countryId, nd);
             return nd;
+          });
+          setNotesState((n) => {
+            const nn = { ...n };
+            delete nn[regionId];
+            saveNotes(countryId, nn);
+            return nn;
           });
         } else {
           next.add(regionId);
@@ -140,16 +160,34 @@ export default function useVisitedRegions(countryId) {
     [countryId]
   );
 
+  const setNote = useCallback(
+    (regionId, noteStr) => {
+      setNotesState((prev) => {
+        const next = { ...prev };
+        if (noteStr && noteStr.trim()) {
+          next[regionId] = noteStr.trim();
+        } else {
+          delete next[regionId];
+        }
+        saveNotes(countryId, next);
+        return next;
+      });
+    },
+    [countryId]
+  );
+
   const reset = useCallback(() => {
     const empty = new Set();
     saveLocal(countryId, empty);
     saveDates(countryId, {});
+    saveNotes(countryId, {});
     if (isLoggedIn && token) {
       saveVisitedRemote(countryId, empty, token);
     }
     setVisited(empty);
     setDatesState({});
+    setNotesState({});
   }, [countryId, isLoggedIn, token]);
 
-  return { visited, toggle, reset, dates, setDate };
+  return { visited, toggle, reset, dates, setDate, notes, setNote };
 }

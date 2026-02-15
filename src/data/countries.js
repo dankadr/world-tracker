@@ -1,82 +1,31 @@
+import countriesConfig from '../config/countries.json';
+
+// Static GeoJSON imports (Vite requires static import paths for bundling)
 import cantonsData from './cantons.json';
 import usaData from './usa.json';
 import usParksData from './us-parks.json';
+import nycData from './nyc.json';
 import norwayData from './norway.json';
 import canadaData from './canada.json';
 
-const countries = {
-  ch: {
-    id: 'ch',
-    name: 'Switzerland',
-    flag: '🇨🇭',
-    regionLabel: 'Cantons',
-    regionLabelSingular: 'canton',
-    center: [46.8, 8.22],
-    zoom: 8,
-    minZoom: 2,
-    maxZoom: 12,
-    data: cantonsData,
-    visitedColor: '#2ecc71',
-    visitedHover: '#27ae60',
-  },
-  us: {
-    id: 'us',
-    name: 'United States',
-    flag: '🇺🇸',
-    regionLabel: 'States',
-    regionLabelSingular: 'state',
-    center: [39.5, -98.35],
-    zoom: 4,
-    minZoom: 2,
-    maxZoom: 10,
-    data: usaData,
-    visitedColor: '#3498db',
-    visitedHover: '#2980b9',
-  },
-  usparks: {
-    id: 'usparks',
-    name: 'US Nat. Parks',
-    flag: '🏞️',
-    regionLabel: 'National Parks',
-    regionLabelSingular: 'national park',
-    center: [39.5, -98.35],
-    zoom: 4,
-    minZoom: 2,
-    maxZoom: 15,
-    data: usParksData,
-    visitedColor: '#16a085',
-    visitedHover: '#1abc9c',
-    pointMode: true,
-  },
-  no: {
-    id: 'no',
-    name: 'Norway',
-    flag: '🇳🇴',
-    regionLabel: 'Counties & Territories',
-    regionLabelSingular: 'county/territory',
-    center: [68.0, 16.0],
-    zoom: 3,
-    minZoom: 2,
-    maxZoom: 10,
-    data: norwayData,
-    visitedColor: '#e74c3c',
-    visitedHover: '#c0392b',
-  },
-  ca: {
-    id: 'ca',
-    name: 'Canada',
-    flag: '🇨🇦',
-    regionLabel: 'Provinces & Territories',
-    regionLabelSingular: 'province/territory',
-    center: [60.0, -96.0],
-    zoom: 3,
-    minZoom: 2,
-    maxZoom: 10,
-    data: canadaData,
-    visitedColor: '#e67e22',
-    visitedHover: '#d35400',
-  },
+// Map geoFile names to imported data
+const geoMap = {
+  'cantons.json': cantonsData,
+  'usa.json': usaData,
+  'us-parks.json': usParksData,
+  'nyc.json': nycData,
+  'norway.json': norwayData,
+  'canada.json': canadaData,
 };
+
+// Build countries object from config
+const countries = {};
+for (const entry of countriesConfig) {
+  countries[entry.id] = {
+    ...entry,
+    data: geoMap[entry.geoFile],
+  };
+}
 
 export const countryList = Object.values(countries);
 export default countries;

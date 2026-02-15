@@ -1,6 +1,10 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+
+# Add project root to path for backend module imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,8 +15,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_db, init_db
-from models import User, VisitedRegions
+from backend.database import get_db, init_db
+from backend.models import User, VisitedRegions
 
 # --------------- Config ---------------
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")

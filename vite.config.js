@@ -15,6 +15,7 @@ export default defineConfig({
           'geo-ch': ['./src/data/cantons.json'],
           'geo-us': ['./src/data/usa.json'],
           'geo-usparks': ['./src/data/us-parks.json'],
+          'geo-nyc': ['./src/data/nyc.json'],
           'geo-no': ['./src/data/norway.json'],
           'geo-ca': ['./src/data/canada.json'],
         },
