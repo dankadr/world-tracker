@@ -13,6 +13,7 @@ export default function Sidebar({
   visited,
   onToggle,
   onReset,
+  onResetAll,
   onCountryChange,
   readOnly,
   dates,
@@ -171,43 +172,6 @@ export default function Sidebar({
         <CitySearch country={country} visited={visited} onToggle={onToggle} />
       )}
 
-      <div className="stats-card" style={{ '--accent': country.visitedColor }}>
-        <div className="stats-card-header">
-          <div className="stats-numbers">
-            <span className="stats-count">{count}</span>
-            <span className="stats-separator">/</span>
-            <span className="stats-total">{total}</span>
-          </div>
-          {!readOnly && (
-            <label className="color-picker-label" title="Custom color">
-              <input
-                type="color"
-                className="color-picker"
-                value={customColor || country.visitedColor}
-                onChange={(e) => onSetColor(e.target.value)}
-              />
-              <span
-                className="color-dot"
-                style={{ background: country.visitedColor }}
-              />
-            </label>
-          )}
-        </div>
-        <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{
-              width: `${pct}%`,
-              background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
-            }}
-          />
-        </div>
-        <p className="stats-pct" style={{ color: country.visitedColor }}>
-          {pct}%
-        </p>
-      </div>
-
       {!readOnly && <Achievements />}
 
       <div className="canton-list">
@@ -233,11 +197,18 @@ export default function Sidebar({
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
         {!readOnly && (
-          <button className="reset-btn" onClick={onReset}>
+          <button className="reset-btn" onClick={() => { if (window.confirm(`Reset all ${country.regionLabel} progress?`)) onReset(); }}>
             Reset {country.regionLabel}
           </button>
         )}
       </div>
+      {!readOnly && (
+        <div className="sidebar-footer-secondary">
+          <button className="reset-all-btn" onClick={() => { if (window.confirm('Reset ALL countries? This cannot be undone.')) onResetAll(); }}>
+            Reset Everything
+          </button>
+        </div>
+      )}
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
     </aside>

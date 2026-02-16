@@ -1,11 +1,14 @@
+import { createPortal } from 'react-dom';
+import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 
-const STORAGE_PREFIX = 'swiss-tracker-visited-';
-const DATES_PREFIX = 'swiss-tracker-dates-';
+function storagePrefix(userId) {
+  return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
+}
 
-function getVisitedIds(countryId) {
+function getVisitedIds(countryId, userId) {
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + countryId);
+    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : Object.keys(data);
@@ -14,11 +17,11 @@ function getVisitedIds(countryId) {
   return [];
 }
 
-function getAllDates() {
+function getAllDates(userId) {
   const timeline = [];
   for (const c of countryList) {
     try {
-      const raw = localStorage.getItem(DATES_PREFIX + c.id);
+      const raw = localStorage.getItem(storagePrefix(userId) + 'dates-' + c.id);
       if (raw) {
         const dates = JSON.parse(raw);
         for (const [regionId, dateStr] of Object.entries(dates)) {
@@ -43,10 +46,10 @@ function centroid(geom) {
 }
 
 // Get all visited region centroids across all countries
-function getVisitedCoords() {
+function getVisitedCoords(userId) {
   const points = [];
   for (const c of countryList) {
-    const visitedIds = new Set(getVisitedIds(c.id));
+    const visitedIds = new Set(getVisitedIds(c.id, userId));
     if (visitedIds.size === 0) continue;
     for (const f of c.data.features) {
       if (f.properties.isBorough) continue;
@@ -124,21 +127,24 @@ function computeGeoInsights(coords) {
 }
 
 export default function StatsModal({ onClose }) {
+  const { user } = useAuth();
+  const userId = user?.id || null;
+
   const stats = countryList.map((c) => {
     const total = c.data.features.filter(f => !f.properties?.isBorough).length;
-    const visited = getVisitedIds(c.id).length;
+    const visited = getVisitedIds(c.id, userId).length;
     return { ...c, total, visited, pct: total > 0 ? Math.round((visited / total) * 100) : 0 };
   });
 
   const totalAll = stats.reduce((s, c) => s + c.total, 0);
   const visitedAll = stats.reduce((s, c) => s + c.visited, 0);
   const mostExplored = [...stats].sort((a, b) => b.pct - a.pct)[0];
-  const timeline = getAllDates().slice(0, 20);
+  const timeline = getAllDates(userId).slice(0, 20);
 
-  const coords = getVisitedCoords();
+  const coords = getVisitedCoords(userId);
   const geo = computeGeoInsights(coords);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -254,6 +260,7 @@ export default function StatsModal({ onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

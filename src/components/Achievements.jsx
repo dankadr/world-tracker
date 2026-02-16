@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import achievements from '../data/achievements';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../context/AuthContext';
+import getAchievements from '../data/achievements';
 
 export default function Achievements() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
+  const achievements = getAchievements(userId);
   const results = achievements.map((a) => ({
     ...a,
     unlocked: a.check(),
@@ -11,7 +16,6 @@ export default function Achievements() {
 
   const unlockedCount = results.filter((r) => r.unlocked).length;
 
-  // Group by category
   const groups = {};
   results.forEach((a) => {
     const cat = a.category || 'General';
@@ -29,7 +33,7 @@ export default function Achievements() {
         </button>
       </div>
 
-      {open && (
+      {open && createPortal(
         <div className="modal-overlay" onClick={() => setOpen(false)}>
           <div className="modal-content achievements-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -62,7 +66,8 @@ export default function Achievements() {
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

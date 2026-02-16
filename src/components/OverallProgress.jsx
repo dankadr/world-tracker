@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 
-const STORAGE_PREFIX = 'swiss-tracker-visited-';
+function storagePrefix(userId) {
+  return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
+}
 
-function getVisitedCount(countryId) {
+function getVisitedCount(countryId, userId) {
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + countryId);
+    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data)) return data.length;
@@ -17,10 +20,12 @@ function getVisitedCount(countryId) {
 
 export default function OverallProgress() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
   const stats = countryList.map((c) => {
-    const total = c.data.features.length;
-    const visited = getVisitedCount(c.id);
+    const total = c.data.features.filter((f) => !f.properties?.isBorough).length;
+    const visited = getVisitedCount(c.id, userId);
     return { ...c, total, visited, pct: total > 0 ? Math.round((visited / total) * 100) : 0 };
   });
 
