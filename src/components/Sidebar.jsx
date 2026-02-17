@@ -7,6 +7,9 @@ import OverallProgress from './OverallProgress';
 import Achievements from './Achievements';
 import ShareButton from './ShareButton';
 import StatsModal from './StatsModal';
+import AvatarCanvas from './AvatarCanvas';
+import AvatarEditor from './AvatarEditor';
+import useAvatar from '../hooks/useAvatar';
 
 export default function Sidebar({
   country,
@@ -22,11 +25,17 @@ export default function Sidebar({
   onSetNote,
   customColor,
   onSetColor,
+  collapsed,
+  wishlist,
+  onToggleWishlist,
+  searchRef,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [showAvatar, setShowAvatar] = useState(false);
+  const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const regionList = country.data.features
     .filter((f) => !f.properties.isBorough)
@@ -37,10 +46,8 @@ export default function Sidebar({
   const count = visited.size;
   const pct = Math.round((count / total) * 100);
 
-  // Hide the abbreviation column when IDs are just numbers (e.g., NYC)
   const showAbbr = regionList.length > 0 && isNaN(regionList[0].id);
 
-  // Group by borough if any region has one (NYC)
   const hasBoroughs = regionList.some((r) => r.borough);
   const groupedRegions = hasBoroughs
     ? regionList.reduce((acc, r) => {
@@ -53,12 +60,13 @@ export default function Sidebar({
 
   const renderRegionItem = ({ id, name }) => {
     const isVisited = visited.has(id);
+    const isWishlisted = wishlist?.has(id);
     const dateVal = dates?.[id] || '';
     const noteVal = notes?.[id] || '';
     return (
       <li key={id} className="canton-item">
         <label
-          className={`canton-label ${isVisited ? 'visited' : ''}`}
+          className={`canton-label ${isVisited ? 'visited' : ''} ${isWishlisted && !isVisited ? 'wishlisted' : ''}`}
           style={isVisited ? { '--visit-bg': country.visitedColor + '18', '--visit-bg-hover': country.visitedColor + '28', '--visit-color': country.visitedHover } : {}}
         >
           <input
@@ -99,6 +107,17 @@ export default function Sidebar({
               </span>
             </span>
           )}
+          {!isVisited && !readOnly && (
+            <span className="region-actions">
+              <button
+                className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleWishlist(id); }}
+                title={isWishlisted ? 'Remove from planned' : 'Add to planned'}
+              >
+                {isWishlisted ? '★' : '☆'}
+              </button>
+            </span>
+          )}
         </label>
         {editingNote === id && isVisited && !readOnly && (
           <div className="note-editor">
@@ -121,13 +140,19 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-header-top">
-          <h1 className="sidebar-title">
-            <img src="/logo.png" alt="" className="sidebar-logo" />
-            Travel Tracker
-          </h1>
+          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
+            <AvatarCanvas config={avatarConfig} size={40} />
+          </button>
+          <div className="sidebar-title-group">
+            <h1 className="sidebar-title">
+              <img src="/logo.png" alt="" className="sidebar-logo" />
+              Travel Tracker
+            </h1>
+            <p className="sidebar-subtitle">Mark the places you've been</p>
+          </div>
           <div className="header-actions">
             {!readOnly && (
               <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
@@ -147,7 +172,6 @@ export default function Sidebar({
             </button>
           </div>
         </div>
-        <p className="sidebar-subtitle">Mark the places you've been</p>
       </div>
 
       {!readOnly && <AuthButton />}
@@ -169,7 +193,7 @@ export default function Sidebar({
       </nav>
 
       {!readOnly && (
-        <CitySearch country={country} visited={visited} onToggle={onToggle} />
+        <CitySearch country={country} visited={visited} onToggle={onToggle} searchRef={searchRef} />
       )}
 
       {!readOnly && <Achievements />}
@@ -211,6 +235,14 @@ export default function Sidebar({
       )}
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {showAvatar && (
+        <AvatarEditor
+          config={avatarConfig}
+          onSetPart={setAvatarPart}
+          onReset={resetAvatar}
+          onClose={() => setShowAvatar(false)}
+        />
+      )}
     </aside>
   );
 }

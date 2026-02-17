@@ -5,10 +5,12 @@ import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
 
 const UNVISITED_STYLE = {
-  fillColor: '#d5dbe0',
-  fillOpacity: 0.6,
-  color: '#ffffff',
-  weight: 2,
+  fillColor: '#cfd8dc',
+  fillOpacity: 0.4,
+  color: 'rgba(0, 0, 0, 0.1)',
+  weight: 0.5,
+  lineJoin: 'round',
+  lineCap: 'round',
 };
 
 function MapController({ center, zoom }) {
@@ -19,7 +21,21 @@ function MapController({ center, zoom }) {
   return null;
 }
 
-export default function RegionMap({ country, visited, onToggle }) {
+function pulseLayer(layer, isPoint, isPointMode, finalStyle) {
+  if (isPoint) {
+    layer.setStyle({ radius: isPointMode ? 12 : 9, fillOpacity: 1, weight: 3 });
+    setTimeout(() => layer.setStyle({ radius: isPointMode ? 10 : 7, fillOpacity: 0.9, weight: 2.5 }), 120);
+    setTimeout(() => layer.setStyle({ radius: isPointMode ? 8 : 6, fillOpacity: 0.85, weight: 2 }), 250);
+    setTimeout(() => layer.setStyle(finalStyle), 400);
+  } else {
+    layer.setStyle({ fillOpacity: 0.85, weight: 2, color: 'rgba(255,255,255,0.7)' });
+    setTimeout(() => layer.setStyle({ fillOpacity: 0.7, weight: 1.5, color: 'rgba(255,255,255,0.4)' }), 120);
+    setTimeout(() => layer.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
+    setTimeout(() => layer.setStyle(finalStyle), 400);
+  }
+}
+
+export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
@@ -27,7 +43,6 @@ export default function RegionMap({ country, visited, onToggle }) {
     dark ? LAYERS[0].dark : LAYERS[0].light
   );
 
-  // Sync default tile when theme changes
   useEffect(() => {
     setTileUrl((prev) => {
       const layer = LAYERS.find((l) => l.light === prev || l.dark === prev);
@@ -38,51 +53,84 @@ export default function RegionMap({ country, visited, onToggle }) {
 
   const visitedStyle = {
     fillColor: country.visitedColor,
-    fillOpacity: 0.55,
-    color: '#ffffff',
-    weight: 2,
+    fillOpacity: 0.5,
+    color: 'transparent',
+    weight: 0,
+    lineJoin: 'round',
+    lineCap: 'round',
+  };
+
+  const wishlistStyle = {
+    fillColor: country.visitedColor,
+    fillOpacity: 0.15,
+    color: 'rgba(0, 0, 0, 0.08)',
+    weight: 0.5,
+    dashArray: '5 4',
+    lineJoin: 'round',
+    lineCap: 'round',
   };
 
   const hoverVisited = {
     fillColor: country.visitedHover,
-    fillOpacity: 0.75,
-    weight: 3,
+    fillOpacity: 0.7,
+    color: 'rgba(255, 255, 255, 0.9)',
+    weight: 2,
+    lineJoin: 'round',
+    lineCap: 'round',
   };
 
   const hoverUnvisited = {
-    fillColor: '#bdc3c7',
-    fillOpacity: 0.75,
-    weight: 3,
+    fillColor: '#b0bec5',
+    fillOpacity: 0.55,
+    color: 'rgba(255, 255, 255, 0.8)',
+    weight: 2,
+    lineJoin: 'round',
+    lineCap: 'round',
+  };
+
+  const hoverWishlist = {
+    fillColor: country.visitedColor,
+    fillOpacity: 0.3,
+    color: 'rgba(255, 255, 255, 0.7)',
+    weight: 2,
+    dashArray: '5 4',
+    lineJoin: 'round',
+    lineCap: 'round',
   };
 
   const style = useCallback(
     (feature) => {
       if (feature.geometry.type === 'Point') return {};
       const id = feature.properties.id;
-      return visited.has(id) ? { ...visitedStyle } : { ...UNVISITED_STYLE };
+      if (visited.has(id)) return { ...visitedStyle };
+      if (wishlist?.has(id)) return { ...wishlistStyle };
+      return { ...UNVISITED_STYLE };
     },
-    [visited, country.visitedColor]
+    [visited, wishlist, country.visitedColor]
   );
 
   const pointToLayer = useCallback(
     (feature, latlng) => {
       const id = feature.properties.id;
       const isVisited = visited.has(id);
-      const radius = isPointMode ? 8 : 6;
+      const isWishlisted = wishlist?.has(id);
+      const radius = isPointMode ? 7 : 5;
       return L.circleMarker(latlng, {
         radius,
-        fillColor: isVisited ? country.visitedColor : '#d5dbe0',
-        fillOpacity: isVisited ? 0.85 : 0.6,
-        color: '#ffffff',
-        weight: 2,
+        fillColor: isVisited ? country.visitedColor : isWishlisted ? country.visitedColor : '#b0bec5',
+        fillOpacity: isVisited ? 0.8 : isWishlisted ? 0.3 : 0.5,
+        color: isVisited ? 'rgba(255,255,255,0.9)' : isWishlisted ? country.visitedColor : 'rgba(255,255,255,0.7)',
+        weight: isVisited ? 2 : 1.5,
+        dashArray: isWishlisted && !isVisited ? '3 3' : null,
       });
     },
-    [visited, country.visitedColor, isPointMode]
+    [visited, wishlist, country.visitedColor, isPointMode]
   );
 
   const onEachFeature = useCallback(
     (feature, layer) => {
       const { id, name } = feature.properties;
+      const isPoint = feature.geometry.type === 'Point';
 
       const tooltipText = feature.properties.borough
         ? `${name} (${feature.properties.borough})`
@@ -98,34 +146,74 @@ export default function RegionMap({ country, visited, onToggle }) {
       layer.on({
         mouseover: (e) => {
           const target = e.target;
-          if (feature.geometry.type === 'Point') {
-            target.setStyle({ radius: isPointMode ? 11 : 8, fillOpacity: 0.9, weight: 3 });
+          if (isPoint) {
+            target.setStyle({ radius: isPointMode ? 10 : 7, fillOpacity: 0.9, weight: 2.5 });
           } else {
-            target.setStyle(visited.has(id) ? hoverVisited : hoverUnvisited);
+            const isVisited = visited.has(id);
+            const isWishlisted = wishlist?.has(id);
+            if (isVisited) target.setStyle(hoverVisited);
+            else if (isWishlisted) target.setStyle(hoverWishlist);
+            else target.setStyle(hoverUnvisited);
             target.bringToFront();
           }
         },
         mouseout: (e) => {
           const target = e.target;
-          if (feature.geometry.type === 'Point') {
+          if (isPoint) {
             const isVisited = visited.has(id);
+            const isWishlisted = wishlist?.has(id);
             target.setStyle({
-              radius: isPointMode ? 8 : 6,
-              fillColor: isVisited ? country.visitedColor : '#d5dbe0',
-              fillOpacity: isVisited ? 0.85 : 0.6,
-              weight: 2,
+              radius: isPointMode ? 7 : 5,
+              fillColor: isVisited ? country.visitedColor : isWishlisted ? country.visitedColor : '#b0bec5',
+              fillOpacity: isVisited ? 0.8 : isWishlisted ? 0.3 : 0.5,
+              weight: isVisited ? 2 : 1.5,
             });
           } else {
-            target.setStyle(visited.has(id) ? visitedStyle : UNVISITED_STYLE);
+            const isVisited = visited.has(id);
+            const isWishlisted = wishlist?.has(id);
+            if (isVisited) target.setStyle(visitedStyle);
+            else if (isWishlisted) target.setStyle(wishlistStyle);
+            else target.setStyle(UNVISITED_STYLE);
           }
         },
-        click: () => { onToggle(id); },
+        click: (e) => {
+          const isVisited = visited.has(id);
+          if (isVisited && (dates?.[id] || notes?.[id])) {
+            const dateStr = dates?.[id] ? `<div style="font-size:0.75rem;color:#95a5a6;margin-top:4px">${dates[id]}</div>` : '';
+            const noteStr = notes?.[id] ? `<div style="font-size:0.78rem;margin-top:4px;font-style:italic;color:#7f8c9b">${notes[id]}</div>` : '';
+            const html = `<div style="min-width:120px"><strong>${name}</strong>${dateStr}${noteStr}<button onclick="this.parentElement.closest('.leaflet-popup').remove();document.dispatchEvent(new CustomEvent('region-uncheck',{detail:'${id}'}))" style="margin-top:6px;font-size:0.7rem;border:none;background:rgba(211,47,47,0.1);color:#d32f2f;padding:2px 8px;border-radius:4px;cursor:pointer">Uncheck</button></div>`;
+            L.popup({ className: 'region-popup', closeButton: true, offset: [0, -5] })
+              .setLatLng(e.latlng)
+              .setContent(html)
+              .openOn(e.target._map);
+            return;
+          }
+          onToggle(id);
+          const target = e.target;
+          const willBeVisited = !isVisited;
+          const finalStyle = isPoint
+            ? {
+                radius: isPointMode ? 7 : 5,
+                fillColor: willBeVisited ? country.visitedColor : '#b0bec5',
+                fillOpacity: willBeVisited ? 0.8 : 0.5,
+                weight: willBeVisited ? 2 : 1.5,
+              }
+            : willBeVisited ? visitedStyle : UNVISITED_STYLE;
+          pulseLayer(target, isPoint, isPointMode, finalStyle);
+        },
       });
     },
-    [visited, onToggle, country.visitedColor, isPointMode]
+    [visited, wishlist, onToggle, country.visitedColor, isPointMode, dates, notes]
   );
 
-  // Split data: regions (interactive) vs borough outlines (non-interactive)
+  useEffect(() => {
+    function handleUncheck(e) {
+      onToggle(e.detail);
+    }
+    document.addEventListener('region-uncheck', handleUncheck);
+    return () => document.removeEventListener('region-uncheck', handleUncheck);
+  }, [onToggle]);
+
   const regionData = {
     type: 'FeatureCollection',
     features: country.data.features.filter((f) => !f.properties.isBorough),
@@ -139,8 +227,10 @@ export default function RegionMap({ country, visited, onToggle }) {
   const boroughStyle = {
     fillColor: 'transparent',
     fillOpacity: 0,
-    color: dark ? '#ecf0f1' : '#1a1a2e',
-    weight: 3,
+    color: dark ? 'rgba(236, 240, 241, 0.6)' : 'rgba(26, 26, 46, 0.5)',
+    weight: 2,
+    lineJoin: 'round',
+    lineCap: 'round',
   };
 
   const boroughOnEach = useCallback((feature, layer) => {
@@ -149,7 +239,6 @@ export default function RegionMap({ country, visited, onToggle }) {
       className: 'canton-tooltip',
       direction: 'center',
     });
-    // Make non-interactive: clicks pass through to regions below
     layer.options.interactive = false;
   }, []);
 
@@ -170,7 +259,7 @@ export default function RegionMap({ country, visited, onToggle }) {
         url={tileUrl}
       />
       <GeoJSON
-        key={country.id + '-' + JSON.stringify([...visited])}
+        key={country.id + '-' + JSON.stringify([...visited]) + '-' + JSON.stringify([...(wishlist || [])])}
         ref={geoJsonRef}
         data={regionData}
         style={style}

@@ -1,0 +1,107 @@
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useAuth } from '../context/AuthContext';
+import { avatarCategories, hairColorOptions } from '../config/avatarParts';
+import getAchievements from '../data/achievements';
+import AvatarCanvas from './AvatarCanvas';
+
+const categoryOrder = ['background', 'body', 'hair', 'eyes', 'shirt', 'hat', 'accessory'];
+
+export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
+  const [activeTab, setActiveTab] = useState('body');
+  const { user } = useAuth();
+  const userId = user?.id || null;
+
+  const achievements = getAchievements(userId);
+  const unlockedIds = new Set(achievements.filter((a) => a.check()).map((a) => a.id));
+
+  function isUnlocked(part) {
+    if (!part.requires) return true;
+    return unlockedIds.has(part.requires);
+  }
+
+  function getAchievementName(id) {
+    const a = achievements.find((x) => x.id === id);
+    return a ? `${a.icon} ${a.title}` : id;
+  }
+
+  const category = avatarCategories[activeTab];
+  const parts = category?.parts || [];
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content avatar-editor-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Customize Avatar</h2>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+
+        <div className="avatar-editor-preview">
+          <AvatarCanvas config={config} size={128} />
+        </div>
+
+        <div className="avatar-category-tabs">
+          {categoryOrder.map((key) => (
+            <button
+              key={key}
+              className={`avatar-cat-tab ${activeTab === key ? 'active' : ''}`}
+              onClick={() => setActiveTab(key)}
+            >
+              {avatarCategories[key].label}
+            </button>
+          ))}
+        </div>
+
+        <div className="avatar-parts-grid-container">
+          {activeTab === 'hair' && (
+            <div className="avatar-hair-colors">
+              <span className="avatar-color-label">Color:</span>
+              {hairColorOptions.map((hc, i) => (
+                <button
+                  key={hc.id}
+                  className={`avatar-color-swatch ${config.hairColor === i ? 'active' : ''}`}
+                  style={{ background: hc.color }}
+                  onClick={() => onSetPart('hairColor', i)}
+                  title={hc.name}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="avatar-parts-grid">
+            {parts.map((part, i) => {
+              const unlocked = isUnlocked(part);
+              const isSelected = config[activeTab] === i;
+              const previewConfig = { ...config, [activeTab]: i };
+              return (
+                <button
+                  key={part.id}
+                  className={`avatar-part-option ${isSelected ? 'selected' : ''} ${!unlocked ? 'locked' : ''}`}
+                  onClick={() => unlocked && onSetPart(activeTab, i)}
+                  disabled={!unlocked}
+                  title={unlocked ? part.name : `Locked: ${getAchievementName(part.requires)}`}
+                >
+                  <AvatarCanvas config={previewConfig} size={48} />
+                  <span className="avatar-part-name">{part.name}</span>
+                  {!unlocked && (
+                    <span className="avatar-part-lock">
+                      <span className="lock-icon">&#128274;</span>
+                      <span className="lock-req">{getAchievementName(part.requires)}</span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="avatar-editor-footer">
+          <button className="avatar-reset-btn" onClick={() => { if (window.confirm('Reset avatar to default?')) onReset(); }}>
+            Reset Avatar
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}

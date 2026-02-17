@@ -50,6 +50,21 @@ function saveNotes(countryId, notes, userId) {
   localStorage.setItem(storagePrefix(userId) + 'notes-' + countryId, JSON.stringify(notes));
 }
 
+function loadWishlist(countryId, userId) {
+  try {
+    const raw = localStorage.getItem(storagePrefix(userId) + 'wishlist-' + countryId);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch { /* ignore */ }
+  return new Set();
+}
+
+function saveWishlist(countryId, set, userId) {
+  localStorage.setItem(storagePrefix(userId) + 'wishlist-' + countryId, JSON.stringify([...set]));
+}
+
 // --------------- API helpers ---------------
 async function fetchVisited(countryId, token) {
   const res = await fetch(`/api/visited/${countryId}`, {
@@ -80,6 +95,7 @@ export default function useVisitedRegions(countryId) {
   const [visited, setVisited] = useState(() => userId ? loadLocal(countryId, userId) : new Set());
   const [dates, setDatesState] = useState(() => userId ? loadDates(countryId, userId) : {});
   const [notes, setNotesState] = useState(() => userId ? loadNotes(countryId, userId) : {});
+  const [wishlist, setWishlist] = useState(() => userId ? loadWishlist(countryId, userId) : new Set());
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
@@ -92,10 +108,12 @@ export default function useVisitedRegions(countryId) {
       setVisited(loadLocal(countryId, userId));
       setDatesState(loadDates(countryId, userId));
       setNotesState(loadNotes(countryId, userId));
+      setWishlist(loadWishlist(countryId, userId));
     } else {
       setVisited(new Set());
       setDatesState({});
       setNotesState({});
+      setWishlist(new Set());
     }
   }
 
@@ -128,6 +146,7 @@ export default function useVisitedRegions(countryId) {
       setVisited(new Set());
       setDatesState({});
       setNotesState({});
+      setWishlist(new Set());
     }
   }, [isLoggedIn]);
 
@@ -207,6 +226,22 @@ export default function useVisitedRegions(countryId) {
     setNotesState({});
   }, [countryId, isLoggedIn, token, userId]);
 
+  const toggleWishlist = useCallback(
+    (regionId) => {
+      setWishlist((prev) => {
+        const next = new Set(prev);
+        if (next.has(regionId)) {
+          next.delete(regionId);
+        } else {
+          next.add(regionId);
+        }
+        saveWishlist(countryId, next, userId);
+        return next;
+      });
+    },
+    [countryId, userId]
+  );
+
   const resetAll = useCallback(() => {
     const empty = new Set();
     for (const c of countryList) {
@@ -222,5 +257,5 @@ export default function useVisitedRegions(countryId) {
     setNotesState({});
   }, [isLoggedIn, token, userId]);
 
-  return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote };
+  return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist };
 }

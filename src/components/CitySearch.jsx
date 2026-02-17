@@ -4,7 +4,7 @@ import { findRegion } from '../utils/geo';
 // Map country IDs to Nominatim country codes
 const COUNTRY_CODES = { ch: 'Switzerland', us: 'United States', no: 'Norway', ca: 'Canada' };
 
-export default function CitySearch({ country, visited, onToggle }) {
+export default function CitySearch({ country, visited, onToggle, searchRef }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -123,6 +123,7 @@ export default function CitySearch({ country, visited, onToggle }) {
           value={query}
           onChange={handleInput}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
+          ref={searchRef}
         />
         {loading && <span className="search-spinner" />}
       </div>

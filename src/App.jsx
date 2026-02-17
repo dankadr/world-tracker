@@ -3,9 +3,14 @@ import { createPortal } from 'react-dom';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import ExportButton from './components/ExportButton';
+import Confetti from './components/Confetti';
+import AnimatedNumber from './components/AnimatedNumber';
+import Onboarding from './components/Onboarding';
 import useVisitedRegions from './hooks/useVisitedCantons';
 import useCustomColors from './hooks/useCustomColors';
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import getAchievements from './data/achievements';
 import countries from './data/countries';
 import { countryList } from './data/countries';
@@ -93,16 +98,21 @@ function AchievementToasts() {
   );
 }
 
+const MILESTONES = [25, 50, 75, 100];
+
 export default function App() {
   const [countryId, setCountryId] = useState('ch');
   const [shareData, setShareData] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { applyColors, setColor, colors } = useCustomColors();
+  const { toggle: toggleTheme } = useTheme();
+  const searchRef = useRef(null);
 
   const rawCountry = countries[countryId];
   const country = applyColors(rawCountry);
-  const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote } = useVisitedRegions(countryId);
+  const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist } = useVisitedRegions(countryId);
 
-  // Check for share URL on mount
   useEffect(() => {
     const data = parseShareHash();
     if (data) {
@@ -129,10 +139,39 @@ export default function App() {
   const total = regionList.length;
   const count = displayVisited.size;
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  const wishlistCount = isShareMode ? 0 : wishlist.size;
+
+  const prevPct = useRef(pct);
+  const prevCountryRef = useRef(countryId);
+  useEffect(() => {
+    const prev = prevPct.current;
+    const countryChanged = prevCountryRef.current !== countryId;
+    prevPct.current = pct;
+    prevCountryRef.current = countryId;
+    if (countryChanged || prev === pct) return;
+    for (const m of MILESTONES) {
+      if (prev < m && pct >= m) {
+        setShowConfetti(true);
+        break;
+      }
+    }
+  }, [pct, countryId]);
+
+  const closeModals = useCallback(() => {}, []);
+
+  useKeyboardShortcuts({
+    toggleTheme,
+    countryId,
+    setCountryId,
+    searchRef,
+    closeModals,
+  });
 
   return (
     <div className="app">
       {!isShareMode && <AchievementToasts />}
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
+      <Onboarding />
       {isShareMode && (
         <div className="share-banner">
           Viewing shared progress &mdash;
@@ -153,17 +192,35 @@ export default function App() {
         onSetNote={isShareMode ? () => {} : setNote}
         customColor={colors[countryId] || ''}
         onSetColor={(c) => setColor(countryId, c)}
+        collapsed={sidebarCollapsed}
+        wishlist={isShareMode ? new Set() : wishlist}
+        onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+        searchRef={searchRef}
       />
       <main className="map-container">
-        <RegionMap country={country} visited={displayVisited} onToggle={handleToggle} />
+        <button
+          className="sidebar-toggle"
+          onClick={() => setSidebarCollapsed((c) => !c)}
+          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+        >
+          {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+        </button>
+        <RegionMap
+          country={country}
+          visited={displayVisited}
+          onToggle={handleToggle}
+          wishlist={isShareMode ? new Set() : wishlist}
+          dates={isShareMode ? {} : dates}
+          notes={isShareMode ? {} : notes}
+        />
         {!isShareMode && <ExportButton country={country} />}
 
         <div className="floating-stats" style={{ '--accent': country.visitedColor }}>
           <div className="stats-card-header">
             <div className="stats-numbers">
-              <span className="stats-count">{count}</span>
+              <span className="stats-count"><AnimatedNumber value={count} /></span>
               <span className="stats-separator">/</span>
-              <span className="stats-total">{total}</span>
+              <span className="stats-total"><AnimatedNumber value={total} /></span>
             </div>
             {!isShareMode && (
               <label className="color-picker-label" title="Custom color">
@@ -181,6 +238,9 @@ export default function App() {
             )}
           </div>
           <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
+          {wishlistCount > 0 && (
+            <p className="stats-wishlist-count">{wishlistCount} planned</p>
+          )}
           <div className="progress-bar">
             <div
               className="progress-fill"
@@ -191,7 +251,7 @@ export default function App() {
             />
           </div>
           <p className="stats-pct" style={{ color: country.visitedColor }}>
-            {pct}%
+            <AnimatedNumber value={pct} suffix="%" />
           </p>
         </div>
       </main>
