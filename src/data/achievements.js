@@ -1,9 +1,10 @@
 import achievementsConfig from '../config/achievements.json';
 import { countryList } from './countries';
 import continentMap from '../config/continents.json';
+import worldData from './world.json';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
-const TOTAL_WORLD_COUNTRIES = 175;
+const TOTAL_WORLD_COUNTRIES = worldData.features.length;
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -103,6 +104,19 @@ function evaluateRule(rule, userId) {
 
     case 'worldPercent':
       return TOTAL_WORLD_COUNTRIES > 0 && getWorldVisitedCount(userId) / TOTAL_WORLD_COUNTRIES >= rule.min;
+
+    case 'capitalsVisited':
+      return getVisited('capitals', userId) >= rule.min;
+
+    case 'capitalsComplete':
+      return getVisited('capitals', userId) >= getTotalRegions('capitals') && getTotalRegions('capitals') > 0;
+
+    case 'worldContinentComplete': {
+      const wVisited = new Set(getWorldVisited(userId));
+      const continentCountries = Object.entries(continentMap)
+        .filter(([, cont]) => cont === rule.continent);
+      return continentCountries.length > 0 && continentCountries.every(([code]) => wVisited.has(code));
+    }
 
     default:
       return false;
