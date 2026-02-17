@@ -57,5 +57,16 @@
   { "id": "ca-5", "icon": "🍁", "title": "Maple Leaf", "desc": "Visit 5 Canadian provinces", "category": "Canada", "rule": { "type": "countryVisited", "country": "ca", "min": 5 } },
   { "id": "ca-7", "icon": "🇨🇦", "title": "Canadian Trail", "desc": "Visit 7 Canadian provinces", "category": "Canada", "rule": { "type": "countryVisited", "country": "ca", "min": 7 } },
   { "id": "ca-10", "icon": "🐻‍❄️", "title": "Great White North", "desc": "Visit 10 Canadian provinces", "category": "Canada", "rule": { "type": "countryVisited", "country": "ca", "min": 10 } },
-  { "id": "ca-complete", "icon": "🏔️", "title": "True North", "desc": "Visit all Canadian provinces", "category": "Canada", "rule": { "type": "countryComplete", "country": "ca" } }
+  { "id": "ca-complete", "icon": "🏔️", "title": "True North", "desc": "Visit all Canadian provinces", "category": "Canada", "rule": { "type": "countryComplete", "country": "ca" } },
+
+  { "id": "world-first", "icon": "🌐", "title": "First Country", "desc": "Mark your first country as visited", "category": "World", "rule": { "type": "worldVisited", "min": 1 } },
+  { "id": "world-5", "icon": "✈️", "title": "Five Countries", "desc": "Visit 5 countries", "category": "World", "rule": { "type": "worldVisited", "min": 5 } },
+  { "id": "world-10", "icon": "🛫", "title": "Ten Countries", "desc": "Visit 10 countries", "category": "World", "rule": { "type": "worldVisited", "min": 10 } },
+  { "id": "world-20", "icon": "🗺️", "title": "Twenty Countries", "desc": "Visit 20 countries", "category": "World", "rule": { "type": "worldVisited", "min": 20 } },
+  { "id": "world-50", "icon": "🌏", "title": "Fifty Countries", "desc": "Visit 50 countries", "category": "World", "rule": { "type": "worldVisited", "min": 50 } },
+  { "id": "world-100", "icon": "💎", "title": "Century Club", "desc": "Visit 100 countries", "category": "World", "rule": { "type": "worldVisited", "min": 100 } },
+  { "id": "world-continent-2", "icon": "🧭", "title": "Continent Starter", "desc": "Visit countries on 2 continents", "category": "World", "rule": { "type": "continentsVisited", "min": 2 } },
+  { "id": "world-all-continents", "icon": "🌎", "title": "All Continents", "desc": "Visit countries on all 6 inhabited continents", "category": "World", "rule": { "type": "continentsVisited", "min": 6 } },
+  { "id": "world-half", "icon": "🏅", "title": "Half the World", "desc": "Visit 50% of all countries", "category": "World", "rule": { "type": "worldPercent", "min": 0.5 } },
+  { "id": "world-complete", "icon": "🏆", "title": "World Complete", "desc": "Visit every country in the world", "category": "World", "rule": { "type": "worldPercent", "min": 1.0 } }
 ]

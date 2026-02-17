@@ -2521,3 +2521,439 @@ body {
   background: rgba(255, 255, 255, 0.05);
   color: #ecf0f1;
 }
+
+/* ========== World Map & Sidebar ========== */
+
+.world-map {
+  cursor: pointer;
+}
+
+.world-globe-icon {
+  font-size: 1.2rem;
+  margin-right: 2px;
+}
+
+/* Back to World button */
+.back-to-world-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 24px);
+  margin: 0 12px 8px;
+  padding: 8px 14px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  background: rgba(46, 204, 113, 0.08);
+  color: #27ae60;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-to-world-btn:hover {
+  background: rgba(46, 204, 113, 0.15);
+  border-color: rgba(46, 204, 113, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.15);
+}
+
+.back-to-world-icon {
+  font-size: 1rem;
+}
+
+[data-theme="dark"] .back-to-world-btn {
+  background: rgba(46, 204, 113, 0.1);
+  border-color: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+}
+
+[data-theme="dark"] .back-to-world-btn:hover {
+  background: rgba(46, 204, 113, 0.18);
+  border-color: rgba(46, 204, 113, 0.4);
+}
+
+/* World Stats Summary */
+.world-stats-summary {
+  padding: 12px 16px;
+  margin: 0 12px 8px;
+  background: rgba(46, 204, 113, 0.06);
+  border: 1px solid rgba(46, 204, 113, 0.15);
+  border-radius: 10px;
+}
+
+.world-stats-row {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.world-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.world-stat-num {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2ecc71;
+  line-height: 1;
+}
+
+.world-stat-label {
+  font-size: 0.72rem;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.world-progress-bar {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.world-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.world-progress-pct {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #27ae60;
+  font-weight: 600;
+  margin: 0;
+}
+
+[data-theme="dark"] .world-stats-summary {
+  background: rgba(46, 204, 113, 0.08);
+  border-color: rgba(46, 204, 113, 0.2);
+}
+
+[data-theme="dark"] .world-stat-label {
+  color: #95a5a6;
+}
+
+[data-theme="dark"] .world-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* World Search */
+.world-search-container {
+  position: relative;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.world-search-input {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.6);
+  color: inherit;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.world-search-input:focus {
+  border-color: rgba(46, 204, 113, 0.4);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+}
+
+.world-search-input::placeholder {
+  color: #95a5a6;
+}
+
+.world-search-clear {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #95a5a6;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+[data-theme="dark"] .world-search-input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .world-search-input:focus {
+  border-color: rgba(46, 204, 113, 0.4);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.08);
+}
+
+/* World Search Results */
+.world-search-results {
+  padding: 0 12px;
+  margin-bottom: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.world-no-results {
+  text-align: center;
+  color: #95a5a6;
+  font-size: 0.82rem;
+  padding: 16px 0;
+  margin: 0;
+}
+
+.world-country-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.world-country-item {
+  margin-bottom: 1px;
+}
+
+.world-country-continent {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #95a5a6;
+  white-space: nowrap;
+}
+
+/* World Quick Links / Region Trackers */
+.world-quick-links {
+  padding: 0 12px;
+  margin-bottom: 12px;
+}
+
+.world-quick-links .list-heading {
+  margin-bottom: 8px;
+}
+
+.world-tracker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.world-tracker-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.world-tracker-card:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.world-tracker-flag {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.world-tracker-name {
+  font-weight: 600;
+  font-size: 0.78rem;
+  min-width: 80px;
+}
+
+.world-tracker-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.world-tracker-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.world-tracker-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7f8c8d;
+  min-width: 30px;
+  text-align: right;
+}
+
+[data-theme="dark"] .world-tracker-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .world-tracker-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .world-tracker-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* World Continent Breakdown */
+.world-continents {
+  padding: 0 12px;
+  margin-bottom: 16px;
+}
+
+.world-continent-group {
+  margin-bottom: 2px;
+}
+
+.world-continent-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: inherit;
+  text-align: left;
+}
+
+.world-continent-header:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.world-continent-emoji {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.world-continent-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.world-continent-count {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .world-continent-header {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .world-continent-header:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.world-continent-group .world-country-list {
+  padding: 4px 0 4px 16px;
+}
+
+/* World Map Country Popup */
+.world-country-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.world-popup-content {
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.world-popup-name {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.world-popup-status {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.world-popup-status.visited {
+  background: rgba(46, 204, 113, 0.12);
+  color: #27ae60;
+}
+
+.world-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.world-popup-toggle {
+  padding: 5px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  color: #2c3e50;
+  font-size: 0.75rem;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.world-popup-toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.world-popup-explore {
+  padding: 6px 10px;
+  border: none;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.world-popup-explore:hover {
+  background: linear-gradient(135deg, #2980b9, #2471a3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* World Floating Stats */
+.world-floating-stats .stats-label {
+  color: #27ae60;
+}

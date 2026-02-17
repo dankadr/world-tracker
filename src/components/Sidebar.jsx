@@ -29,6 +29,7 @@ export default function Sidebar({
   wishlist,
   onToggleWishlist,
   searchRef,
+  onBackToWorld,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
@@ -173,6 +174,13 @@ export default function Sidebar({
           </div>
         </div>
       </div>
+
+      {onBackToWorld && !readOnly && (
+        <button className="back-to-world-btn" onClick={onBackToWorld}>
+          <span className="back-to-world-icon">🌍</span>
+          <span>Back to World Map</span>
+        </button>
+      )}
 
       {!readOnly && <AuthButton />}
 

@@ -1,5 +1,9 @@
 import achievementsConfig from '../config/achievements.json';
 import { countryList } from './countries';
+import continentMap from '../config/continents.json';
+
+const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+const TOTAL_WORLD_COUNTRIES = 175;
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -33,6 +37,33 @@ function getAllTotal() {
   return countryList.reduce((sum, c) => sum + getTotalRegions(c.id), 0);
 }
 
+function getWorldVisited(userId) {
+  try {
+    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    if (raw) {
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+function getWorldVisitedCount(userId) {
+  return getWorldVisited(userId).length;
+}
+
+function getContinentsVisited(userId) {
+  const visited = getWorldVisited(userId);
+  const continents = new Set();
+  visited.forEach((code) => {
+    const continent = continentMap[code];
+    if (continent && INHABITED_CONTINENTS.includes(continent)) {
+      continents.add(continent);
+    }
+  });
+  return continents.size;
+}
+
 function evaluateRule(rule, userId) {
   switch (rule.type) {
     case 'totalVisited':
@@ -63,6 +94,15 @@ function evaluateRule(rule, userId) {
       const count = ids.filter((id) => regionSet.has(id)).length;
       return count >= rule.min;
     }
+
+    case 'worldVisited':
+      return getWorldVisitedCount(userId) >= rule.min;
+
+    case 'continentsVisited':
+      return getContinentsVisited(userId) >= rule.min;
+
+    case 'worldPercent':
+      return TOTAL_WORLD_COUNTRIES > 0 && getWorldVisitedCount(userId) / TOTAL_WORLD_COUNTRIES >= rule.min;
 
     default:
       return false;

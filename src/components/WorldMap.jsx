@@ -1,0 +1,205 @@
+import { useRef, useCallback, useEffect, useState } from 'react';
+import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { useTheme } from '../context/ThemeContext';
+import MapLayerControl, { LAYERS } from './MapLayerControl';
+import worldData from '../data/world.json';
+
+const VISITED_COLOR = '#2ecc71';
+const VISITED_HOVER = '#27ae60';
+
+const TRACKED_COUNTRY_IDS = {
+  ch: 'ch',
+  us: 'us',
+  no: 'no',
+  ca: 'ca',
+};
+
+const UNVISITED_STYLE = {
+  fillColor: '#cfd8dc',
+  fillOpacity: 0.4,
+  color: 'rgba(0, 0, 0, 0.1)',
+  weight: 0.5,
+  lineJoin: 'round',
+  lineCap: 'round',
+};
+
+const VISITED_STYLE = {
+  fillColor: VISITED_COLOR,
+  fillOpacity: 0.5,
+  color: 'transparent',
+  weight: 0,
+  lineJoin: 'round',
+  lineCap: 'round',
+};
+
+const TRACKED_STYLE = {
+  fillColor: '#cfd8dc',
+  fillOpacity: 0.4,
+  color: 'rgba(52, 152, 219, 0.6)',
+  weight: 2,
+  dashArray: '4 3',
+  lineJoin: 'round',
+  lineCap: 'round',
+};
+
+const TRACKED_VISITED_STYLE = {
+  fillColor: VISITED_COLOR,
+  fillOpacity: 0.5,
+  color: 'rgba(52, 152, 219, 0.6)',
+  weight: 2,
+  dashArray: '4 3',
+  lineJoin: 'round',
+  lineCap: 'round',
+};
+
+function MapController({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [map, center, zoom]);
+  return null;
+}
+
+export default function WorldMap({ visited, onToggle, onExploreCountry }) {
+  const geoJsonRef = useRef(null);
+  const { dark } = useTheme();
+  const [tileUrl, setTileUrl] = useState(
+    dark ? LAYERS[0].dark : LAYERS[0].light
+  );
+
+  useEffect(() => {
+    setTileUrl((prev) => {
+      const layer = LAYERS.find((l) => l.light === prev || l.dark === prev);
+      if (layer) return dark ? layer.dark : layer.light;
+      return dark ? LAYERS[0].dark : LAYERS[0].light;
+    });
+  }, [dark]);
+
+  const getStyle = useCallback(
+    (feature) => {
+      const id = feature.properties.id;
+      const isVisited = visited.has(id);
+      const isTracked = id in TRACKED_COUNTRY_IDS;
+
+      if (isVisited && isTracked) return { ...TRACKED_VISITED_STYLE };
+      if (isVisited) return { ...VISITED_STYLE };
+      if (isTracked) return { ...TRACKED_STYLE };
+      return { ...UNVISITED_STYLE };
+    },
+    [visited]
+  );
+
+  const onEachFeature = useCallback(
+    (feature, layer) => {
+      const { id, name } = feature.properties;
+      const isTracked = id in TRACKED_COUNTRY_IDS;
+
+      layer.bindTooltip(name, {
+        sticky: true,
+        className: 'canton-tooltip',
+        direction: 'top',
+        offset: [0, -10],
+      });
+
+      layer.on({
+        mouseover: (e) => {
+          const target = e.target;
+          const isVisited = visited.has(id);
+          target.setStyle({
+            fillColor: isVisited ? VISITED_HOVER : '#b0bec5',
+            fillOpacity: isVisited ? 0.7 : 0.55,
+            color: 'rgba(255, 255, 255, 0.9)',
+            weight: 2,
+          });
+          target.bringToFront();
+        },
+        mouseout: (e) => {
+          const target = e.target;
+          const isVisited = visited.has(id);
+          if (isVisited && isTracked) target.setStyle(TRACKED_VISITED_STYLE);
+          else if (isVisited) target.setStyle(VISITED_STYLE);
+          else if (isTracked) target.setStyle(TRACKED_STYLE);
+          else target.setStyle(UNVISITED_STYLE);
+        },
+        click: (e) => {
+          if (isTracked) {
+            const isVisited = visited.has(id);
+            const trackerId = TRACKED_COUNTRY_IDS[id];
+            const statusHtml = isVisited
+              ? '<span class="world-popup-status visited">Visited</span>'
+              : '<span class="world-popup-status">Not visited</span>';
+            const html = `<div class="world-popup-content">
+              <strong class="world-popup-name">${name}</strong>
+              ${statusHtml}
+              <div class="world-popup-actions">
+                <button class="world-popup-toggle" onclick="document.dispatchEvent(new CustomEvent('world-toggle',{detail:'${id}'}))">${isVisited ? 'Mark unvisited' : 'Mark visited'}</button>
+                <button class="world-popup-explore" onclick="document.dispatchEvent(new CustomEvent('world-explore',{detail:'${trackerId}'}))">Explore Regions &rarr;</button>
+              </div>
+            </div>`;
+            L.popup({ className: 'world-country-popup', closeButton: true, offset: [0, -5] })
+              .setLatLng(e.latlng)
+              .setContent(html)
+              .openOn(e.target._map);
+          } else {
+            onToggle(id);
+            const target = e.target;
+            const willBeVisited = !visited.has(id);
+            const finalStyle = willBeVisited ? VISITED_STYLE : UNVISITED_STYLE;
+            target.setStyle({
+              fillOpacity: 0.85,
+              weight: 2,
+              color: 'rgba(255,255,255,0.7)',
+            });
+            setTimeout(() => target.setStyle({ fillOpacity: 0.7, weight: 1.5 }), 120);
+            setTimeout(() => target.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
+            setTimeout(() => target.setStyle(finalStyle), 400);
+          }
+        },
+      });
+    },
+    [visited, onToggle]
+  );
+
+  useEffect(() => {
+    function handleToggle(e) {
+      onToggle(e.detail);
+    }
+    function handleExplore(e) {
+      onExploreCountry(e.detail);
+    }
+    document.addEventListener('world-toggle', handleToggle);
+    document.addEventListener('world-explore', handleExplore);
+    return () => {
+      document.removeEventListener('world-toggle', handleToggle);
+      document.removeEventListener('world-explore', handleExplore);
+    };
+  }, [onToggle, onExploreCountry]);
+
+  return (
+    <MapContainer
+      center={[20, 0]}
+      zoom={2}
+      className="swiss-map world-map"
+      zoomControl={true}
+      scrollWheelZoom={true}
+      minZoom={2}
+      maxZoom={8}
+    >
+      <MapController center={[20, 0]} zoom={2} />
+      <TileLayer
+        key={tileUrl}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+        url={tileUrl}
+      />
+      <GeoJSON
+        key={'world-' + JSON.stringify([...visited])}
+        ref={geoJsonRef}
+        data={worldData}
+        style={getStyle}
+        onEachFeature={onEachFeature}
+      />
+      <MapLayerControl onLayerChange={setTileUrl} />
+    </MapContainer>
+  );
+}

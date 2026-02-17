@@ -1,0 +1,285 @@
+import { useState, useMemo } from 'react';
+import { useTheme } from '../context/ThemeContext';
+import { countryList } from '../data/countries';
+import { useAuth } from '../context/AuthContext';
+import worldData from '../data/world.json';
+import continentMap from '../config/continents.json';
+import AuthButton from './AuthButton';
+import AvatarCanvas from './AvatarCanvas';
+import AvatarEditor from './AvatarEditor';
+import useAvatar from '../hooks/useAvatar';
+
+const CONTINENT_EMOJI = {
+  'Africa': '🌍',
+  'Asia': '🌏',
+  'Europe': '🌍',
+  'North America': '🌎',
+  'South America': '🌎',
+  'Oceania': '🌏',
+  'Other': '🌐',
+};
+
+const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+
+function storagePrefix(userId) {
+  return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
+}
+
+function getVisitedCount(countryId, userId) {
+  try {
+    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) return data.length;
+      if (typeof data === 'object') return Object.keys(data).length;
+    }
+  } catch { /* ignore */ }
+  return 0;
+}
+
+function getTotalRegions(country) {
+  return country.data.features.filter((f) => !f.properties?.isBorough).length;
+}
+
+export default function WorldSidebar({
+  visited,
+  onToggle,
+  onExploreCountry,
+  collapsed,
+}) {
+  const { dark, toggle: toggleTheme } = useTheme();
+  const { user } = useAuth();
+  const userId = user?.id || null;
+  const [search, setSearch] = useState('');
+  const [openContinents, setOpenContinents] = useState({});
+  const [showAvatar, setShowAvatar] = useState(false);
+  const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
+
+  const allCountries = useMemo(() => {
+    return worldData.features.map((f) => ({
+      id: f.properties.id,
+      name: f.properties.name,
+      continent: continentMap[f.properties.id] || 'Other',
+    }));
+  }, []);
+
+  const totalCountries = allCountries.length;
+  const visitedCount = visited.size;
+  const pct = totalCountries > 0 ? Math.round((visitedCount / totalCountries) * 100) : 0;
+
+  const continentStats = useMemo(() => {
+    const stats = {};
+    allCountries.forEach((c) => {
+      if (!stats[c.continent]) stats[c.continent] = { total: 0, visited: 0, countries: [] };
+      stats[c.continent].total++;
+      if (visited.has(c.id)) stats[c.continent].visited++;
+      stats[c.continent].countries.push(c);
+    });
+    return stats;
+  }, [allCountries, visited]);
+
+  const continentsVisited = INHABITED_CONTINENTS.filter(
+    (c) => continentStats[c]?.visited > 0
+  ).length;
+
+  const filteredCountries = useMemo(() => {
+    if (!search.trim()) return null;
+    const q = search.toLowerCase();
+    return allCountries.filter((c) => c.name.toLowerCase().includes(q));
+  }, [allCountries, search]);
+
+  const toggleContinent = (continent) => {
+    setOpenContinents((prev) => ({ ...prev, [continent]: !prev[continent] }));
+  };
+
+  const trackerStats = useMemo(() => {
+    return countryList.map((c) => {
+      const total = getTotalRegions(c);
+      const v = getVisitedCount(c.id, userId);
+      return {
+        ...c,
+        total,
+        visited: v,
+        pct: total > 0 ? Math.round((v / total) * 100) : 0,
+      };
+    });
+  }, [userId]);
+
+  return (
+    <aside className={`sidebar world-sidebar ${collapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-header">
+        <div className="sidebar-header-top">
+          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
+            <AvatarCanvas config={avatarConfig} size={40} />
+          </button>
+          <div className="sidebar-title-group">
+            <h1 className="sidebar-title">
+              <span className="world-globe-icon">🌍</span>
+              World Tracker
+            </h1>
+            <p className="sidebar-subtitle">Track every country you visit</p>
+          </div>
+          <div className="header-actions">
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AuthButton />
+
+      {/* World Stats Summary */}
+      <div className="world-stats-summary">
+        <div className="world-stats-row">
+          <div className="world-stat-item">
+            <span className="world-stat-num">{visitedCount}</span>
+            <span className="world-stat-label">/ {totalCountries} countries</span>
+          </div>
+          <div className="world-stat-item">
+            <span className="world-stat-num">{continentsVisited}</span>
+            <span className="world-stat-label">/ {INHABITED_CONTINENTS.length} continents</span>
+          </div>
+        </div>
+        <div className="world-progress-bar">
+          <div
+            className="world-progress-fill"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="world-progress-pct">{pct}% of the world</p>
+      </div>
+
+      {/* Search */}
+      <div className="world-search-container">
+        <input
+          type="text"
+          className="world-search-input"
+          placeholder="Search countries..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search && (
+          <button className="world-search-clear" onClick={() => setSearch('')}>
+            &times;
+          </button>
+        )}
+      </div>
+
+      {/* Search Results */}
+      {filteredCountries && (
+        <div className="world-search-results">
+          {filteredCountries.length === 0 && (
+            <p className="world-no-results">No countries found</p>
+          )}
+          <ul className="world-country-list">
+            {filteredCountries.map((c) => (
+              <li key={c.id} className="world-country-item">
+                <label className={`canton-label ${visited.has(c.id) ? 'visited' : ''}`}
+                  style={visited.has(c.id) ? { '--visit-bg': '#2ecc7118', '--visit-bg-hover': '#2ecc7128', '--visit-color': '#27ae60' } : {}}
+                >
+                  <input
+                    type="checkbox"
+                    checked={visited.has(c.id)}
+                    onChange={() => onToggle(c.id)}
+                    style={{ accentColor: '#2ecc71' }}
+                  />
+                  <span className="canton-name">{c.name}</span>
+                  <span className="world-country-continent">{c.continent}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Quick Links to Detail Trackers */}
+      <div className="world-quick-links">
+        <h2 className="list-heading">Region Trackers</h2>
+        <div className="world-tracker-grid">
+          {trackerStats.map((t) => (
+            <button
+              key={t.id}
+              className="world-tracker-card"
+              onClick={() => onExploreCountry(t.id)}
+            >
+              <span className="world-tracker-flag">{t.flag}</span>
+              <span className="world-tracker-name">{t.name}</span>
+              <div className="world-tracker-bar">
+                <div
+                  className="world-tracker-bar-fill"
+                  style={{ width: `${t.pct}%`, background: t.visitedColor }}
+                />
+              </div>
+              <span className="world-tracker-pct">{t.pct}%</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Continent Breakdown */}
+      {!filteredCountries && (
+        <div className="world-continents">
+          <h2 className="list-heading">Countries by Continent</h2>
+          {Object.entries(continentStats)
+            .filter(([name]) => name !== 'Other')
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([continent, stats]) => (
+              <div key={continent} className="world-continent-group">
+                <button
+                  className="world-continent-header"
+                  onClick={() => toggleContinent(continent)}
+                >
+                  <span className="world-continent-emoji">
+                    {CONTINENT_EMOJI[continent] || '🌐'}
+                  </span>
+                  <span className="world-continent-name">{continent}</span>
+                  <span className="world-continent-count">
+                    {stats.visited}/{stats.total}
+                  </span>
+                  <span className={`overall-chevron ${openContinents[continent] ? 'open' : ''}`}>
+                    &#9662;
+                  </span>
+                </button>
+                {openContinents[continent] && (
+                  <ul className="world-country-list">
+                    {stats.countries
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((c) => (
+                        <li key={c.id} className="world-country-item">
+                          <label
+                            className={`canton-label ${visited.has(c.id) ? 'visited' : ''}`}
+                            style={visited.has(c.id) ? { '--visit-bg': '#2ecc7118', '--visit-bg-hover': '#2ecc7128', '--visit-color': '#27ae60' } : {}}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={visited.has(c.id)}
+                              onChange={() => onToggle(c.id)}
+                              style={{ accentColor: '#2ecc71' }}
+                            />
+                            <span className="canton-name">{c.name}</span>
+                          </label>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+
+      {showAvatar && (
+        <AvatarEditor
+          config={avatarConfig}
+          onSetPart={setAvatarPart}
+          onReset={resetAvatar}
+          onClose={() => setShowAvatar(false)}
+        />
+      )}
+    </aside>
+  );
+}

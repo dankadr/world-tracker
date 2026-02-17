@@ -1,6 +1,11 @@
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
+import continentMap from '../config/continents.json';
+import worldData from '../data/world.json';
+
+const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+const TOTAL_WORLD_COUNTRIES = 175;
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -126,6 +131,51 @@ function computeGeoInsights(coords) {
   };
 }
 
+function getWorldVisitedIds(userId) {
+  try {
+    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    if (raw) {
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+function computeWorldStats(userId) {
+  const visited = new Set(getWorldVisitedIds(userId));
+  const visitedCount = visited.size;
+  const pct = TOTAL_WORLD_COUNTRIES > 0 ? Math.round((visitedCount / TOTAL_WORLD_COUNTRIES) * 100) : 0;
+
+  const continentBreakdown = {};
+  INHABITED_CONTINENTS.forEach((c) => { continentBreakdown[c] = { total: 0, visited: 0 }; });
+
+  worldData.features.forEach((f) => {
+    const continent = continentMap[f.properties.id];
+    if (continent && continentBreakdown[continent]) {
+      continentBreakdown[continent].total++;
+      if (visited.has(f.properties.id)) {
+        continentBreakdown[continent].visited++;
+      }
+    }
+  });
+
+  const continentsWithVisits = Object.entries(continentBreakdown)
+    .filter(([, s]) => s.visited > 0).length;
+
+  const mostVisitedContinent = Object.entries(continentBreakdown)
+    .sort(([, a], [, b]) => b.visited - a.visited)[0];
+
+  return {
+    visitedCount,
+    total: TOTAL_WORLD_COUNTRIES,
+    pct,
+    continentBreakdown,
+    continentsWithVisits,
+    mostVisitedContinent: mostVisitedContinent?.[1].visited > 0 ? mostVisitedContinent[0] : null,
+  };
+}
+
 export default function StatsModal({ onClose }) {
   const { user } = useAuth();
   const userId = user?.id || null;
@@ -143,6 +193,8 @@ export default function StatsModal({ onClose }) {
 
   const coords = getVisitedCoords(userId);
   const geo = computeGeoInsights(coords);
+
+  const worldStats = computeWorldStats(userId);
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
@@ -187,6 +239,49 @@ export default function StatsModal({ onClose }) {
             </p>
           )}
         </div>
+
+        {worldStats.visitedCount > 0 && (
+          <div className="stats-section">
+            <h3>World Countries</h3>
+            <div className="stats-summary">
+              <div className="stats-summary-item">
+                <span className="stats-summary-num">{worldStats.visitedCount}</span>
+                <span className="stats-summary-label">/ {worldStats.total} countries</span>
+              </div>
+              <div className="stats-summary-item">
+                <span className="stats-summary-num">{worldStats.continentsWithVisits}</span>
+                <span className="stats-summary-label">/ 6 continents</span>
+              </div>
+              <div className="stats-summary-item">
+                <span className="stats-summary-num">{worldStats.pct}%</span>
+                <span className="stats-summary-label">of the world</span>
+              </div>
+            </div>
+
+            <div className="stats-bars" style={{ marginTop: '12px' }}>
+              {Object.entries(worldStats.continentBreakdown)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([continent, s]) => {
+                  const cpct = s.total > 0 ? Math.round((s.visited / s.total) * 100) : 0;
+                  return (
+                    <div key={continent} className="stats-bar-row">
+                      <span className="stats-bar-label">{continent}</span>
+                      <div className="stats-bar-track">
+                        <div className="stats-bar-fill" style={{ width: `${cpct}%`, background: '#2ecc71' }} />
+                      </div>
+                      <span className="stats-bar-value">{s.visited}/{s.total}</span>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {worldStats.mostVisitedContinent && (
+              <p className="stats-highlight">
+                Most explored continent: {worldStats.mostVisitedContinent}
+              </p>
+            )}
+          </div>
+        )}
 
         {geo && (
           <div className="stats-section">

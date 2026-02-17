@@ -2,11 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
+import WorldMap from './components/WorldMap';
+import WorldSidebar from './components/WorldSidebar';
 import ExportButton from './components/ExportButton';
 import Confetti from './components/Confetti';
 import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import useVisitedRegions from './hooks/useVisitedCantons';
+import useVisitedCountries from './hooks/useVisitedCountries';
 import useCustomColors from './hooks/useCustomColors';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { useAuth } from './context/AuthContext';
@@ -101,6 +104,7 @@ function AchievementToasts() {
 const MILESTONES = [25, 50, 75, 100];
 
 export default function App() {
+  const [view, setView] = useState('world'); // 'world' | 'detail'
   const [countryId, setCountryId] = useState('ch');
   const [shareData, setShareData] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -112,11 +116,22 @@ export default function App() {
   const rawCountry = countries[countryId];
   const country = applyColors(rawCountry);
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist } = useVisitedRegions(countryId);
+  const { visited: worldVisited, toggleCountry: toggleWorldCountry } = useVisitedCountries();
+
+  const handleExploreCountry = useCallback((id) => {
+    setCountryId(id);
+    setView('detail');
+  }, []);
+
+  const handleBackToWorld = useCallback(() => {
+    setView('world');
+  }, []);
 
   useEffect(() => {
     const data = parseShareHash();
     if (data) {
       setShareData(data);
+      setView('detail');
       const firstKey = Object.keys(data).find((k) => countries[k]);
       if (firstKey) setCountryId(firstKey);
     }
@@ -167,6 +182,8 @@ export default function App() {
     closeModals,
   });
 
+  const isWorldView = view === 'world' && !isShareMode;
+
   return (
     <div className="app">
       {!isShareMode && <AchievementToasts />}
@@ -178,83 +195,134 @@ export default function App() {
           <button className="share-banner-btn" onClick={exitShareMode}>Exit</button>
         </div>
       )}
-      <Sidebar
-        country={country}
-        visited={displayVisited}
-        onToggle={handleToggle}
-        onReset={isShareMode ? () => {} : reset}
-        onResetAll={isShareMode ? () => {} : resetAll}
-        onCountryChange={setCountryId}
-        readOnly={isShareMode}
-        dates={isShareMode ? {} : dates}
-        onSetDate={isShareMode ? () => {} : setDate}
-        notes={isShareMode ? {} : notes}
-        onSetNote={isShareMode ? () => {} : setNote}
-        customColor={colors[countryId] || ''}
-        onSetColor={(c) => setColor(countryId, c)}
-        collapsed={sidebarCollapsed}
-        wishlist={isShareMode ? new Set() : wishlist}
-        onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
-        searchRef={searchRef}
-      />
-      <main className="map-container">
-        <button
-          className="sidebar-toggle"
-          onClick={() => setSidebarCollapsed((c) => !c)}
-          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-        >
-          {sidebarCollapsed ? '\u25B6' : '\u25C0'}
-        </button>
-        <RegionMap
-          country={country}
-          visited={displayVisited}
-          onToggle={handleToggle}
-          wishlist={isShareMode ? new Set() : wishlist}
-          dates={isShareMode ? {} : dates}
-          notes={isShareMode ? {} : notes}
-        />
-        {!isShareMode && <ExportButton country={country} />}
 
-        <div className="floating-stats" style={{ '--accent': country.visitedColor }}>
-          <div className="stats-card-header">
-            <div className="stats-numbers">
-              <span className="stats-count"><AnimatedNumber value={count} /></span>
-              <span className="stats-separator">/</span>
-              <span className="stats-total"><AnimatedNumber value={total} /></span>
-            </div>
-            {!isShareMode && (
-              <label className="color-picker-label" title="Custom color">
-                <input
-                  type="color"
-                  className="color-picker"
-                  value={colors[countryId] || country.visitedColor}
-                  onChange={(e) => setColor(countryId, e.target.value)}
-                />
-                <span
-                  className="color-dot"
-                  style={{ background: country.visitedColor }}
-                />
-              </label>
-            )}
-          </div>
-          <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
-          {wishlistCount > 0 && (
-            <p className="stats-wishlist-count">{wishlistCount} planned</p>
-          )}
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width: `${pct}%`,
-                background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
-              }}
+      {isWorldView ? (
+        <>
+          <WorldSidebar
+            visited={worldVisited}
+            onToggle={toggleWorldCountry}
+            onExploreCountry={handleExploreCountry}
+            collapsed={sidebarCollapsed}
+          />
+          <main className="map-container">
+            <button
+              className="sidebar-toggle"
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            >
+              {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+            </button>
+            <WorldMap
+              visited={worldVisited}
+              onToggle={toggleWorldCountry}
+              onExploreCountry={handleExploreCountry}
             />
-          </div>
-          <p className="stats-pct" style={{ color: country.visitedColor }}>
-            <AnimatedNumber value={pct} suffix="%" />
-          </p>
-        </div>
-      </main>
+            <div className="floating-stats world-floating-stats" style={{ '--accent': '#2ecc71' }}>
+              <div className="stats-card-header">
+                <div className="stats-numbers">
+                  <span className="stats-count"><AnimatedNumber value={worldVisited.size} /></span>
+                  <span className="stats-separator">/</span>
+                  <span className="stats-total">175</span>
+                </div>
+              </div>
+              <p className="stats-label">countries visited</p>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.round((worldVisited.size / 175) * 100)}%`,
+                    background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
+                  }}
+                />
+              </div>
+              <p className="stats-pct" style={{ color: '#2ecc71' }}>
+                <AnimatedNumber value={Math.round((worldVisited.size / 175) * 100)} suffix="%" />
+              </p>
+            </div>
+          </main>
+        </>
+      ) : (
+        <>
+          <Sidebar
+            country={country}
+            visited={displayVisited}
+            onToggle={handleToggle}
+            onReset={isShareMode ? () => {} : reset}
+            onResetAll={isShareMode ? () => {} : resetAll}
+            onCountryChange={setCountryId}
+            readOnly={isShareMode}
+            dates={isShareMode ? {} : dates}
+            onSetDate={isShareMode ? () => {} : setDate}
+            notes={isShareMode ? {} : notes}
+            onSetNote={isShareMode ? () => {} : setNote}
+            customColor={colors[countryId] || ''}
+            onSetColor={(c) => setColor(countryId, c)}
+            collapsed={sidebarCollapsed}
+            wishlist={isShareMode ? new Set() : wishlist}
+            onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+            searchRef={searchRef}
+            onBackToWorld={handleBackToWorld}
+          />
+          <main className="map-container">
+            <button
+              className="sidebar-toggle"
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            >
+              {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+            </button>
+            <RegionMap
+              country={country}
+              visited={displayVisited}
+              onToggle={handleToggle}
+              wishlist={isShareMode ? new Set() : wishlist}
+              dates={isShareMode ? {} : dates}
+              notes={isShareMode ? {} : notes}
+            />
+            {!isShareMode && <ExportButton country={country} />}
+
+            <div className="floating-stats" style={{ '--accent': country.visitedColor }}>
+              <div className="stats-card-header">
+                <div className="stats-numbers">
+                  <span className="stats-count"><AnimatedNumber value={count} /></span>
+                  <span className="stats-separator">/</span>
+                  <span className="stats-total"><AnimatedNumber value={total} /></span>
+                </div>
+                {!isShareMode && (
+                  <label className="color-picker-label" title="Custom color">
+                    <input
+                      type="color"
+                      className="color-picker"
+                      value={colors[countryId] || country.visitedColor}
+                      onChange={(e) => setColor(countryId, e.target.value)}
+                    />
+                    <span
+                      className="color-dot"
+                      style={{ background: country.visitedColor }}
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
+              {wishlistCount > 0 && (
+                <p className="stats-wishlist-count">{wishlistCount} planned</p>
+              )}
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${pct}%`,
+                    background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
+                  }}
+                />
+              </div>
+              <p className="stats-pct" style={{ color: country.visitedColor }}>
+                <AnimatedNumber value={pct} suffix="%" />
+              </p>
+            </div>
+          </main>
+        </>
+      )}
     </div>
   );
 }
