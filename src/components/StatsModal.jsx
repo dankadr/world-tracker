@@ -5,7 +5,7 @@ import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
-const TOTAL_WORLD_COUNTRIES = 175;
+const TOTAL_WORLD_COUNTRIES = worldData.features.length;
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';

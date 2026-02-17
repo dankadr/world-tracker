@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
@@ -55,8 +55,12 @@ const TRACKED_VISITED_STYLE = {
 
 function MapController({ center, zoom }) {
   const map = useMap();
+  const initialized = useRef(false);
   useEffect(() => {
-    map.setView(center, zoom);
+    if (!initialized.current) {
+      map.setView(center, zoom);
+      initialized.current = true;
+    }
   }, [map, center, zoom]);
   return null;
 }
@@ -75,6 +79,22 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
       return dark ? LAYERS[0].dark : LAYERS[0].light;
     });
   }, [dark]);
+
+  // Update GeoJSON styles when visited set changes (without remounting)
+  useEffect(() => {
+    const layer = geoJsonRef.current;
+    if (!layer) return;
+    layer.eachLayer((l) => {
+      const id = l.feature?.properties?.id;
+      if (!id) return;
+      const isVisited = visited.has(id);
+      const isTracked = id in TRACKED_COUNTRY_IDS;
+      if (isVisited && isTracked) l.setStyle(TRACKED_VISITED_STYLE);
+      else if (isVisited) l.setStyle(VISITED_STYLE);
+      else if (isTracked) l.setStyle(TRACKED_STYLE);
+      else l.setStyle(UNVISITED_STYLE);
+    });
+  }, [visited]);
 
   const getStyle = useCallback(
     (feature) => {
@@ -193,7 +213,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
         url={tileUrl}
       />
       <GeoJSON
-        key={'world-' + JSON.stringify([...visited])}
+        key="world-geojson"
         ref={geoJsonRef}
         data={worldData}
         style={getStyle}

@@ -8,6 +8,8 @@ import AuthButton from './AuthButton';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
 import useAvatar from '../hooks/useAvatar';
+import Achievements from './Achievements';
+import StatsModal from './StatsModal';
 
 const CONTINENT_EMOJI = {
   'Africa': '🌍',
@@ -53,6 +55,7 @@ export default function WorldSidebar({
   const [search, setSearch] = useState('');
   const [openContinents, setOpenContinents] = useState({});
   const [showAvatar, setShowAvatar] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const allCountries = useMemo(() => {
@@ -120,6 +123,13 @@ export default function WorldSidebar({
             <p className="sidebar-subtitle">Track every country you visit</p>
           </div>
           <div className="header-actions">
+            <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+            </button>
             <button
               className="theme-toggle"
               onClick={toggleTheme}
@@ -197,6 +207,8 @@ export default function WorldSidebar({
         </div>
       )}
 
+      <Achievements />
+
       {/* Quick Links to Detail Trackers */}
       <div className="world-quick-links">
         <h2 className="list-heading">Region Trackers</h2>
@@ -272,6 +284,7 @@ export default function WorldSidebar({
         </div>
       )}
 
+      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showAvatar && (
         <AvatarEditor
           config={avatarConfig}

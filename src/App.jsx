@@ -17,6 +17,7 @@ import { useTheme } from './context/ThemeContext';
 import getAchievements from './data/achievements';
 import countries from './data/countries';
 import { countryList } from './data/countries';
+import worldData from './data/world.json';
 
 function parseShareHash() {
   try {
@@ -222,7 +223,7 @@ export default function App() {
                 <div className="stats-numbers">
                   <span className="stats-count"><AnimatedNumber value={worldVisited.size} /></span>
                   <span className="stats-separator">/</span>
-                  <span className="stats-total">175</span>
+                  <span className="stats-total">{worldData.features.length}</span>
                 </div>
               </div>
               <p className="stats-label">countries visited</p>
@@ -230,13 +231,13 @@ export default function App() {
                 <div
                   className="progress-fill"
                   style={{
-                    width: `${Math.round((worldVisited.size / 175) * 100)}%`,
+                    width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
                     background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
                   }}
                 />
               </div>
               <p className="stats-pct" style={{ color: '#2ecc71' }}>
-                <AnimatedNumber value={Math.round((worldVisited.size / 175) * 100)} suffix="%" />
+                <AnimatedNumber value={Math.round((worldVisited.size / worldData.features.length) * 100)} suffix="%" />
               </p>
             </div>
           </main>

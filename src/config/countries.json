@@ -83,5 +83,20 @@
     "maxZoom": 18,
     "visitedColor": "#e67e22",
     "visitedHover": "#d35400"
+  },
+  {
+    "id": "capitals",
+    "name": "World Capitals",
+    "flag": "🏛️",
+    "regionLabel": "Capitals",
+    "regionLabelSingular": "capital",
+    "geoFile": "capitals.json",
+    "center": [20, 0],
+    "zoom": 2,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#f39c12",
+    "visitedHover": "#e67e22",
+    "pointMode": true
   }
 ]

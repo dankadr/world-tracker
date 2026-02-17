@@ -7,6 +7,7 @@ import usParksData from './us-parks.json';
 import nycData from './nyc.json';
 import norwayData from './norway.json';
 import canadaData from './canada.json';
+import capitalsData from './capitals.json';
 
 // Map geoFile names to imported data
 const geoMap = {
@@ -16,6 +17,7 @@ const geoMap = {
   'nyc.json': nycData,
   'norway.json': norwayData,
   'canada.json': canadaData,
+  'capitals.json': capitalsData,
 };
 
 // Build countries object from config
