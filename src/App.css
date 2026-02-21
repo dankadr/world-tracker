@@ -1835,51 +1835,268 @@ body {
 }
 
 /* ======== Responsive ======== */
+
+/* ---- Mobile Bottom Sheet ---- */
+.mobile-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border-top: 1px solid var(--glass-border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15),
+              var(--glass-specular);
+  overflow: hidden;
+  transition: height 0.35s cubic-bezier(.4,0,.2,1);
+  will-change: height;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-handle-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px 6px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sheet-handle-area:active {
+  cursor: grabbing;
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--text-muted);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.sheet-mini-content {
+  width: 100%;
+  cursor: pointer;
+  padding: 4px 0 2px;
+}
+
+.sheet-mini-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+.sheet-mini-icon {
+  font-size: 1.1rem;
+}
+
+.sheet-mini-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sheet-mini-pct {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.sheet-mini-expand {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-left: auto;
+}
+
+.sheet-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-body > .sidebar,
+.sheet-body > .world-sidebar {
+  width: 100% !important;
+  min-width: unset !important;
+  height: 100% !important;
+  border-right: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---- Mobile (≤ 768px) ---- */
 @media (max-width: 768px) {
   .app {
-    flex-direction: column-reverse;
+    flex-direction: column;
+    position: relative;
   }
 
-  .sidebar {
+  .app.is-mobile .map-container {
+    height: 100%;
     width: 100%;
-    min-width: unset;
-    height: 45%;
-    min-height: 220px;
-    border-right: none;
-    border-top: 1px solid var(--glass-border);
-    box-shadow: var(--glass-specular), 0 -4px 24px rgba(0, 0, 0, 0.1);
+    flex: 1;
   }
 
-  .map-container {
-    height: 55%;
+  /* Hide desktop sidebar on mobile — bottom sheet replaces it */
+  .app.is-mobile > .sidebar,
+  .app.is-mobile > .world-sidebar {
+    display: none;
   }
 
+  /* Sidebar toggle hidden on mobile */
+  .sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Floating stats — top center, compact */
+  .floating-stats {
+    bottom: auto;
+    top: 12px;
+    min-width: 160px;
+    padding: 8px 16px;
+    border-radius: 14px;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 100px);
+  }
+
+  .floating-stats:hover {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .floating-stats .stats-numbers {
+    font-size: 1.4rem;
+  }
+
+  .floating-stats .stats-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.5px;
+  }
+
+  .floating-stats .progress-bar {
+    margin-top: 6px;
+  }
+
+  .floating-stats .stats-pct {
+    font-size: 0.75rem;
+  }
+
+  /* Export button — below floating stats */
+  .export-btn {
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  /* Layer control */
+  .layer-control {
+    top: 48px;
+    right: 8px;
+  }
+
+  .layer-control-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Sidebar inside bottom sheet: compact */
   .sidebar-header {
-    padding: 10px 16px 8px;
+    padding: 8px 14px 6px;
   }
 
   .sidebar-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
+  .sidebar-subtitle {
+    font-size: 0.65rem;
+  }
+
+  .sidebar-logo {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Country tabs — horizontally scrollable, compact */
   .country-tabs {
     padding: 0;
+    gap: 0;
   }
 
   .country-tab {
-    padding: 6px 2px 5px;
+    padding: 6px 3px 5px;
+    min-width: 42px;
   }
 
   .tab-flag {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .tab-name {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
   }
 
+  /* Region list touch-friendly */
+  .canton-list {
+    padding: 0 12px 8px;
+  }
+
+  .canton-label {
+    padding: 10px 10px;
+    gap: 10px;
+    font-size: 0.88rem;
+    min-height: 44px;
+  }
+
+  .canton-label input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .canton-abbr {
+    font-size: 0.8rem;
+  }
+
+  /* Region actions */
+  .region-actions {
+    gap: 8px;
+  }
+
+  .date-tag {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+  }
+
+  .note-icon {
+    font-size: 0.9rem;
+    padding: 4px;
+  }
+
+  .wishlist-btn {
+    font-size: 1rem;
+    padding: 4px;
+  }
+
+  /* Stats card */
   .stats-card {
-    margin: 6px 16px;
+    margin: 6px 12px;
     padding: 10px;
   }
 
@@ -1887,35 +2104,583 @@ body {
     font-size: 1.5rem;
   }
 
-  .canton-list {
-    padding: 0 16px 8px;
-  }
-
+  /* Reset button */
   .reset-btn {
-    margin: 6px 16px 10px;
+    margin: 6px 12px 8px;
+    padding: 10px;
+    min-height: 44px;
+    font-size: 0.85rem;
   }
 
-  .floating-stats {
-    bottom: auto;
-    top: 10px;
-    min-width: 180px;
-    padding: 10px 18px;
-    border-radius: 14px;
+  /* Footer */
+  .sidebar-footer {
+    padding: 8px 12px 4px;
   }
 
-  .floating-stats .stats-numbers {
+  .sidebar-footer-secondary {
+    padding: 0 12px 12px;
+  }
+
+  .share-btn {
+    padding: 10px;
+    min-height: 44px;
+  }
+
+  /* Auth section */
+  .auth-section {
+    padding: 8px 14px;
+    min-height: 44px;
+  }
+
+  /* Back to world button */
+  .back-to-world-btn {
+    margin: 0 10px 6px;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+
+  /* Search */
+  .city-search {
+    padding: 8px 12px;
+  }
+
+  .search-input {
+    padding: 10px 8px;
+    font-size: 0.88rem;
+  }
+
+  .search-input-wrapper {
+    padding: 0 10px;
+    min-height: 44px;
+  }
+
+  /* World sidebar search */
+  .world-search-container {
+    padding: 0 10px;
+  }
+
+  .world-search-input {
+    padding: 10px 32px 10px 12px;
+    font-size: 0.88rem;
+    min-height: 44px;
+  }
+
+  /* World stats */
+  .world-stats-summary {
+    margin: 0 10px 6px;
+    padding: 10px 14px;
+  }
+
+  .world-stat-num {
+    font-size: 1.3rem;
+  }
+
+  /* Continent headers */
+  .world-continent-header {
+    padding: 10px 10px;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+
+  /* Tracker cards */
+  .world-tracker-card {
+    padding: 10px;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+
+  /* Overall progress */
+  .overall-toggle {
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+
+  /* Achievements */
+  .achievements-toggle {
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .achievement-badge {
+    padding: 10px 6px;
+  }
+
+  .badge-icon {
     font-size: 1.5rem;
   }
 
+  .badge-title {
+    font-size: 0.72rem;
+  }
+
+  /* Modals — near full-screen on mobile */
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 92vh;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: 16px 18px 10px;
+  }
+
+  .modal-header h2 {
+    font-size: 1rem;
+  }
+
+  .stats-section {
+    padding: 14px 18px;
+  }
+
+  .stats-bar-label {
+    min-width: 80px;
+    font-size: 0.78rem;
+  }
+
+  .stats-bar-value {
+    min-width: 60px;
+    font-size: 0.68rem;
+  }
+
+  .stats-summary {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .stats-summary-num {
+    font-size: 1.3rem;
+  }
+
+  /* Avatar editor */
+  .avatar-editor-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .avatar-parts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  }
+
+  .avatar-parts-grid-container {
+    max-height: 280px;
+  }
+
+  /* Toasts — bottom, full width */
   .toast-container {
-    bottom: 12px;
-    right: 12px;
-    left: 12px;
+    bottom: auto;
+    top: 60px;
+    right: 8px;
+    left: 8px;
   }
 
   .toast-achievement {
     min-width: unset;
+    max-width: 100%;
   }
+
+  /* Onboarding — responsive */
+  .onboarding-card {
+    padding: 28px 24px 22px;
+    max-width: 100%;
+    border-radius: 20px;
+  }
+
+  .onboarding-title {
+    font-size: 1.1rem;
+  }
+
+  .onboarding-desc {
+    font-size: 0.82rem;
+  }
+
+  /* Borough groups */
+  .borough-heading {
+    font-size: 0.75rem;
+    padding: 10px 0 6px;
+  }
+
+  /* World country items */
+  .world-country-item .canton-label {
+    min-height: 44px;
+    padding: 10px;
+  }
+
+  /* Note preview/editor */
+  .note-editor {
+    padding: 4px 10px 6px 28px;
+  }
+
+  .note-textarea {
+    font-size: 0.82rem;
+    padding: 8px 10px;
+    min-height: 44px;
+  }
+
+  /* Avatar preview button */
+  .avatar-preview-btn {
+    padding: 2px;
+  }
+
+  /* Overall detail */
+  .overall-detail {
+    padding: 0 14px 8px;
+  }
+
+  .overall-row {
+    padding: 4px 0;
+    font-size: 0.78rem;
+  }
+
+  /* Color picker */
+  .color-dot {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Map popup */
+  .world-popup-toggle,
+  .world-popup-explore {
+    padding: 8px 12px;
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ---- Small Mobile (≤ 380px) ---- */
+@media (max-width: 380px) {
+  .floating-stats {
+    padding: 6px 12px;
+    min-width: 140px;
+  }
+
+  .floating-stats .stats-numbers {
+    font-size: 1.2rem;
+  }
+
+  .sidebar-header {
+    padding: 6px 10px 5px;
+  }
+
+  .sidebar-title {
+    font-size: 0.9rem;
+  }
+
+  .country-tab {
+    min-width: 36px;
+    padding: 5px 2px 4px;
+  }
+
+  .tab-flag {
+    font-size: 0.9rem;
+  }
+
+  .tab-name {
+    font-size: 0.5rem;
+  }
+
+  .canton-label {
+    font-size: 0.82rem;
+    padding: 8px;
+  }
+
+  .sheet-mini-stats {
+    gap: 6px;
+  }
+
+  .sheet-mini-text {
+    font-size: 0.78rem;
+  }
+
+  .onboarding-card {
+    padding: 22px 16px 18px;
+  }
+
+  .onboarding-title {
+    font-size: 1rem;
+  }
+
+  .achievements-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+}
+
+/* ---- Tablet (769px – 1024px) ---- */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px 10px;
+  }
+
+  .sidebar-title {
+    font-size: 1.1rem;
+  }
+
+  .sidebar-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .country-tab {
+    padding: 7px 3px 5px;
+  }
+
+  .tab-flag {
+    font-size: 1.2rem;
+  }
+
+  .tab-name {
+    font-size: 0.55rem;
+  }
+
+  .canton-label {
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+
+  .canton-list {
+    padding: 0 14px 10px;
+  }
+
+  .stats-numbers {
+    font-size: 1.8rem;
+  }
+
+  .stats-card {
+    padding: 12px 16px;
+    margin: 8px 14px;
+  }
+
+  .modal-content {
+    max-width: 480px;
+  }
+
+  .floating-stats {
+    padding: 14px 24px;
+    min-width: 200px;
+  }
+
+  .world-stats-summary {
+    margin: 0 10px 6px;
+  }
+
+  .achievements-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .avatar-parts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+  }
+}
+
+/* ---- Large Desktop (> 1440px) ---- */
+@media (min-width: 1441px) {
+  .sidebar {
+    width: 380px;
+    min-width: 380px;
+  }
+
+  .canton-label {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+  }
+
+  .floating-stats {
+    padding: 18px 32px;
+    min-width: 240px;
+  }
+
+  .stats-numbers {
+    font-size: 2.4rem;
+  }
+
+  .modal-content {
+    max-width: 600px;
+  }
+}
+
+/* ---- Touch device optimizations ---- */
+@media (pointer: coarse) {
+  .canton-label {
+    min-height: 44px;
+  }
+
+  .canton-label input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .country-tab {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .theme-toggle {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .header-icon-btn {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 8px;
+  }
+
+  .export-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .layer-control-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-input-wrapper {
+    min-height: 44px;
+  }
+
+  .reset-btn,
+  .share-btn,
+  .back-to-world-btn {
+    min-height: 44px;
+  }
+
+  .wishlist-btn {
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .note-icon {
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .date-tag {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+  }
+
+  .world-continent-header {
+    min-height: 44px;
+  }
+
+  .world-tracker-card {
+    min-height: 44px;
+  }
+
+  .overall-toggle {
+    min-height: 44px;
+  }
+
+  .achievements-toggle {
+    min-height: 44px;
+  }
+
+  .modal-close {
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .onboarding-next,
+  .onboarding-skip {
+    min-height: 44px;
+    padding: 10px 24px;
+  }
+
+  .world-popup-toggle,
+  .world-popup-explore {
+    min-height: 40px;
+  }
+}
+
+/* ---- Landscape mobile ---- */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-bottom-sheet {
+    left: 40%;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .floating-stats {
+    left: 20%;
+    transform: translateX(-50%);
+  }
+
+  .floating-stats:hover {
+    transform: translateX(-50%);
+  }
+
+  .modal-overlay {
+    align-items: center;
+    padding: 12px;
+  }
+
+  .modal-content {
+    max-height: 90vh;
+    border-radius: 16px;
+    max-width: 480px;
+  }
+
+  .onboarding-card {
+    max-width: 420px;
+  }
+}
+
+/* ---- Safe area insets (notched phones) ---- */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-sheet {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (max-width: 768px) {
+    .floating-stats {
+      top: calc(12px + env(safe-area-inset-top));
+    }
+
+    .export-btn {
+      top: calc(8px + env(safe-area-inset-top));
+    }
+
+    .share-banner {
+      padding-top: calc(8px + env(safe-area-inset-top));
+    }
+  }
+}
+
+/* ---- Dark mode bottom sheet ---- */
+[data-theme="dark"] .mobile-bottom-sheet {
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4),
+              var(--glass-specular);
+}
+
+[data-theme="dark"] .sheet-handle {
+  background: var(--text-muted);
 }
 
 /* ======== Achievement Toasts ======== */

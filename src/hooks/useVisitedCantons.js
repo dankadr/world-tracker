@@ -72,18 +72,27 @@ async function fetchVisited(countryId, token) {
   });
   if (!res.ok) return null;
   const data = await res.json();
-  return new Set(data.regions || []);
+  return {
+    regions: new Set(data.regions || []),
+    dates: data.dates || {},
+    notes: data.notes || {},
+    wishlist: new Set(data.wishlist || []),
+  };
 }
 
-async function saveVisitedRemote(countryId, set, token) {
+async function saveVisitedRemote(countryId, set, token, dates, notes, wishlist) {
   try {
+    const body = { regions: [...set] };
+    if (dates !== undefined) body.dates = dates;
+    if (notes !== undefined) body.notes = notes;
+    if (wishlist !== undefined) body.wishlist = [...wishlist];
     await fetch(`/api/visited/${countryId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ regions: [...set] }),
+      body: JSON.stringify(body),
     });
   } catch { /* silently fail */ }
 }
@@ -99,6 +108,16 @@ export default function useVisitedRegions(countryId) {
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+
+  // Refs for stable access inside callbacks / state updaters
+  const visitedRef = useRef(visited);
+  const datesRef = useRef(dates);
+  const notesRef = useRef(notes);
+  const wishlistRef = useRef(wishlist);
+  visitedRef.current = visited;
+  datesRef.current = dates;
+  notesRef.current = notes;
+  wishlistRef.current = wishlist;
 
   // When country or user changes, reload from the correct localStorage keys
   if (countryId !== currentCountry || userId !== currentUserId) {
@@ -125,13 +144,26 @@ export default function useVisitedRegions(countryId) {
     fetchVisited(countryId, token).then((remote) => {
       if (cancelled || !remote) return;
       const local = loadLocal(countryId, userId);
-      if (!prevLoggedIn.current && local.size > 0 && remote.size === 0) {
+      if (!prevLoggedIn.current && local.size > 0 && remote.regions.size === 0) {
+        // First login: push local data up to the server
+        const localDates = loadDates(countryId, userId);
+        const localNotes = loadNotes(countryId, userId);
+        const localWishlist = loadWishlist(countryId, userId);
         setVisited(local);
-        saveVisitedRemote(countryId, local, token);
-        saveLocal(countryId, local, userId);
+        setDatesState(localDates);
+        setNotesState(localNotes);
+        setWishlist(localWishlist);
+        saveVisitedRemote(countryId, local, token, localDates, localNotes, localWishlist);
       } else {
-        setVisited(remote);
-        saveLocal(countryId, remote, userId);
+        // Server is source of truth
+        setVisited(remote.regions);
+        setDatesState(remote.dates);
+        setNotesState(remote.notes);
+        setWishlist(remote.wishlist);
+        saveLocal(countryId, remote.regions, userId);
+        saveDates(countryId, remote.dates, userId);
+        saveNotes(countryId, remote.notes, userId);
+        saveWishlist(countryId, remote.wishlist, userId);
       }
       prevLoggedIn.current = true;
     });
@@ -154,26 +186,24 @@ export default function useVisitedRegions(countryId) {
     (regionId) => {
       setVisited((prev) => {
         const next = new Set(prev);
+        let newDates = datesRef.current;
+        let newNotes = notesRef.current;
         if (next.has(regionId)) {
           next.delete(regionId);
-          setDatesState((d) => {
-            const nd = { ...d };
-            delete nd[regionId];
-            saveDates(countryId, nd, userId);
-            return nd;
-          });
-          setNotesState((n) => {
-            const nn = { ...n };
-            delete nn[regionId];
-            saveNotes(countryId, nn, userId);
-            return nn;
-          });
+          newDates = { ...newDates };
+          delete newDates[regionId];
+          setDatesState(newDates);
+          saveDates(countryId, newDates, userId);
+          newNotes = { ...newNotes };
+          delete newNotes[regionId];
+          setNotesState(newNotes);
+          saveNotes(countryId, newNotes, userId);
         } else {
           next.add(regionId);
         }
         saveLocal(countryId, next, userId);
         if (isLoggedIn && token) {
-          saveVisitedRemote(countryId, next, token);
+          saveVisitedRemote(countryId, next, token, newDates, newNotes, wishlistRef.current);
         }
         return next;
       });
@@ -191,10 +221,13 @@ export default function useVisitedRegions(countryId) {
           delete next[regionId];
         }
         saveDates(countryId, next, userId);
+        if (isLoggedIn && token) {
+          saveVisitedRemote(countryId, visitedRef.current, token, next, notesRef.current, wishlistRef.current);
+        }
         return next;
       });
     },
-    [countryId, userId]
+    [countryId, userId, isLoggedIn, token]
   );
 
   const setNote = useCallback(
@@ -207,23 +240,29 @@ export default function useVisitedRegions(countryId) {
           delete next[regionId];
         }
         saveNotes(countryId, next, userId);
+        if (isLoggedIn && token) {
+          saveVisitedRemote(countryId, visitedRef.current, token, datesRef.current, next, wishlistRef.current);
+        }
         return next;
       });
     },
-    [countryId, userId]
+    [countryId, userId, isLoggedIn, token]
   );
 
   const reset = useCallback(() => {
     const empty = new Set();
+    const emptyWishlist = new Set();
     saveLocal(countryId, empty, userId);
     saveDates(countryId, {}, userId);
     saveNotes(countryId, {}, userId);
+    saveWishlist(countryId, emptyWishlist, userId);
     if (isLoggedIn && token) {
-      saveVisitedRemote(countryId, empty, token);
+      saveVisitedRemote(countryId, empty, token, {}, {}, emptyWishlist);
     }
     setVisited(empty);
     setDatesState({});
     setNotesState({});
+    setWishlist(emptyWishlist);
   }, [countryId, isLoggedIn, token, userId]);
 
   const toggleWishlist = useCallback(
@@ -236,25 +275,31 @@ export default function useVisitedRegions(countryId) {
           next.add(regionId);
         }
         saveWishlist(countryId, next, userId);
+        if (isLoggedIn && token) {
+          saveVisitedRemote(countryId, visitedRef.current, token, datesRef.current, notesRef.current, next);
+        }
         return next;
       });
     },
-    [countryId, userId]
+    [countryId, userId, isLoggedIn, token]
   );
 
   const resetAll = useCallback(() => {
     const empty = new Set();
+    const emptyWishlist = new Set();
     for (const c of countryList) {
       saveLocal(c.id, empty, userId);
       saveDates(c.id, {}, userId);
       saveNotes(c.id, {}, userId);
+      saveWishlist(c.id, emptyWishlist, userId);
       if (isLoggedIn && token) {
-        saveVisitedRemote(c.id, empty, token);
+        saveVisitedRemote(c.id, empty, token, {}, {}, emptyWishlist);
       }
     }
     setVisited(empty);
     setDatesState({});
     setNotesState({});
+    setWishlist(emptyWishlist);
   }, [isLoggedIn, token, userId]);
 
   return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist };

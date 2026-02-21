@@ -30,6 +30,7 @@ export default function Sidebar({
   onToggleWishlist,
   searchRef,
   onBackToWorld,
+  isMobile,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);

@@ -26,10 +26,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
 try:
     from backend.database import get_db, init_db, engine
-    from backend.models import User, VisitedRegions
+    from backend.models import User, VisitedRegions, VisitedWorld
 except ImportError:
     from database import get_db, init_db, engine
-    from models import User, VisitedRegions
+    from models import User, VisitedRegions, VisitedWorld
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -112,11 +112,25 @@ class GoogleLoginResponse(BaseModel):
 
 class VisitedRequest(BaseModel):
     regions: list[str]
+    dates: dict[str, str] | None = None
+    notes: dict[str, str] | None = None
+    wishlist: list[str] | None = None
 
 
 class VisitedResponse(BaseModel):
     country_id: str
     regions: list[str]
+    dates: dict[str, str]
+    notes: dict[str, str]
+    wishlist: list[str]
+
+
+class WorldVisitedRequest(BaseModel):
+    countries: list[str]
+
+
+class WorldVisitedResponse(BaseModel):
+    countries: list[str]
 
 
 # --------------- Auth helpers ---------------
@@ -214,7 +228,10 @@ async def get_visited(
     )
     record = result.scalar_one_or_none()
     regions = record.regions if record else []
-    return VisitedResponse(country_id=country_id, regions=regions)
+    dates = record.dates if record and record.dates else {}
+    notes = record.notes if record and record.notes else {}
+    wishlist = record.wishlist if record and record.wishlist else []
+    return VisitedResponse(country_id=country_id, regions=regions, dates=dates, notes=notes, wishlist=wishlist)
 
 
 @app.put("/api/visited/{country_id}", response_model=VisitedResponse)
@@ -237,13 +254,68 @@ async def put_visited(
 
     if record:
         record.regions = body.regions
+        if body.dates is not None:
+            record.dates = body.dates
+        if body.notes is not None:
+            record.notes = body.notes
+        if body.wishlist is not None:
+            record.wishlist = body.wishlist
     else:
-        record = VisitedRegions(user_id=user.id, country_id=country_id, regions=body.regions)
+        record = VisitedRegions(
+            user_id=user.id,
+            country_id=country_id,
+            regions=body.regions,
+            dates=body.dates or {},
+            notes=body.notes or {},
+            wishlist=body.wishlist or [],
+        )
         db.add(record)
 
     await db.commit()
     await db.refresh(record)
-    return VisitedResponse(country_id=country_id, regions=record.regions)
+    return VisitedResponse(
+        country_id=country_id,
+        regions=record.regions,
+        dates=record.dates or {},
+        notes=record.notes or {},
+        wishlist=record.wishlist or [],
+    )
+
+
+# --------------- World visited endpoints ---------------
+@app.get("/api/visited-world", response_model=WorldVisitedResponse)
+async def get_visited_world(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+    )
+    record = result.scalar_one_or_none()
+    countries = record.countries if record else []
+    return WorldVisitedResponse(countries=countries)
+
+
+@app.put("/api/visited-world", response_model=WorldVisitedResponse)
+async def put_visited_world(
+    body: WorldVisitedRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+    )
+    record = result.scalar_one_or_none()
+
+    if record:
+        record.countries = body.countries
+    else:
+        record = VisitedWorld(user_id=user.id, countries=body.countries)
+        db.add(record)
+
+    await db.commit()
+    await db.refresh(record)
+    return WorldVisitedResponse(countries=record.countries)
 
 
 # --------------- Health check ---------------

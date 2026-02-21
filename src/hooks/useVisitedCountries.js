@@ -20,8 +20,33 @@ function saveVisitedWorld(set, userId) {
   localStorage.setItem(storagePrefix(userId) + 'visited-world', JSON.stringify([...set]));
 }
 
+// --------------- API helpers ---------------
+async function fetchWorldRemote(token) {
+  try {
+    const res = await fetch('/api/visited-world', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return new Set(data.countries || []);
+  } catch { return null; }
+}
+
+async function saveWorldRemote(set, token) {
+  try {
+    await fetch('/api/visited-world', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ countries: [...set] }),
+    });
+  } catch { /* silently fail */ }
+}
+
 export default function useVisitedCountries() {
-  const { user, isLoggedIn } = useAuth();
+  const { token, isLoggedIn, user } = useAuth();
   const userId = user?.id || null;
   const [visited, setVisited] = useState(() => loadVisitedWorld(userId));
   const [currentUserId, setCurrentUserId] = useState(userId);
@@ -36,6 +61,30 @@ export default function useVisitedCountries() {
       setVisited(new Set());
     }
   }
+
+  // Sync from server when logged in
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+    let cancelled = false;
+
+    fetchWorldRemote(token).then((remote) => {
+      if (cancelled || !remote) return;
+      const local = loadVisitedWorld(userId);
+      // Merge: if user had local data before logging in, push it up
+      if (!prevLoggedIn.current && local.size > 0 && remote.size === 0) {
+        setVisited(local);
+        saveVisitedWorld(local, userId);
+        saveWorldRemote(local, token);
+      } else {
+        // Server is source of truth
+        setVisited(remote);
+        saveVisitedWorld(remote, userId);
+      }
+      prevLoggedIn.current = true;
+    });
+
+    return () => { cancelled = true; };
+  }, [isLoggedIn, token, userId]);
 
   // On logout, reset to prevent data leaks
   useEffect(() => {
@@ -58,10 +107,13 @@ export default function useVisitedCountries() {
           next.add(countryCode);
         }
         saveVisitedWorld(next, userId);
+        if (isLoggedIn && token) {
+          saveWorldRemote(next, token);
+        }
         return next;
       });
     },
-    [userId]
+    [userId, isLoggedIn, token]
   );
 
   const isVisited = useCallback(
