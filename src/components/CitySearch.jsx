@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { findRegion } from '../utils/geo';
 
-// Map country IDs to Nominatim country codes
-const COUNTRY_CODES = { ch: 'Switzerland', us: 'United States', no: 'Norway', ca: 'Canada' };
+// Map country IDs to ISO 3166-1 alpha-2 codes for Nominatim countrycodes param
+const ISO_CODES = { ch: 'ch', us: 'us', usparks: 'us', nyc: 'us', no: 'no', ca: 'ca' };
 
 export default function CitySearch({ country, visited, onToggle, searchRef }) {
   const [query, setQuery] = useState('');
@@ -10,6 +10,7 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
   const timerRef = useRef(null);
   const wrapperRef = useRef(null);
 
@@ -41,25 +42,56 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
 
   const search = useCallback(
     async (q) => {
-      if (q.trim().length < 2) {
+      const trimmed = q.trim();
+      if (trimmed.length < 2) {
         setResults([]);
         setShowDropdown(false);
         return;
       }
       setLoading(true);
       try {
-        const countryName = COUNTRY_CODES[country.id] || '';
+        const isoCode = ISO_CODES[country.id];
+
+        // Build params: use countrycodes to restrict (not appended to q)
         const params = new URLSearchParams({
-          q: `${q}, ${countryName}`,
+          q: trimmed,
           format: 'json',
-          limit: '6',
+          limit: '8',
           addressdetails: '1',
+          dedupe: '1',
+          'accept-language': 'en',
         });
+
+        // Restrict to country when we have an ISO code (skip for world capitals)
+        if (isoCode) {
+          params.set('countrycodes', isoCode);
+        }
+
         const res = await fetch(`/nominatim/search?${params}`);
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
-        setResults(data);
-        setShowDropdown(data.length > 0);
+
+        // Sort results: prefer cities/towns/villages over highways/counties/etc.
+        const placeTypes = ['city', 'town', 'village', 'hamlet', 'suburb', 'neighbourhood'];
+        const sorted = data.sort((a, b) => {
+          const aType = a.type || '';
+          const bType = b.type || '';
+          const aIsPlace = placeTypes.includes(aType);
+          const bIsPlace = placeTypes.includes(bType);
+          if (aIsPlace && !bIsPlace) return -1;
+          if (!aIsPlace && bIsPlace) return 1;
+          // Prefer results whose name starts with the query
+          const name = trimmed.toLowerCase();
+          const aStarts = (a.display_name || '').toLowerCase().startsWith(name);
+          const bStarts = (b.display_name || '').toLowerCase().startsWith(name);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return (parseFloat(a.importance) || 0) > (parseFloat(b.importance) || 0) ? -1 : 1;
+        });
+
+        setResults(sorted);
+        setSelectedIdx(-1);
+        setShowDropdown(sorted.length > 0);
       } catch {
         setResults([]);
         setShowDropdown(false);
@@ -75,7 +107,24 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
     setQuery(val);
     setMessage(null);
     clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => search(val), 500);
+    timerRef.current = setTimeout(() => search(val), 300);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!showDropdown || results.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIdx((i) => (i < results.length - 1 ? i + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIdx((i) => (i > 0 ? i - 1 : results.length - 1));
+    } else if (e.key === 'Enter' && selectedIdx >= 0) {
+      e.preventDefault();
+      handleSelect(results[selectedIdx]);
+    } else if (e.key === 'Escape') {
+      setShowDropdown(false);
+      setSelectedIdx(-1);
+    }
   };
 
   const handleSelect = (result) => {
@@ -122,6 +171,7 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
           placeholder={`Search a city in ${country.name}...`}
           value={query}
           onChange={handleInput}
+          onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
           ref={searchRef}
         />
@@ -130,16 +180,27 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
 
       {showDropdown && results.length > 0 && (
         <ul className="search-results">
-          {results.map((r) => (
-            <li key={r.place_id}>
-              <button className="search-result-btn" onClick={() => handleSelect(r)}>
-                <span className="result-name">{r.display_name.split(',')[0]}</span>
-                <span className="result-detail">
-                  {r.display_name.split(',').slice(1, 3).join(',').trim()}
-                </span>
-              </button>
-            </li>
-          ))}
+          {results.map((r, i) => {
+            const parts = r.display_name.split(',');
+            const name = parts[0].trim();
+            const detail = parts.slice(1, 3).join(',').trim();
+            const type = r.type ? r.type.replace(/_/g, ' ') : '';
+            return (
+              <li key={r.place_id}>
+                <button
+                  className={`search-result-btn${i === selectedIdx ? ' selected' : ''}`}
+                  onClick={() => handleSelect(r)}
+                  onMouseEnter={() => setSelectedIdx(i)}
+                >
+                  <span className="result-name">{name}</span>
+                  <span className="result-detail">
+                    {detail}
+                    {type && <span className="result-type">{type}</span>}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
 

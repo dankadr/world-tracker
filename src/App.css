@@ -298,6 +298,10 @@ body {
   background: var(--hover-bg);
 }
 
+.search-result-btn.selected {
+  background: var(--hover-bg);
+}
+
 .result-name {
   font-size: 0.85rem;
   font-weight: 600;
@@ -308,6 +312,21 @@ body {
   font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.result-type {
+  display: inline-block;
+  font-size: 0.62rem;
+  text-transform: capitalize;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  white-space: nowrap;
 }
 
 .search-message {
