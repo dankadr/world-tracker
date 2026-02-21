@@ -2,6 +2,8 @@ import achievementsConfig from '../config/achievements.json';
 import { countryList } from './countries';
 import continentMap from '../config/continents.json';
 import worldData from './world.json';
+import countryMeta from '../config/countryMeta.json';
+import capitalsData from './capitals.json';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -116,6 +118,80 @@ function evaluateRule(rule, userId) {
       const continentCountries = Object.entries(continentMap)
         .filter(([, cont]) => cont === rule.continent);
       return continentCountries.length > 0 && continentCountries.every(([code]) => wVisited.has(code));
+    }
+
+    case 'specificCapitalVisited': {
+      const visitedCaps = getVisitedIds('capitals', userId);
+      return visitedCaps.includes(rule.capitalId);
+    }
+
+    case 'allCapitalsVisited': {
+      const visitedCaps = new Set(getVisitedIds('capitals', userId));
+      return rule.capitalIds.every((id) => visitedCaps.has(id));
+    }
+
+    case 'worldTagVisited': {
+      const wVisited = getWorldVisited(userId);
+      return wVisited.filter((code) => {
+        const meta = countryMeta[code];
+        return meta && meta.tags && meta.tags.includes(rule.tag);
+      }).length >= rule.min;
+    }
+
+    case 'worldAreaVisited': {
+      const wVisited = getWorldVisited(userId);
+      const totalArea = wVisited.reduce((sum, code) => {
+        const meta = countryMeta[code];
+        return sum + (meta ? meta.area : 0);
+      }, 0);
+      return totalArea >= rule.min;
+    }
+
+    case 'worldPopulationVisited': {
+      const wVisited = getWorldVisited(userId);
+      const totalPop = wVisited.reduce((sum, code) => {
+        const meta = countryMeta[code];
+        return sum + (meta ? meta.population : 0);
+      }, 0);
+      return totalPop >= rule.min;
+    }
+
+    case 'hemisphereVisited': {
+      const wVisited = getWorldVisited(userId);
+      // Use capitals data to determine hemisphere of each visited country
+      const visitedCoords = [];
+      for (const code of wVisited) {
+        const cap = capitalsData.features.find(
+          (f) => f.properties.country === code
+        );
+        if (cap) {
+          visitedCoords.push(cap.geometry.coordinates);
+        }
+      }
+      if (visitedCoords.length === 0) return false;
+      const hasNorth = visitedCoords.some(([, lat]) => lat > 0);
+      const hasSouth = visitedCoords.some(([, lat]) => lat <= 0);
+      const hasEast = visitedCoords.some(([lng]) => lng >= 0);
+      const hasWest = visitedCoords.some(([lng]) => lng < 0);
+      if (rule.mode === 'ns') return hasNorth && hasSouth;
+      if (rule.mode === 'all') return hasNorth && hasSouth && hasEast && hasWest;
+      return false;
+    }
+
+    case 'achievementsUnlocked': {
+      // Count how many achievements (excluding this category) are unlocked
+      const otherAchievements = achievementsConfig.filter(
+        (a) => a.rule.type !== 'achievementsUnlocked' && a.rule.type !== 'categoryComplete'
+      );
+      const unlockedCount = otherAchievements.filter((a) => evaluateRule(a.rule, userId)).length;
+      return unlockedCount >= rule.min;
+    }
+
+    case 'categoryComplete': {
+      const catAchievements = achievementsConfig.filter(
+        (a) => a.category === rule.category && a.rule.type !== 'categoryComplete'
+      );
+      return catAchievements.length > 0 && catAchievements.every((a) => evaluateRule(a.rule, userId));
     }
 
     default:

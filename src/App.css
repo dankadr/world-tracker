@@ -3100,6 +3100,75 @@ body {
   justify-content: center;
 }
 
+/* Coming Soon placeholder for future avatar categories */
+.avatar-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  text-align: center;
+  gap: 8px;
+}
+
+.avatar-coming-soon-icon {
+  font-size: 2.5rem;
+}
+
+.avatar-coming-soon-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin: 0;
+}
+
+.avatar-coming-soon-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  margin: 0 0 8px 0;
+}
+
+.avatar-coming-soon-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.avatar-coming-soon-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+  border: 1px dashed var(--glass-border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+}
+
+.avatar-coming-soon-req {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted, #718096);
+}
+
+[data-theme="dark"] .avatar-coming-soon-title {
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .avatar-coming-soon-item {
+  background: rgba(22, 27, 34, 0.6);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .avatar-coming-soon-req {
+  color: #7a8899;
+}
+
 .avatar-reset-btn {
   padding: 6px 16px;
   background: transparent;

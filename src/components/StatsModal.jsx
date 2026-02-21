@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
+import countryMeta from '../config/countryMeta.json';
+import capitalsData from '../data/capitals.json';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -176,6 +178,129 @@ function computeWorldStats(userId) {
   };
 }
 
+const WORLD_LAND_AREA = 148940000; // km²
+const WORLD_POPULATION = 8000000000;
+
+function computeAreaPopStats(userId) {
+  const visited = getWorldVisitedIds(userId);
+  if (visited.length === 0) return null;
+
+  let totalArea = 0;
+  let totalPop = 0;
+  let largest = null;
+  let smallest = null;
+  let mostPopulous = null;
+  let leastPopulous = null;
+
+  for (const code of visited) {
+    const meta = countryMeta[code];
+    if (!meta) continue;
+    totalArea += meta.area;
+    totalPop += meta.population;
+
+    const name = worldData.features.find((f) => f.properties.id === code)?.properties.name || code;
+
+    if (!largest || meta.area > largest.area) largest = { name, area: meta.area };
+    if (!smallest || meta.area < smallest.area) smallest = { name, area: meta.area };
+    if (!mostPopulous || meta.population > mostPopulous.pop) mostPopulous = { name, pop: meta.population };
+    if (!leastPopulous || meta.population < leastPopulous.pop) leastPopulous = { name, pop: meta.population };
+  }
+
+  // Tag counts
+  const tagCounts = {};
+  for (const code of visited) {
+    const meta = countryMeta[code];
+    if (!meta || !meta.tags) continue;
+    for (const tag of meta.tags) {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    }
+  }
+
+  // Tag totals (how many countries in the world have each tag)
+  const tagTotals = {};
+  for (const [, meta] of Object.entries(countryMeta)) {
+    if (!meta.tags) continue;
+    for (const tag of meta.tags) {
+      tagTotals[tag] = (tagTotals[tag] || 0) + 1;
+    }
+  }
+
+  return {
+    totalArea,
+    areaPct: Math.round((totalArea / WORLD_LAND_AREA) * 1000) / 10,
+    totalPop,
+    popPct: Math.round((totalPop / WORLD_POPULATION) * 1000) / 10,
+    largest,
+    smallest,
+    mostPopulous,
+    leastPopulous,
+    tagCounts,
+    tagTotals,
+  };
+}
+
+function computeCapitalSuperlatives(userId) {
+  const visitedCapIds = new Set(getVisitedIds('capitals', userId));
+  if (visitedCapIds.size === 0) return null;
+
+  const visitedCaps = capitalsData.features.filter((f) => visitedCapIds.has(f.properties.id));
+  if (visitedCaps.length === 0) return null;
+
+  let northernmost = null, southernmost = null, easternmost = null, westernmost = null;
+
+  for (const f of visitedCaps) {
+    const [lng, lat] = f.geometry.coordinates;
+    const name = f.properties.name;
+    if (!northernmost || lat > northernmost.lat) northernmost = { name, lat, lng };
+    if (!southernmost || lat < southernmost.lat) southernmost = { name, lat, lng };
+    if (!easternmost || lng > easternmost.lng) easternmost = { name, lat, lng };
+    if (!westernmost || lng < westernmost.lng) westernmost = { name, lat, lng };
+  }
+
+  // Average lat/lng
+  let sumLat = 0, sumLng = 0;
+  for (const f of visitedCaps) {
+    sumLat += f.geometry.coordinates[1];
+    sumLng += f.geometry.coordinates[0];
+  }
+
+  // Farthest pair (only if > 1 capital)
+  let farthestDist = 0;
+  let farthestPair = null;
+  if (visitedCaps.length > 1) {
+    const R = 6371;
+    const toRad = (d) => (d * Math.PI) / 180;
+    for (let i = 0; i < visitedCaps.length; i++) {
+      for (let j = i + 1; j < visitedCaps.length; j++) {
+        const [lng1, lat1] = visitedCaps[i].geometry.coordinates;
+        const [lng2, lat2] = visitedCaps[j].geometry.coordinates;
+        const dLat = toRad(lat2 - lat1);
+        const dLng = toRad(lng2 - lng1);
+        const a = Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        if (dist > farthestDist) {
+          farthestDist = dist;
+          farthestPair = [visitedCaps[i].properties.name, visitedCaps[j].properties.name];
+        }
+      }
+    }
+  }
+
+  return {
+    count: visitedCaps.length,
+    total: capitalsData.features.length,
+    northernmost,
+    southernmost,
+    easternmost,
+    westernmost,
+    avgLat: Math.round((sumLat / visitedCaps.length) * 10) / 10,
+    avgLng: Math.round((sumLng / visitedCaps.length) * 10) / 10,
+    farthestDist: Math.round(farthestDist),
+    farthestPair,
+  };
+}
+
 export default function StatsModal({ onClose }) {
   const { user } = useAuth();
   const userId = user?.id || null;
@@ -195,6 +320,8 @@ export default function StatsModal({ onClose }) {
   const geo = computeGeoInsights(coords);
 
   const worldStats = computeWorldStats(userId);
+  const areaPopStats = computeAreaPopStats(userId);
+  const capStats = computeCapitalSuperlatives(userId);
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
@@ -337,6 +464,141 @@ export default function StatsModal({ onClose }) {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {areaPopStats && (
+          <div className="stats-section">
+            <h3>Area & Population</h3>
+            <div className="stats-summary">
+              <div className="stats-summary-item">
+                <span className="stats-summary-num">{areaPopStats.totalArea.toLocaleString()}</span>
+                <span className="stats-summary-label">km² visited ({areaPopStats.areaPct}% of land)</span>
+              </div>
+              <div className="stats-summary-item">
+                <span className="stats-summary-num">{(areaPopStats.totalPop / 1e6).toFixed(0)}M</span>
+                <span className="stats-summary-label">people ({areaPopStats.popPct}% of world)</span>
+              </div>
+            </div>
+
+            <div className="geo-grid" style={{ marginTop: '12px' }}>
+              {areaPopStats.largest && (
+                <div className="geo-card">
+                  <span className="geo-card-icon">📐</span>
+                  <span className="geo-card-label">Largest visited</span>
+                  <span className="geo-card-value">{areaPopStats.largest.name}</span>
+                  <span className="geo-card-sub">{areaPopStats.largest.area.toLocaleString()} km²</span>
+                </div>
+              )}
+              {areaPopStats.smallest && (
+                <div className="geo-card">
+                  <span className="geo-card-icon">🔬</span>
+                  <span className="geo-card-label">Smallest visited</span>
+                  <span className="geo-card-value">{areaPopStats.smallest.name}</span>
+                  <span className="geo-card-sub">{areaPopStats.smallest.area.toLocaleString()} km²</span>
+                </div>
+              )}
+              {areaPopStats.mostPopulous && (
+                <div className="geo-card">
+                  <span className="geo-card-icon">👥</span>
+                  <span className="geo-card-label">Most populous</span>
+                  <span className="geo-card-value">{areaPopStats.mostPopulous.name}</span>
+                  <span className="geo-card-sub">{(areaPopStats.mostPopulous.pop / 1e6).toFixed(1)}M people</span>
+                </div>
+              )}
+              {areaPopStats.leastPopulous && (
+                <div className="geo-card">
+                  <span className="geo-card-icon">👤</span>
+                  <span className="geo-card-label">Least populous</span>
+                  <span className="geo-card-value">{areaPopStats.leastPopulous.name}</span>
+                  <span className="geo-card-sub">{areaPopStats.leastPopulous.pop.toLocaleString()} people</span>
+                </div>
+              )}
+            </div>
+
+            {Object.keys(areaPopStats.tagCounts).length > 0 && (
+              <div className="geo-facts" style={{ marginTop: '12px' }}>
+                {areaPopStats.tagCounts.island && (
+                  <p className="geo-fact">🏝️ {areaPopStats.tagCounts.island}/{areaPopStats.tagTotals.island} island nations visited</p>
+                )}
+                {areaPopStats.tagCounts.landlocked && (
+                  <p className="geo-fact">🏜️ {areaPopStats.tagCounts.landlocked}/{areaPopStats.tagTotals.landlocked} landlocked countries visited</p>
+                )}
+                {areaPopStats.tagCounts.g7 && (
+                  <p className="geo-fact">💼 {areaPopStats.tagCounts.g7}/7 G7 nations visited</p>
+                )}
+                {areaPopStats.tagCounts.g20 && (
+                  <p className="geo-fact">🏦 {areaPopStats.tagCounts.g20}/20 G20 nations visited</p>
+                )}
+                {areaPopStats.tagCounts.nordic && (
+                  <p className="geo-fact">❄️ {areaPopStats.tagCounts.nordic}/5 Nordic countries visited</p>
+                )}
+                {areaPopStats.tagCounts.microstate && (
+                  <p className="geo-fact">🔬 {areaPopStats.tagCounts.microstate} microstate{areaPopStats.tagCounts.microstate > 1 ? 's' : ''} visited</p>
+                )}
+                {areaPopStats.tagCounts.equator && (
+                  <p className="geo-fact">♨️ {areaPopStats.tagCounts.equator} equatorial countr{areaPopStats.tagCounts.equator > 1 ? 'ies' : 'y'} visited</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {capStats && (
+          <div className="stats-section">
+            <h3>Capital Superlatives</h3>
+            <p className="stats-highlight" style={{ marginBottom: '12px' }}>
+              {capStats.count} / {capStats.total} world capitals visited
+            </p>
+            <div className="geo-grid">
+              <div className="geo-card">
+                <span className="geo-card-icon">&#8593;</span>
+                <span className="geo-card-label">Northernmost capital</span>
+                <span className="geo-card-value">{capStats.northernmost.name}</span>
+                <span className="geo-card-sub">{Math.abs(capStats.northernmost.lat).toFixed(1)}&deg;{capStats.northernmost.lat >= 0 ? 'N' : 'S'}</span>
+              </div>
+              <div className="geo-card">
+                <span className="geo-card-icon">&#8595;</span>
+                <span className="geo-card-label">Southernmost capital</span>
+                <span className="geo-card-value">{capStats.southernmost.name}</span>
+                <span className="geo-card-sub">{Math.abs(capStats.southernmost.lat).toFixed(1)}&deg;{capStats.southernmost.lat >= 0 ? 'N' : 'S'}</span>
+              </div>
+              <div className="geo-card">
+                <span className="geo-card-icon">&#8592;</span>
+                <span className="geo-card-label">Westernmost capital</span>
+                <span className="geo-card-value">{capStats.westernmost.name}</span>
+                <span className="geo-card-sub">{Math.abs(capStats.westernmost.lng).toFixed(1)}&deg;{capStats.westernmost.lng >= 0 ? 'E' : 'W'}</span>
+              </div>
+              <div className="geo-card">
+                <span className="geo-card-icon">&#8594;</span>
+                <span className="geo-card-label">Easternmost capital</span>
+                <span className="geo-card-value">{capStats.easternmost.name}</span>
+                <span className="geo-card-sub">{Math.abs(capStats.easternmost.lng).toFixed(1)}&deg;{capStats.easternmost.lng >= 0 ? 'E' : 'W'}</span>
+              </div>
+            </div>
+
+            <div className="geo-numbers" style={{ marginTop: '12px' }}>
+              <div className="geo-number">
+                <span className="geo-num-val">{capStats.avgLat}&deg;</span>
+                <span className="geo-num-label">Avg latitude</span>
+              </div>
+              <div className="geo-number">
+                <span className="geo-num-val">{capStats.avgLng}&deg;</span>
+                <span className="geo-num-label">Avg longitude</span>
+              </div>
+              {capStats.farthestPair && (
+                <div className="geo-number">
+                  <span className="geo-num-val">{capStats.farthestDist.toLocaleString()} km</span>
+                  <span className="geo-num-label">Farthest apart</span>
+                </div>
+              )}
+            </div>
+
+            {capStats.farthestPair && (
+              <p className="stats-highlight" style={{ marginTop: '8px' }}>
+                Farthest pair: {capStats.farthestPair[0]} ↔ {capStats.farthestPair[1]}
+              </p>
+            )}
           </div>
         )}
 

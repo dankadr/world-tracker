@@ -987,6 +987,43 @@ const accessories = [
   },
 ];
 
+// ── Future avatar categories (placeholder infrastructure) ──
+// These define unlockable items tied to new achievements.
+// Pixel art (palette + rows) will be added later — for now rows: null signals "coming soon".
+
+const shoes = [
+  { id: 'shoe-none', name: 'None', requires: null, palette: null, rows: null },
+  { id: 'shoe-hiking', name: 'Hiking Boots', requires: 'fun-landlocked-5', palette: null, rows: null },
+  { id: 'shoe-flipflops', name: 'Flip Flops', requires: 'fun-island-5', palette: null, rows: null },
+  { id: 'shoe-sneakers', name: 'Sneakers', requires: 'collect-15', palette: null, rows: null },
+];
+
+const glasses = [
+  { id: 'glasses-none', name: 'None', requires: null, palette: null, rows: null },
+  { id: 'glasses-aviator', name: 'Aviators', requires: 'geo-poles', palette: null, rows: null },
+  { id: 'glasses-monocle', name: 'Monocle', requires: 'fun-g7', palette: null, rows: null },
+  { id: 'glasses-night', name: 'Night Vision', requires: 'geo-all-hemispheres', palette: null, rows: null },
+];
+
+const capes = [
+  { id: 'cape-none', name: 'None', requires: null, palette: null, rows: null },
+  { id: 'cape-explorer', name: 'Explorer Cape', requires: 'collect-30', palette: null, rows: null },
+  { id: 'cape-world', name: 'World Cape', requires: 'world-complete', palette: null, rows: null },
+];
+
+const badges = [
+  { id: 'badge-none', name: 'None', requires: null, palette: null, rows: null },
+  { id: 'badge-globe', name: 'Globe Pin', requires: 'collect-5', palette: null, rows: null },
+  { id: 'badge-compass', name: 'Compass Pin', requires: 'collect-all-geo', palette: null, rows: null },
+  { id: 'badge-star', name: 'Star Pin', requires: 'collect-all-fun', palette: null, rows: null },
+];
+
+const pets = [
+  { id: 'pet-none', name: 'None', requires: null, palette: null, rows: null },
+  { id: 'pet-penguin', name: 'Penguin', requires: 'geo-south-cap', palette: null, rows: null },
+  { id: 'pet-polar-bear', name: 'Polar Bear', requires: 'geo-north-cap', palette: null, rows: null },
+];
+
 export const avatarCategories = {
   background: { label: 'Background', parts: backgrounds },
   body: { label: 'Body', parts: bodies },
@@ -995,6 +1032,11 @@ export const avatarCategories = {
   shirt: { label: 'Shirt', parts: shirts },
   hat: { label: 'Hat', parts: hats },
   accessory: { label: 'Accessory', parts: accessories },
+  shoes: { label: 'Shoes', parts: shoes, comingSoon: true },
+  glasses: { label: 'Glasses', parts: glasses, comingSoon: true },
+  cape: { label: 'Cape', parts: capes, comingSoon: true },
+  badge: { label: 'Badge', parts: badges, comingSoon: true },
+  pet: { label: 'Pet', parts: pets, comingSoon: true },
 };
 
 export const hairColorOptions = hairColors;
@@ -1008,4 +1050,9 @@ export const defaultAvatar = {
   shirt: 1,
   hat: 0,
   accessory: 0,
+  shoes: 0,
+  glasses: 0,
+  cape: 0,
+  badge: 0,
+  pet: 0,
 };

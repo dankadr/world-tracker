@@ -5,7 +5,7 @@ import { avatarCategories, hairColorOptions } from '../config/avatarParts';
 import getAchievements from '../data/achievements';
 import AvatarCanvas from './AvatarCanvas';
 
-const categoryOrder = ['background', 'body', 'hair', 'eyes', 'shirt', 'hat', 'accessory'];
+const categoryOrder = ['background', 'body', 'hair', 'eyes', 'shirt', 'hat', 'accessory', 'shoes', 'glasses', 'cape', 'badge', 'pet'];
 
 export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
   const [activeTab, setActiveTab] = useState('body');
@@ -68,6 +68,22 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
             </div>
           )}
 
+          {category?.comingSoon ? (
+            <div className="avatar-coming-soon">
+              <span className="avatar-coming-soon-icon">🔮</span>
+              <h3 className="avatar-coming-soon-title">Coming Soon</h3>
+              <p className="avatar-coming-soon-desc">New {category.label.toLowerCase()} will be available in a future update!</p>
+              <div className="avatar-coming-soon-items">
+                {parts.filter(p => p.requires).map((part) => (
+                  <div key={part.id} className="avatar-coming-soon-item">
+                    <span className="lock-icon">&#128274;</span>
+                    <span>{part.name}</span>
+                    <span className="avatar-coming-soon-req">Requires: {getAchievementName(part.requires)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
           <div className="avatar-parts-grid">
             {parts.map((part, i) => {
               const unlocked = isUnlocked(part);
@@ -93,6 +109,7 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
               );
             })}
           </div>
+          )}
         </div>
 
         <div className="avatar-editor-footer">
