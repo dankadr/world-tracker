@@ -5,10 +5,28 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/auth/:path*", "destination": "/api" },
+    { "source": "/api/:path*", "destination": "/api" },
     { "source": "/nominatim/:path*", "destination": "https://nominatim.openstreetmap.org/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
   ],
   "functions": {
     "api/**/*.py": {
+      "maxDuration": 10,
       "excludeFiles": "node_modules/**"
     }
   }

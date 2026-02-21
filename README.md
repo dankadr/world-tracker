@@ -32,7 +32,35 @@ An interactive web app to track your travels across the world. Mark countries on
 - **Google Sign-In** — optional cross-device sync via Google OAuth
 - **Guest Mode** — uses browser localStorage, no account needed
 - **Responsive** — works on desktop and mobile
-- **Dockerized** — runs with Docker Compose (nginx + FastAPI + PostgreSQL)
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Two deployment modes                   │
+├──────────────────────┬──────────────────────────────────┤
+│   Docker Compose     │   Vercel (production)            │
+│                      │                                  │
+│  nginx (port 8088)   │  Vite static build → CDN         │
+│    ├─ static files   │  api/index.py → Serverless Fn    │
+│    └─ /api → FastAPI │    └─ re-exports backend/main.py │
+│         └─ asyncpg   │         └─ psycopg (NullPool)    │
+│            └─ PG 16  │            └─ Neon PostgreSQL     │
+└──────────────────────┴──────────────────────────────────┘
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite 6, Leaflet + react-leaflet |
+| Backend | Python FastAPI, SQLAlchemy (async), PostgreSQL |
+| Auth | Google Identity Services + JWT |
+| Database (local) | PostgreSQL 16 (Docker) with asyncpg |
+| Database (prod) | [Neon](https://neon.tech) serverless PostgreSQL with psycopg |
+| Hosting | [Vercel](https://vercel.com) (frontend CDN + Python serverless functions) |
+| Monitoring | Sentry (frontend), Vercel Analytics & Speed Insights |
+| Container | Docker Compose (nginx + FastAPI + PostgreSQL) |
 
 ## Quick Start (Docker)
 
@@ -48,11 +76,11 @@ docker compose up --build
 2. Create a project and enable the Google Identity API
 3. Create an OAuth 2.0 Client ID (Web application type)
 4. Add `http://localhost:8088` to **Authorized JavaScript origins**
-5. Create a `.env` file (see `.env.example`):
+5. Create a `.env` file:
 
 ```bash
 cp .env.example .env
-# Edit .env and paste your Google Client ID
+# Edit .env and paste your Google Client ID + a random JWT secret
 ```
 
 6. Start the stack:
@@ -63,12 +91,82 @@ docker compose up --build
 
 Open [http://localhost:8088](http://localhost:8088) in your browser.
 
-## Tech Stack
+## Deploy to Vercel
 
-- **Frontend:** React 18 + Vite 6, Leaflet + react-leaflet
-- **Backend:** Python FastAPI, SQLAlchemy (async), PostgreSQL
-- **Auth:** Google Identity Services + JWT
-- **Docker:** Multi-container (nginx + FastAPI + PostgreSQL)
+### 1. Set up Neon PostgreSQL
+
+1. Create a free project at [neon.tech](https://neon.tech)
+2. Copy the **pooled** connection string from **Connection Details**:
+   ```
+   postgresql://user:pass@ep-xyz-pooler.region.aws.neon.tech/neondb?sslmode=require
+   ```
+
+> **Tip:** You can also add Neon as a Vercel Storage integration — it will auto-populate `POSTGRES_URL` and `PG*` env vars.
+
+### 2. Configure Vercel environment variables
+
+In your Vercel project → **Settings** → **Environment Variables**, add:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | Neon pooled connection string (see above) |
+| `GOOGLE_CLIENT_ID` | Yes | Google OAuth 2.0 Client ID |
+| `JWT_SECRET` | Yes | Random secret for signing JWTs (`openssl rand -hex 32`) |
+| `VITE_SENTRY_DSN` | No | Sentry DSN for frontend error tracking |
+
+> **Note:** `VERCEL=1` is set automatically by Vercel — do not set it manually.
+
+### 3. Add your Vercel URL to Google OAuth
+
+In the [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** → your OAuth Client ID, add your Vercel production URL to **Authorized JavaScript origins**:
+```
+https://your-app.vercel.app
+```
+
+### 4. Deploy
+
+```bash
+# Install Vercel CLI (if needed)
+npm i -g vercel
+
+# Deploy
+vercel --prod
+```
+
+Or just push to your connected Git repo — Vercel deploys automatically.
+
+### 5. Verify
+
+- Visit `https://your-app.vercel.app/api/health` — should return `{"status":"ok","database":"connected"}`
+- Try logging in with Google
+- Check **Vercel → Logs** for structured log output from the serverless function
+
+## Environment Variables Reference
+
+| Variable | Used in | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | Backend | PostgreSQL connection string |
+| `POSTGRES_URL` | Backend (fallback) | Auto-set by Vercel Neon integration |
+| `PGHOST` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Backend (fallback) | Individual PG vars |
+| `GOOGLE_CLIENT_ID` | Backend + Vite | Google OAuth verification |
+| `VITE_GOOGLE_CLIENT_ID` | Vite build | Exposed to frontend (auto-mapped from `GOOGLE_CLIENT_ID` in `vite.config.js`) |
+| `JWT_SECRET` | Backend | JWT signing key |
+| `VERCEL` | Backend | Auto-set by Vercel to `"1"` — do not set manually |
+| `VITE_SENTRY_DSN` | Vite build | Sentry frontend error tracking |
+
+## Troubleshooting
+
+### `fe_sendauth: no password supplied`
+Your `DATABASE_URL` is missing the password or pointing to the wrong host. Double-check the Neon connection string in Vercel env vars.
+
+### `init_db skipped on serverless cold start`
+This warning is expected on the very first request after a cold start if the database is momentarily unreachable. Tables should already exist in Neon. If it persists, check your `DATABASE_URL`.
+
+### `Cannot assign requested address` (IPv6)
+Vercel's Lambda runtime may not support IPv6. Use Neon's **pooled** connection string (contains `-pooler` in the hostname) which resolves to IPv4.
+
+### Health check returns `"database": "unreachable"`
+Verify `DATABASE_URL` is set correctly in Vercel env vars and that your Neon project is active (free-tier projects suspend after 5 minutes of inactivity — the first request wakes them up).
 
 ## Data Attribution
 
@@ -78,3 +176,8 @@ Open [http://localhost:8088](http://localhost:8088) in your browser.
 - USA & Canada: publicly available GeoJSON boundary data
 - US National Parks: NPS boundary data
 - NYC Neighborhoods: NYC Planning / Pediacities
+
+## License
+
+MIT
+
