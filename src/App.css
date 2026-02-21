@@ -508,6 +508,44 @@ body {
   margin-top: 4px;
 }
 
+/* ======== World Sidebar Scroll Wrapper ======== */
+.world-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.world-sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.world-sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.world-sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.world-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .world-sidebar-content {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+[data-theme="dark"] .world-sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .world-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* ======== Region List ======== */
 .canton-list {
   flex: 1;

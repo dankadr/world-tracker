@@ -141,6 +141,7 @@ export default function WorldSidebar({
         </div>
       </div>
 
+      <div className="world-sidebar-content">
       <AuthButton />
 
       {/* World Stats Summary */}
@@ -283,6 +284,8 @@ export default function WorldSidebar({
             ))}
         </div>
       )}
+
+      </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showAvatar && (
