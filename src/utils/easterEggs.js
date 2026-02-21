@@ -2,7 +2,7 @@
  * Easter eggs utilities
  */
 
-const GREATER_ISRAEL_IDS = ['il', 'jo', 'lb', 'sy'];
+const GREATER_ISRAEL_IDS = ['il', 'jo'];
 
 const SINAI_RING = [
   [32.136, 31.3411],
