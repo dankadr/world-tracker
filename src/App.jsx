@@ -11,6 +11,7 @@ import Confetti from './components/Confetti';
 import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
+import EasterEggPrompt from './components/EasterEggPrompt';
 import useVisitedRegions from './hooks/useVisitedCantons';
 import useVisitedCountries from './hooks/useVisitedCountries';
 import useCustomColors from './hooks/useCustomColors';
@@ -114,6 +115,7 @@ export default function App() {
   const [shareData, setShareData] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
@@ -179,12 +181,17 @@ export default function App() {
 
   const closeModals = useCallback(() => {}, []);
 
+  const handleOpenEasterEggPrompt = useCallback(() => {
+    setShowEasterEggPrompt(true);
+  }, []);
+
   useKeyboardShortcuts({
     toggleTheme,
     countryId,
     setCountryId,
     searchRef,
     closeModals,
+    onOpenEasterEggPrompt: handleOpenEasterEggPrompt,
   });
 
   const { isMobile } = useDeviceType();
@@ -194,6 +201,7 @@ export default function App() {
     <div className={`app ${isMobile ? 'is-mobile' : ''}`}>
       {!isShareMode && <AchievementToasts />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
+      <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       <Onboarding />
       {isShareMode && (
         <div className="share-banner">

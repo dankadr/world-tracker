@@ -7,6 +7,7 @@ export default function useKeyboardShortcuts({
   setCountryId,
   searchRef,
   closeModals,
+  onOpenEasterEggPrompt,
 }) {
   useEffect(() => {
     function handleKey(e) {
@@ -20,6 +21,13 @@ export default function useKeyboardShortcuts({
       }
 
       if (isTyping) return;
+
+      // Easter egg: Ctrl+Shift+I for Greater Israel prompt
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        onOpenEasterEggPrompt?.();
+        return;
+      }
 
       if (e.key === '/' || e.key === 'f') {
         e.preventDefault();
@@ -47,5 +55,6 @@ export default function useKeyboardShortcuts({
 
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [toggleTheme, countryId, setCountryId, searchRef, closeModals]);
+  }, [toggleTheme, countryId, setCountryId, searchRef, closeModals, onOpenEasterEggPrompt]);
 }
+

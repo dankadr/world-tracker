@@ -127,5 +127,7 @@
   { "id": "collect-30", "icon": "🎪", "title": "Achievement Hunter", "desc": "Unlock 30 achievements", "category": "Collector", "rule": { "type": "achievementsUnlocked", "min": 30 } },
   { "id": "collect-50", "icon": "💎", "title": "Diamond Collector", "desc": "Unlock 50 achievements", "category": "Collector", "rule": { "type": "achievementsUnlocked", "min": 50 } },
   { "id": "collect-all-geo", "icon": "🗿", "title": "Geo Master", "desc": "Unlock all Geographic Feats achievements", "category": "Collector", "rule": { "type": "categoryComplete", "category": "Geographic Feats" } },
-  { "id": "collect-all-fun", "icon": "🎭", "title": "Fun Facts Master", "desc": "Unlock all Fun Facts achievements", "category": "Collector", "rule": { "type": "categoryComplete", "category": "Fun Facts" } }
+  { "id": "collect-all-fun", "icon": "🎭", "title": "Fun Facts Master", "desc": "Unlock all Fun Facts achievements", "category": "Collector", "rule": { "type": "categoryComplete", "category": "Fun Facts" } },
+
+  { "id": "easter-greater-israel", "icon": "🕎", "title": "ארץ ישראל השלמה", "desc": "Discover the ancient vision", "category": "Secret", "rule": { "type": "easterEggToggled", "easterEgg": "greater-israel" } }
 ]

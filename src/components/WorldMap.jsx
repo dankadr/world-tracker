@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
 import worldData from '../data/world.json';
+import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
 
 const VISITED_COLOR = '#2ecc71';
 const VISITED_HOVER = '#27ae60';
@@ -71,6 +72,18 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
   const [tileUrl, setTileUrl] = useState(
     dark ? LAYERS[0].dark : LAYERS[0].light
   );
+  const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
+
+  // Listen for easter egg toggles
+  useEffect(() => {
+    function handleEasterEggToggle(e) {
+      if (e.detail === 'greater-israel') {
+        setGreaterIsraelEnabled(isGreaterIsraelEnabled());
+      }
+    }
+    window.addEventListener('easter-egg-toggle', handleEasterEggToggle);
+    return () => window.removeEventListener('easter-egg-toggle', handleEasterEggToggle);
+  }, []);
 
   useEffect(() => {
     setTileUrl((prev) => {
@@ -79,6 +92,12 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
       return dark ? LAYERS[0].dark : LAYERS[0].light;
     });
   }, [dark]);
+
+  // Apply easter egg modifications to world data
+  const modifiedWorldData = useMemo(
+    () => applyEasterEggModifications(worldData, greaterIsraelEnabled),
+    [greaterIsraelEnabled]
+  );
 
   // Update GeoJSON styles when visited set changes (without remounting)
   useEffect(() => {
@@ -215,7 +234,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
       <GeoJSON
         key="world-geojson"
         ref={geoJsonRef}
-        data={worldData}
+        data={modifiedWorldData}
         style={getStyle}
         onEachFeature={onEachFeature}
       />

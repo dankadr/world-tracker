@@ -194,6 +194,16 @@ function evaluateRule(rule, userId) {
       return catAchievements.length > 0 && catAchievements.every((a) => evaluateRule(a.rule, userId));
     }
 
+    case 'easterEggToggled': {
+      try {
+        const easterEggKey = `swiss-tracker-easter-egg-${rule.easterEgg}`;
+        const value = localStorage.getItem(easterEggKey);
+        return value === 'true';
+      } catch {
+        return false;
+      }
+    }
+
     default:
       return false;
   }

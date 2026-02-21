@@ -1,0 +1,167 @@
+.easter-egg-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.easter-egg-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  animation: easter-egg-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-mode .easter-egg-modal {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.easter-egg-content {
+  text-align: center;
+}
+
+.easter-egg-modal h2 {
+  font-size: 48px;
+  margin: 0 0 16px 0;
+  animation: easter-egg-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.easter-egg-modal p {
+  font-size: 16px;
+  margin: 0 0 24px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.dark-mode .easter-egg-modal p {
+  color: #aaa;
+}
+
+.easter-egg-input {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.dark-mode .easter-egg-input {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #fff;
+}
+
+.easter-egg-input:focus {
+  outline: none;
+  border-color: #2ecc71;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+}
+
+.dark-mode .easter-egg-input:focus {
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.easter-egg-error {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-bottom: 16px;
+  animation: easter-egg-shake 0.4s;
+}
+
+.easter-egg-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.easter-egg-submit,
+.easter-egg-cancel {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.easter-egg-submit {
+  background: #2ecc71;
+  color: white;
+}
+
+.easter-egg-submit:hover {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.easter-egg-submit:active {
+  transform: translateY(0);
+}
+
+.easter-egg-cancel {
+  background: #ecf0f1;
+  color: #333;
+}
+
+.dark-mode .easter-egg-cancel {
+  background: #333;
+  color: #aaa;
+}
+
+.easter-egg-cancel:hover {
+  background: #d5dbdb;
+}
+
+.dark-mode .easter-egg-cancel:hover {
+  background: #444;
+}
+
+@keyframes easter-egg-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes easter-egg-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes easter-egg-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
