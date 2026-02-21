@@ -187,10 +187,11 @@ export default function App() {
     closeModals,
   });
 
+  const { isMobile } = useDeviceType();
   const isWorldView = view === 'world' && !isShareMode;
 
   return (
-    <div className="app">
+    <div className={`app ${isMobile ? 'is-mobile' : ''}`}>
       {!isShareMode && <AchievementToasts />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <Onboarding />
@@ -203,12 +204,31 @@ export default function App() {
 
       {isWorldView ? (
         <>
-          <WorldSidebar
-            visited={worldVisited}
-            onToggle={toggleWorldCountry}
-            onExploreCountry={handleExploreCountry}
-            collapsed={sidebarCollapsed}
-          />
+          {isMobile ? (
+            <MobileBottomSheet
+              miniContent={
+                <div className="sheet-mini-stats">
+                  <span className="sheet-mini-icon">🌍</span>
+                  <span className="sheet-mini-text">{worldVisited.size} countries</span>
+                  <span className="sheet-mini-expand">TAP TO EXPAND</span>
+                </div>
+              }
+            >
+              <WorldSidebar
+                visited={worldVisited}
+                onToggle={toggleWorldCountry}
+                onExploreCountry={handleExploreCountry}
+                collapsed={false}
+              />
+            </MobileBottomSheet>
+          ) : (
+            <WorldSidebar
+              visited={worldVisited}
+              onToggle={toggleWorldCountry}
+              onExploreCountry={handleExploreCountry}
+              collapsed={sidebarCollapsed}
+            />
+          )}
           <main className="map-container">
             <button
               className="sidebar-toggle"
@@ -248,26 +268,61 @@ export default function App() {
         </>
       ) : (
         <>
-          <Sidebar
-            country={country}
-            visited={displayVisited}
-            onToggle={handleToggle}
-            onReset={isShareMode ? () => {} : reset}
-            onResetAll={isShareMode ? () => {} : resetAll}
-            onCountryChange={setCountryId}
-            readOnly={isShareMode}
-            dates={isShareMode ? {} : dates}
-            onSetDate={isShareMode ? () => {} : setDate}
-            notes={isShareMode ? {} : notes}
-            onSetNote={isShareMode ? () => {} : setNote}
-            customColor={colors[countryId] || ''}
-            onSetColor={(c) => setColor(countryId, c)}
-            collapsed={sidebarCollapsed}
-            wishlist={isShareMode ? new Set() : wishlist}
-            onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
-            searchRef={searchRef}
-            onBackToWorld={handleBackToWorld}
-          />
+          {isMobile ? (
+            <MobileBottomSheet
+              miniContent={
+                <div className="sheet-mini-stats">
+                  <span className="sheet-mini-icon">{country.flag}</span>
+                  <span className="sheet-mini-text">{count}/{total} {country.regionLabel.toLowerCase()}</span>
+                  <span className="sheet-mini-pct" style={{ color: country.visitedColor }}>{pct}%</span>
+                  <span className="sheet-mini-expand">TAP TO EXPAND</span>
+                </div>
+              }
+            >
+              <Sidebar
+                country={country}
+                visited={displayVisited}
+                onToggle={handleToggle}
+                onReset={isShareMode ? () => {} : reset}
+                onResetAll={isShareMode ? () => {} : resetAll}
+                onCountryChange={setCountryId}
+                readOnly={isShareMode}
+                dates={isShareMode ? {} : dates}
+                onSetDate={isShareMode ? () => {} : setDate}
+                notes={isShareMode ? {} : notes}
+                onSetNote={isShareMode ? () => {} : setNote}
+                customColor={colors[countryId] || ''}
+                onSetColor={(c) => setColor(countryId, c)}
+                collapsed={false}
+                wishlist={isShareMode ? new Set() : wishlist}
+                onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+                searchRef={searchRef}
+                onBackToWorld={handleBackToWorld}
+                isMobile={true}
+              />
+            </MobileBottomSheet>
+          ) : (
+            <Sidebar
+              country={country}
+              visited={displayVisited}
+              onToggle={handleToggle}
+              onReset={isShareMode ? () => {} : reset}
+              onResetAll={isShareMode ? () => {} : resetAll}
+              onCountryChange={setCountryId}
+              readOnly={isShareMode}
+              dates={isShareMode ? {} : dates}
+              onSetDate={isShareMode ? () => {} : setDate}
+              notes={isShareMode ? {} : notes}
+              onSetNote={isShareMode ? () => {} : setNote}
+              customColor={colors[countryId] || ''}
+              onSetColor={(c) => setColor(countryId, c)}
+              collapsed={sidebarCollapsed}
+              wishlist={isShareMode ? new Set() : wishlist}
+              onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+              searchRef={searchRef}
+              onBackToWorld={handleBackToWorld}
+            />
+          )}
           <main className="map-container">
             <button
               className="sidebar-toggle"

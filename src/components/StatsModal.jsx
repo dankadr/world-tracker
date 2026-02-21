@@ -201,7 +201,7 @@ export default function StatsModal({ onClose }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Your Travel Statistics</h2>
-          <button className="modal-close" onClick={onClose}>&times;</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
         </div>
 
         <div className="stats-section">

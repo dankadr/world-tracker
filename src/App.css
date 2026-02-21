@@ -1609,17 +1609,27 @@ body {
 
 .modal-close {
   border: none;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.06);
   font-size: 1.5rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .modal-close:hover {
   color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .stats-section {
@@ -2220,7 +2230,7 @@ body {
 
   /* Modals — near full-screen on mobile */
   .modal-overlay {
-    padding: 8px;
+    padding: 0;
     align-items: flex-end;
   }
 
@@ -2233,10 +2243,25 @@ body {
 
   .modal-header {
     padding: 16px 18px 10px;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+    z-index: 1;
   }
 
   .modal-header h2 {
     font-size: 1rem;
+  }
+
+  .modal-close {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 1.6rem;
+    background: rgba(0, 0, 0, 0.08);
   }
 
   .stats-section {
