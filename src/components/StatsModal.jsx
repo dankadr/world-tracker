@@ -81,7 +81,9 @@ function computeGeoInsights(coords) {
   const westernmost = coords.reduce((a, b) => (a.lng < b.lng ? a : b));
 
   const latRange = Math.max(...lats) - Math.min(...lats);
-  const lngRange = Math.max(...lngs) - Math.min(...lngs);
+  let lngRange = Math.max(...lngs) - Math.min(...lngs);
+  // Handle International Date Line crossing: take the shorter path around the globe
+  if (lngRange > 180) lngRange = 360 - lngRange;
 
   // Approximate distance (Haversine) between northernmost and southernmost
   const R = 6371; // km
@@ -111,9 +113,9 @@ function computeGeoInsights(coords) {
 
   // Hemisphere stats
   const inNorth = coords.filter((c) => c.lat > 0).length;
-  const inSouth = coords.filter((c) => c.lat <= 0).length;
+  const inSouth = coords.filter((c) => c.lat < 0).length;
   const inWest = coords.filter((c) => c.lng < 0).length;
-  const inEast = coords.filter((c) => c.lng >= 0).length;
+  const inEast = coords.filter((c) => c.lng > 0).length;
 
   return {
     northernmost,
@@ -410,7 +412,7 @@ export default function StatsModal({ onClose }) {
           </div>
         )}
 
-        {geo && (
+        {geo && geo.totalPoints >= 2 ? (
           <div className="stats-section">
             <h3>Geographic Insights</h3>
             <div className="geo-insights">
@@ -465,7 +467,14 @@ export default function StatsModal({ onClose }) {
               )}
             </div>
           </div>
-        )}
+        ) : geo && geo.totalPoints === 1 ? (
+          <div className="stats-section">
+            <h3>Geographic Insights</h3>
+            <p className="stats-highlight" style={{ textAlign: 'center', padding: '20px 0' }}>
+              Visit more places to unlock detailed geographic insights!
+            </p>
+          </div>
+        ) : null}
 
         {areaPopStats && (
           <div className="stats-section">
