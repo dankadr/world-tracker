@@ -196,6 +196,37 @@ export default function App() {
 
   const { isMobile } = useDeviceType();
   const isWorldView = view === 'world' && !isShareMode;
+  const longPressTimerRef = useRef(null);
+  const longPressStartRef = useRef(null);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartRef.current = null;
+  }, []);
+
+  const handleLongPressStart = useCallback((e) => {
+    if (!isMobile || !isWorldView) return;
+    if (e.touches && e.touches.length !== 1) return;
+    const touch = e.touches ? e.touches[0] : e;
+    longPressStartRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimerRef.current = setTimeout(() => {
+      setShowEasterEggPrompt(true);
+      clearLongPress();
+    }, 850);
+  }, [clearLongPress, isMobile, isWorldView]);
+
+  const handleLongPressMove = useCallback((e) => {
+    if (!longPressStartRef.current || !e.touches?.length) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - longPressStartRef.current.x;
+    const dy = touch.clientY - longPressStartRef.current.y;
+    if (Math.hypot(dx, dy) > 12) {
+      clearLongPress();
+    }
+  }, [clearLongPress]);
 
   return (
     <div className={`app ${isMobile ? 'is-mobile' : ''}`}>
@@ -237,7 +268,13 @@ export default function App() {
               collapsed={sidebarCollapsed}
             />
           )}
-          <main className="map-container">
+          <main
+            className="map-container"
+            onTouchStart={handleLongPressStart}
+            onTouchMove={handleLongPressMove}
+            onTouchEnd={clearLongPress}
+            onTouchCancel={clearLongPress}
+          >
             <button
               className="sidebar-toggle"
               onClick={() => setSidebarCollapsed((c) => !c)}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { countryList } from '../data/countries';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import AvatarEditor from './AvatarEditor';
 import useAvatar from '../hooks/useAvatar';
 import Achievements from './Achievements';
 import StatsModal from './StatsModal';
+import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs';
 
 const CONTINENT_EMOJI = {
   'Africa': '🌍',
@@ -57,6 +58,7 @@ export default function WorldSidebar({
   const [openContinents, setOpenContinents] = useState({});
   const [showAvatar, setShowAvatar] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const allCountries = useMemo(() => {
@@ -108,6 +110,22 @@ export default function WorldSidebar({
       };
     });
   }, [userId]);
+
+  useEffect(() => {
+    function handleEasterEggToggle(e) {
+      if (e.detail === 'greater-israel') {
+        setGreaterIsraelEnabled(isGreaterIsraelEnabled());
+      }
+    }
+    window.addEventListener('easter-egg-toggle', handleEasterEggToggle);
+    return () => window.removeEventListener('easter-egg-toggle', handleEasterEggToggle);
+  }, []);
+
+  const handleDisableEasterEgg = () => {
+    if (!greaterIsraelEnabled) return;
+    toggleGreaterIsrael();
+    window.dispatchEvent(new CustomEvent('easter-egg-toggle', { detail: 'greater-israel' }));
+  };
 
   return (
     <aside className={`sidebar world-sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -165,6 +183,14 @@ export default function WorldSidebar({
         </div>
         <p className="world-progress-pct">{pct}% of the world</p>
       </div>
+
+      {greaterIsraelEnabled && (
+        <div className="world-easter-egg-toggle">
+          <button className="world-easter-egg-btn" onClick={handleDisableEasterEgg}>
+            Disable secret mode
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="world-search-container">

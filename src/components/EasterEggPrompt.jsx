@@ -23,7 +23,6 @@ export default function EasterEggPrompt({ isOpen, onClose }) {
       setInput('');
       setError('');
       onClose();
-      console.log('ארץ ישראל השלמה - Greater Israel unlocked!');
     } else {
       setError('Incorrect answer');
       setInput('');
@@ -49,15 +48,15 @@ export default function EasterEggPrompt({ isOpen, onClose }) {
     <div className="easter-egg-backdrop" onClick={onClose}>
       <div className="easter-egg-modal" onClick={(e) => e.stopPropagation()}>
         <div className="easter-egg-content">
-          <h2>🕎</h2>
-          <p>What is the ancient name of the land between the Mediterranean and the Jordan River?</p>
+          <h2>🔒</h2>
+          <p>Enter the access phrase to continue.</p>
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter the answer..."
+            placeholder="Type the phrase..."
             className="easter-egg-input"
             maxLength={50}
           />

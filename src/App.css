@@ -3548,6 +3548,42 @@ body {
   margin: 0;
 }
 
+.world-easter-egg-toggle {
+  padding: 0 12px 8px;
+}
+
+.world-easter-egg-btn {
+  width: 100%;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.35);
+  color: #2c3e50;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.world-easter-egg-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .world-easter-egg-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ecf0f1;
+}
+
+[data-theme="dark"] .world-easter-egg-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 [data-theme="dark"] .world-stats-summary {
   background: rgba(46, 204, 113, 0.08);
   border-color: rgba(46, 204, 113, 0.2);
