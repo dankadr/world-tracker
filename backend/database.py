@@ -6,25 +6,41 @@ from sqlalchemy.pool import NullPool
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://tracker:tracker@postgres:5432/tracker",
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-# Handle Neon/Vercel connection strings that use postgres:// or postgresql://
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-elif DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+# Detect if we're running on Vercel (needs SSL, NullPool, and psycopg driver)
+IS_SERVERLESS = os.getenv("VERCEL", "") == "1"
 
-# Detect if we're running on Vercel/Neon (needs SSL + small pool)
-IS_SERVERLESS = os.getenv("VERCEL", "") == "1" or "neon" in DATABASE_URL
+# Choose the async driver: psycopg on Vercel (asyncpg DNS fails in Lambda), asyncpg locally
+DRIVER = "psycopg" if IS_SERVERLESS else "asyncpg"
+
+# If no DATABASE_URL, try to build one from individual PG* env vars (Vercel/Neon)
+if not DATABASE_URL:
+    pg_host = os.getenv("PGHOST", "")
+    pg_user = os.getenv("PGUSER", "")
+    pg_password = os.getenv("PGPASSWORD", "")
+    pg_database = os.getenv("PGDATABASE", "")
+    pg_port = os.getenv("PGPORT", "5432")
+    if pg_host and pg_user and pg_database:
+        DATABASE_URL = f"postgresql+{DRIVER}://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_database}"
+    else:
+        # Local Docker fallback
+        DATABASE_URL = f"postgresql+{DRIVER}://tracker:tracker@postgres:5432/tracker"
+else:
+    # Normalise whatever scheme was provided to use the chosen driver
+    for prefix in ("postgres://", "postgresql://", "postgresql+asyncpg://", "postgresql+psycopg://"):
+        if DATABASE_URL.startswith(prefix):
+            DATABASE_URL = DATABASE_URL.replace(prefix, f"postgresql+{DRIVER}://", 1)
+            break
+
+if "neon" in DATABASE_URL:
+    IS_SERVERLESS = True
 
 connect_args = {}
 if IS_SERVERLESS:
-    connect_args["ssl"] = "require"
+    connect_args["sslmode"] = "require"
 
-# Serverless: use NullPool (no persistent connections) to avoid cold-start DNS issues
+# Serverless: use NullPool (no persistent connections)
 engine_kwargs = dict(
     echo=False,
     connect_args=connect_args,
