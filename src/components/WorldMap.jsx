@@ -232,7 +232,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
         url={tileUrl}
       />
       <GeoJSON
-        key="world-geojson"
+        key={`world-geojson-${greaterIsraelEnabled}`}
         ref={geoJsonRef}
         data={modifiedWorldData}
         style={getStyle}
