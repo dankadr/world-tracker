@@ -215,7 +215,7 @@ export default function App() {
     longPressTimerRef.current = setTimeout(() => {
       setShowEasterEggPrompt(true);
       clearLongPress();
-    }, 850);
+    }, 2000);
   }, [clearLongPress, isMobile, isWorldView]);
 
   const handleLongPressMove = useCallback((e) => {

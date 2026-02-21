@@ -108,31 +108,47 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
       if (!id) return;
       const isVisited = visited.has(id);
       const isTracked = id in TRACKED_COUNTRY_IDS;
-      if (isVisited && isTracked) l.setStyle(TRACKED_VISITED_STYLE);
-      else if (isVisited) l.setStyle(VISITED_STYLE);
-      else if (isTracked) l.setStyle(TRACKED_STYLE);
-      else l.setStyle(UNVISITED_STYLE);
+      const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
+      let style;
+      if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
+      else if (isVisited) style = VISITED_STYLE;
+      else if (isTracked) style = TRACKED_STYLE;
+      else style = UNVISITED_STYLE;
+      if (isGreaterIsrael) {
+        style = { ...style, color: 'transparent', weight: 0 };
+      }
+      l.setStyle(style);
     });
-  }, [visited]);
+  }, [visited, greaterIsraelEnabled]);
 
   const getStyle = useCallback(
     (feature) => {
       const id = feature.properties.id;
       const isVisited = visited.has(id);
       const isTracked = id in TRACKED_COUNTRY_IDS;
+      const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
 
-      if (isVisited && isTracked) return { ...TRACKED_VISITED_STYLE };
-      if (isVisited) return { ...VISITED_STYLE };
-      if (isTracked) return { ...TRACKED_STYLE };
-      return { ...UNVISITED_STYLE };
+      let style;
+      if (isVisited && isTracked) style = { ...TRACKED_VISITED_STYLE };
+      else if (isVisited) style = { ...VISITED_STYLE };
+      else if (isTracked) style = { ...TRACKED_STYLE };
+      else style = { ...UNVISITED_STYLE };
+
+      if (isGreaterIsrael) {
+        style.color = 'transparent';
+        style.weight = 0;
+      }
+
+      return style;
     },
-    [visited]
+    [visited, greaterIsraelEnabled]
   );
 
   const onEachFeature = useCallback(
     (feature, layer) => {
       const { id, name } = feature.properties;
       const isTracked = id in TRACKED_COUNTRY_IDS;
+      const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
 
       layer.bindTooltip(name, {
         sticky: true,
@@ -148,18 +164,23 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
           target.setStyle({
             fillColor: isVisited ? VISITED_HOVER : '#b0bec5',
             fillOpacity: isVisited ? 0.7 : 0.55,
-            color: 'rgba(255, 255, 255, 0.9)',
-            weight: 2,
+            color: isGreaterIsrael ? 'transparent' : 'rgba(255, 255, 255, 0.9)',
+            weight: isGreaterIsrael ? 0 : 2,
           });
           target.bringToFront();
         },
         mouseout: (e) => {
           const target = e.target;
           const isVisited = visited.has(id);
-          if (isVisited && isTracked) target.setStyle(TRACKED_VISITED_STYLE);
-          else if (isVisited) target.setStyle(VISITED_STYLE);
-          else if (isTracked) target.setStyle(TRACKED_STYLE);
-          else target.setStyle(UNVISITED_STYLE);
+          let style;
+          if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
+          else if (isVisited) style = VISITED_STYLE;
+          else if (isTracked) style = TRACKED_STYLE;
+          else style = UNVISITED_STYLE;
+          if (isGreaterIsrael) {
+            style = { ...style, color: 'transparent', weight: 0 };
+          }
+          target.setStyle(style);
         },
         click: (e) => {
           if (isTracked) {

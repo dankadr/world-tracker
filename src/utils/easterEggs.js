@@ -24,6 +24,20 @@ function closeRing(ring) {
   return [...ring, first];
 }
 
+function pointInRing(point, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+    const intersects = (yi > point[1]) !== (yj > point[1])
+      && point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
 function getPolygonsFromGeometry(geometry) {
   if (!geometry) return [];
   if (geometry.type === 'Polygon') return [geometry.coordinates];
@@ -47,11 +61,35 @@ function buildGreaterIsraelGeometry(worldData) {
 }
 
 function getEgyptGeometryWithSinaiHole(geometry) {
-  if (!geometry || geometry.type !== 'Polygon') return geometry;
-  const [outerRing, ...holes] = geometry.coordinates;
+  if (!geometry) return geometry;
+  const holeRing = closeRing(SINAI_RING).slice().reverse();
+
+  if (geometry.type === 'Polygon') {
+    const [outerRing, ...holes] = geometry.coordinates;
+    return {
+      type: 'Polygon',
+      coordinates: [outerRing, ...holes, holeRing],
+    };
+  }
+
+  if (geometry.type !== 'MultiPolygon') return geometry;
+
+  const testPoint = holeRing[0];
+  let applied = false;
+  const updated = geometry.coordinates.map((polygon) => {
+    if (!polygon?.length) return polygon;
+    const outerRing = polygon[0];
+    if (pointInRing(testPoint, outerRing)) {
+      applied = true;
+      return [...polygon, holeRing];
+    }
+    return polygon;
+  });
+
+  if (!applied) return geometry;
   return {
-    type: 'Polygon',
-    coordinates: [outerRing, ...holes, closeRing(SINAI_RING).slice().reverse()],
+    type: 'MultiPolygon',
+    coordinates: updated,
   };
 }
 
