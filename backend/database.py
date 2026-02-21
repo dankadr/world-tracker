@@ -17,6 +17,7 @@ import logging
 import sys
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
@@ -161,8 +162,51 @@ async def get_db():
         yield session
 
 
+def _get_column_default_sql(column) -> str:
+    """Return the SQL DEFAULT clause for a column, e.g. DEFAULT '{}'."""
+    if column.server_default is not None:
+        val = column.server_default.arg
+        if isinstance(val, str):
+            return f"DEFAULT '{val}'"
+    return ""
+
+
+def _column_type_sql(column) -> str:
+    """Return a simple SQL type string for a SQLAlchemy column."""
+    from sqlalchemy.dialects.postgresql import JSONB as PG_JSONB
+    from sqlalchemy import Integer as SA_Integer, String as SA_String
+
+    col_type = type(column.type)
+    if col_type is PG_JSONB:
+        return "JSONB"
+    if col_type is SA_Integer:
+        return "INTEGER"
+    if col_type is SA_String:
+        length = getattr(column.type, "length", None)
+        return f"VARCHAR({length})" if length else "VARCHAR"
+    # Fallback: let SQLAlchemy compile the type
+    return column.type.compile(engine.dialect)
+
+
+def _sync_add_missing_columns(conn):
+    """Inspect the DB and ADD any columns present in ORM models but missing from the DB."""
+    inspector = inspect(conn)
+    for table_name, table in Base.metadata.tables.items():
+        if not inspector.has_table(table_name):
+            continue  # table doesn't exist yet; create_all will handle it
+        db_columns = {c["name"] for c in inspector.get_columns(table_name)}
+        for col_name, column in table.columns.items():
+            if col_name not in db_columns:
+                col_type = _column_type_sql(column)
+                nullable = "" if column.nullable else " NOT NULL"
+                default = _get_column_default_sql(column)
+                stmt = f'ALTER TABLE {table_name} ADD COLUMN "{col_name}" {col_type}{nullable} {default}'.strip()
+                logger.info("auto-migrate: %s", stmt)
+                conn.execute(text(stmt))
+
+
 async def init_db():
-    """Create tables if they don't exist.
+    """Create tables if they don't exist, and add missing columns to existing tables.
 
     On serverless cold starts the database should already have the schema.
     Failures are logged but do not crash the app so the function can still
@@ -171,7 +215,10 @@ async def init_db():
     logger.info("init_db: creating tables …")
     try:
         async with engine.begin() as conn:
+            # 1. Create any brand-new tables
             await conn.run_sync(Base.metadata.create_all)
+            # 2. Add missing columns to existing tables (lightweight auto-migration)
+            await conn.run_sync(_sync_add_missing_columns)
         logger.info("init_db: success")
     except Exception as e:
         if IS_SERVERLESS:

@@ -18,10 +18,12 @@ export default defineConfig({
     port: 5173,
   },
   build: {
-    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
+          'vendor-sentry': ['@sentry/react'],
           'geo-world': ['./src/data/world.json'],
           'geo-ch': ['./src/data/cantons.json'],
           'geo-us': ['./src/data/usa.json'],

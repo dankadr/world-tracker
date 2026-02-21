@@ -11,16 +11,17 @@ import os
 import sys
 import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI, Depends, HTTPException, Header, Request
+from fastapi import FastAPI, Depends, HTTPException, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
 from pydantic import BaseModel
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
@@ -133,7 +134,29 @@ class WorldVisitedResponse(BaseModel):
     countries: list[str]
 
 
+class ToggleRegionRequest(BaseModel):
+    region: str
+    action: str  # "add" or "remove"
+
+
+class ToggleWishlistRequest(BaseModel):
+    region: str
+    action: str  # "add" or "remove"
+
+
+class ToggleWorldRequest(BaseModel):
+    country: str
+    action: str  # "add" or "remove"
+
+
 # --------------- Auth helpers ---------------
+@dataclass
+class CurrentUser:
+    """Lightweight user object derived from JWT — no DB query needed."""
+    id: int
+    email: str
+
+
 def create_jwt(user_id: int, email: str) -> str:
     payload = {
         "sub": str(user_id),
@@ -145,22 +168,18 @@ def create_jwt(user_id: int, email: str) -> str:
 
 async def get_current_user(
     authorization: str = Header(None),
-    db: AsyncSession = Depends(get_db),
-) -> User:
+) -> CurrentUser:
+    """Decode the JWT and return a lightweight CurrentUser — no DB round-trip."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing authorization header")
     token = authorization.split(" ", 1)[1]
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = int(payload["sub"])
+        email = payload.get("email", "")
     except (JWTError, KeyError, ValueError):
         raise HTTPException(status_code=401, detail="Invalid token")
-
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+    return CurrentUser(id=user_id, email=email)
 
 
 # --------------- Auth endpoint ---------------
@@ -199,8 +218,8 @@ async def google_login(body: GoogleLoginRequest, db: AsyncSession = Depends(get_
         db.add(user)
         logger.info("New user created: email=%s", email)
 
+    await db.flush()
     await db.commit()
-    await db.refresh(user)
 
     jwt_token = create_jwt(user.id, user.email)
 
@@ -210,13 +229,60 @@ async def google_login(body: GoogleLoginRequest, db: AsyncSession = Depends(get_
     )
 
 
+# --------------- Bulk endpoints ---------------
+@app.get("/api/visited/all")
+async def get_all_visited(
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all visited regions and world data in a single response."""
+    response.headers["Cache-Control"] = "private, max-age=5"
+    result = await db.execute(
+        select(VisitedRegions).where(VisitedRegions.user_id == user.id)
+    )
+    records = result.scalars().all()
+    regions_data = {}
+    for r in records:
+        regions_data[r.country_id] = {
+            "country_id": r.country_id,
+            "regions": r.regions or [],
+            "dates": r.dates or {},
+            "notes": r.notes or {},
+            "wishlist": r.wishlist or [],
+        }
+
+    result = await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+    )
+    world_record = result.scalar_one_or_none()
+    world_countries = world_record.countries if world_record else []
+
+    return {"regions": regions_data, "world": world_countries}
+
+
+@app.delete("/api/visited/all")
+async def delete_all_visited(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all visited regions for the user (used by resetAll)."""
+    await db.execute(
+        delete(VisitedRegions).where(VisitedRegions.user_id == user.id)
+    )
+    await db.commit()
+    return {"status": "ok"}
+
+
 # --------------- Visited endpoints ---------------
 @app.get("/api/visited/{country_id}", response_model=VisitedResponse)
 async def get_visited(
     country_id: str,
-    user: User = Depends(get_current_user),
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "private, max-age=5"
     if country_id not in VALID_COUNTRIES:
         raise HTTPException(status_code=400, detail="Invalid country")
 
@@ -238,7 +304,7 @@ async def get_visited(
 async def put_visited(
     country_id: str,
     body: VisitedRequest,
-    user: User = Depends(get_current_user),
+    user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if country_id not in VALID_COUNTRIES:
@@ -272,7 +338,6 @@ async def put_visited(
         db.add(record)
 
     await db.commit()
-    await db.refresh(record)
     return VisitedResponse(
         country_id=country_id,
         regions=record.regions,
@@ -282,12 +347,158 @@ async def put_visited(
     )
 
 
+# --------------- Atomic PATCH endpoints ---------------
+@app.patch("/api/visited/{country_id}", response_model=VisitedResponse)
+async def patch_visited_region(
+    country_id: str,
+    body: ToggleRegionRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if country_id not in VALID_COUNTRIES:
+        raise HTTPException(status_code=400, detail="Invalid country")
+    if body.action not in ("add", "remove"):
+        raise HTTPException(status_code=400, detail="action must be 'add' or 'remove'")
+
+    result = await db.execute(
+        select(VisitedRegions).where(
+            VisitedRegions.user_id == user.id,
+            VisitedRegions.country_id == country_id,
+        )
+    )
+    record = result.scalar_one_or_none()
+
+    if not record:
+        record = VisitedRegions(
+            user_id=user.id,
+            country_id=country_id,
+            regions=[],
+            dates={},
+            notes={},
+            wishlist=[],
+        )
+        db.add(record)
+
+    regions = list(record.regions or [])
+    dates = dict(record.dates or {})
+    notes = dict(record.notes or {})
+
+    if body.action == "add":
+        if body.region not in regions:
+            regions.append(body.region)
+    else:
+        if body.region in regions:
+            regions.remove(body.region)
+        dates.pop(body.region, None)
+        notes.pop(body.region, None)
+
+    record.regions = regions
+    record.dates = dates
+    record.notes = notes
+
+    await db.commit()
+    return VisitedResponse(
+        country_id=country_id,
+        regions=record.regions or [],
+        dates=record.dates or {},
+        notes=record.notes or {},
+        wishlist=record.wishlist or [],
+    )
+
+
+@app.patch("/api/visited/{country_id}/wishlist", response_model=VisitedResponse)
+async def patch_visited_wishlist(
+    country_id: str,
+    body: ToggleWishlistRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if country_id not in VALID_COUNTRIES:
+        raise HTTPException(status_code=400, detail="Invalid country")
+    if body.action not in ("add", "remove"):
+        raise HTTPException(status_code=400, detail="action must be 'add' or 'remove'")
+
+    result = await db.execute(
+        select(VisitedRegions).where(
+            VisitedRegions.user_id == user.id,
+            VisitedRegions.country_id == country_id,
+        )
+    )
+    record = result.scalar_one_or_none()
+
+    if not record:
+        record = VisitedRegions(
+            user_id=user.id,
+            country_id=country_id,
+            regions=[],
+            dates={},
+            notes={},
+            wishlist=[],
+        )
+        db.add(record)
+
+    wishlist = list(record.wishlist or [])
+
+    if body.action == "add":
+        if body.region not in wishlist:
+            wishlist.append(body.region)
+    else:
+        if body.region in wishlist:
+            wishlist.remove(body.region)
+
+    record.wishlist = wishlist
+
+    await db.commit()
+    return VisitedResponse(
+        country_id=country_id,
+        regions=record.regions or [],
+        dates=record.dates or {},
+        notes=record.notes or {},
+        wishlist=record.wishlist or [],
+    )
+
+
+@app.patch("/api/visited-world", response_model=WorldVisitedResponse)
+async def patch_visited_world(
+    body: ToggleWorldRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if body.action not in ("add", "remove"):
+        raise HTTPException(status_code=400, detail="action must be 'add' or 'remove'")
+
+    result = await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+    )
+    record = result.scalar_one_or_none()
+
+    if not record:
+        record = VisitedWorld(user_id=user.id, countries=[])
+        db.add(record)
+
+    countries = list(record.countries or [])
+
+    if body.action == "add":
+        if body.country not in countries:
+            countries.append(body.country)
+    else:
+        if body.country in countries:
+            countries.remove(body.country)
+
+    record.countries = countries
+
+    await db.commit()
+    return WorldVisitedResponse(countries=record.countries)
+
+
 # --------------- World visited endpoints ---------------
 @app.get("/api/visited-world", response_model=WorldVisitedResponse)
 async def get_visited_world(
-    user: User = Depends(get_current_user),
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "private, max-age=5"
     result = await db.execute(
         select(VisitedWorld).where(VisitedWorld.user_id == user.id)
     )
@@ -299,7 +510,7 @@ async def get_visited_world(
 @app.put("/api/visited-world", response_model=WorldVisitedResponse)
 async def put_visited_world(
     body: WorldVisitedRequest,
-    user: User = Depends(get_current_user),
+    user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
@@ -314,7 +525,6 @@ async def put_visited_world(
         db.add(record)
 
     await db.commit()
-    await db.refresh(record)
     return WorldVisitedResponse(countries=record.countries)
 
 

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
+import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils/api';
 
 // --------------- localStorage helpers ---------------
 // Keys are scoped per-user so different Google accounts don't share data.
@@ -86,7 +87,7 @@ async function saveVisitedRemote(countryId, set, token, dates, notes, wishlist) 
     if (dates !== undefined) body.dates = dates;
     if (notes !== undefined) body.notes = notes;
     if (wishlist !== undefined) body.wishlist = [...wishlist];
-    await fetch(`/api/visited/${countryId}`, {
+    const res = await fetch(`/api/visited/${countryId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -94,8 +95,40 @@ async function saveVisitedRemote(countryId, set, token, dates, notes, wishlist) 
       },
       body: JSON.stringify(body),
     });
-  } catch { /* silently fail */ }
+    if (!res.ok) console.error(`saveVisitedRemote PUT failed: ${res.status}`);
+  } catch (err) { console.error('saveVisitedRemote network error:', err); }
 }
+
+async function toggleRegionRemote(countryId, regionId, action, token) {
+  try {
+    const res = await fetch(`/api/visited/${countryId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ region: regionId, action }),
+    });
+    if (!res.ok) console.error(`toggleRegionRemote PATCH failed: ${res.status}`);
+  } catch (err) { console.error('toggleRegionRemote network error:', err); }
+}
+
+async function toggleWishlistRemote(countryId, regionId, action, token) {
+  try {
+    const res = await fetch(`/api/visited/${countryId}/wishlist`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ region: regionId, action }),
+    });
+    if (!res.ok) console.error(`toggleWishlistRemote PATCH failed: ${res.status}`);
+  } catch (err) { console.error('toggleWishlistRemote network error:', err); }
+}
+
+// --------------- Debounce helper ---------------
+const DEBOUNCE_MS = 800;
 
 // --------------- Hook ---------------
 export default function useVisitedRegions(countryId) {
@@ -108,6 +141,10 @@ export default function useVisitedRegions(countryId) {
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+
+  // Debounce state for saveVisitedRemote
+  const debounceTimerRef = useRef(null);
+  const pendingSaveRef = useRef(null);
 
   // Refs for stable access inside callbacks / state updaters
   const visitedRef = useRef(visited);
@@ -136,13 +173,61 @@ export default function useVisitedRegions(countryId) {
     }
   }
 
-  // Sync from server when logged in
+  // Debounced save: batches rapid PUT calls into a single request
+  const debouncedSaveRemote = useCallback(
+    (cId, set, tok, d, n, w) => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      pendingSaveRef.current = { cId, set, tok, d, n, w };
+      debounceTimerRef.current = setTimeout(() => {
+        saveVisitedRemote(cId, set, tok, d, n, w);
+        pendingSaveRef.current = null;
+        invalidateBulkCache();
+      }, DEBOUNCE_MS);
+    },
+    []
+  );
+
+  // Flush pending debounced save on page close
+  useEffect(() => {
+    const flush = () => {
+      if (pendingSaveRef.current) {
+        const { cId, set, tok, d, n, w } = pendingSaveRef.current;
+        // Use keepalive so the request outlives the page
+        const body = { regions: [...set] };
+        if (d !== undefined) body.dates = d;
+        if (n !== undefined) body.notes = n;
+        if (w !== undefined) body.wishlist = [...w];
+        fetch(`/api/visited/${cId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
+          body: JSON.stringify(body),
+          keepalive: true,
+        });
+        pendingSaveRef.current = null;
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      }
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, []);
+
+  // Sync from server when logged in (bulk endpoint)
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
-    fetchVisited(countryId, token).then((remote) => {
-      if (cancelled || !remote) return;
+    fetchAllVisited(token).then((bulk) => {
+      if (cancelled || !bulk) return;
+      const countryData = bulk.regions[countryId];
+      const remote = countryData
+        ? {
+            regions: new Set(countryData.regions || []),
+            dates: countryData.dates || {},
+            notes: countryData.notes || {},
+            wishlist: new Set(countryData.wishlist || []),
+          }
+        : { regions: new Set(), dates: {}, notes: {}, wishlist: new Set() };
+
       const local = loadLocal(countryId, userId);
       if (!prevLoggedIn.current && local.size > 0 && remote.regions.size === 0) {
         // First login: push local data up to the server
@@ -182,14 +267,56 @@ export default function useVisitedRegions(countryId) {
     }
   }, [isLoggedIn]);
 
+  // Re-fetch from server when the tab/app becomes visible again
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+
+    const refetch = () => {
+      invalidateBulkCache();
+      fetchAllVisited(token, true).then((bulk) => {
+        if (!bulk) return;
+        const countryData = bulk.regions[countryId];
+        const remote = countryData
+          ? {
+              regions: new Set(countryData.regions || []),
+              dates: countryData.dates || {},
+              notes: countryData.notes || {},
+              wishlist: new Set(countryData.wishlist || []),
+            }
+          : { regions: new Set(), dates: {}, notes: {}, wishlist: new Set() };
+        setVisited(remote.regions);
+        setDatesState(remote.dates);
+        setNotesState(remote.notes);
+        setWishlist(remote.wishlist);
+        saveLocal(countryId, remote.regions, userId);
+        saveDates(countryId, remote.dates, userId);
+        saveNotes(countryId, remote.notes, userId);
+        saveWishlist(countryId, remote.wishlist, userId);
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refetch();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', refetch);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', refetch);
+    };
+  }, [countryId, isLoggedIn, token, userId]);
+
   const toggle = useCallback(
     (regionId) => {
       setVisited((prev) => {
         const next = new Set(prev);
+        let action;
         let newDates = datesRef.current;
         let newNotes = notesRef.current;
         if (next.has(regionId)) {
           next.delete(regionId);
+          action = 'remove';
           newDates = { ...newDates };
           delete newDates[regionId];
           setDatesState(newDates);
@@ -200,10 +327,11 @@ export default function useVisitedRegions(countryId) {
           saveNotes(countryId, newNotes, userId);
         } else {
           next.add(regionId);
+          action = 'add';
         }
         saveLocal(countryId, next, userId);
         if (isLoggedIn && token) {
-          saveVisitedRemote(countryId, next, token, newDates, newNotes, wishlistRef.current);
+          toggleRegionRemote(countryId, regionId, action, token);
         }
         return next;
       });
@@ -222,12 +350,12 @@ export default function useVisitedRegions(countryId) {
         }
         saveDates(countryId, next, userId);
         if (isLoggedIn && token) {
-          saveVisitedRemote(countryId, visitedRef.current, token, next, notesRef.current, wishlistRef.current);
+          debouncedSaveRemote(countryId, visitedRef.current, token, next, notesRef.current, wishlistRef.current);
         }
         return next;
       });
     },
-    [countryId, userId, isLoggedIn, token]
+    [countryId, userId, isLoggedIn, token, debouncedSaveRemote]
   );
 
   const setNote = useCallback(
@@ -241,12 +369,12 @@ export default function useVisitedRegions(countryId) {
         }
         saveNotes(countryId, next, userId);
         if (isLoggedIn && token) {
-          saveVisitedRemote(countryId, visitedRef.current, token, datesRef.current, next, wishlistRef.current);
+          debouncedSaveRemote(countryId, visitedRef.current, token, datesRef.current, next, wishlistRef.current);
         }
         return next;
       });
     },
-    [countryId, userId, isLoggedIn, token]
+    [countryId, userId, isLoggedIn, token, debouncedSaveRemote]
   );
 
   const reset = useCallback(() => {
@@ -269,14 +397,17 @@ export default function useVisitedRegions(countryId) {
     (regionId) => {
       setWishlist((prev) => {
         const next = new Set(prev);
+        let action;
         if (next.has(regionId)) {
           next.delete(regionId);
+          action = 'remove';
         } else {
           next.add(regionId);
+          action = 'add';
         }
         saveWishlist(countryId, next, userId);
         if (isLoggedIn && token) {
-          saveVisitedRemote(countryId, visitedRef.current, token, datesRef.current, notesRef.current, next);
+          toggleWishlistRemote(countryId, regionId, action, token);
         }
         return next;
       });
@@ -292,9 +423,10 @@ export default function useVisitedRegions(countryId) {
       saveDates(c.id, {}, userId);
       saveNotes(c.id, {}, userId);
       saveWishlist(c.id, emptyWishlist, userId);
-      if (isLoggedIn && token) {
-        saveVisitedRemote(c.id, empty, token, {}, {}, emptyWishlist);
-      }
+    }
+    if (isLoggedIn && token) {
+      deleteAllVisited(token);
+      invalidateBulkCache();
     }
     setVisited(empty);
     setDatesState({});

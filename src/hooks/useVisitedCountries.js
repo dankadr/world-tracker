@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -34,7 +35,7 @@ async function fetchWorldRemote(token) {
 
 async function saveWorldRemote(set, token) {
   try {
-    await fetch('/api/visited-world', {
+    const res = await fetch('/api/visited-world', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -42,7 +43,22 @@ async function saveWorldRemote(set, token) {
       },
       body: JSON.stringify({ countries: [...set] }),
     });
-  } catch { /* silently fail */ }
+    if (!res.ok) console.error(`saveWorldRemote PUT failed: ${res.status}`);
+  } catch (err) { console.error('saveWorldRemote network error:', err); }
+}
+
+async function toggleWorldRemote(countryCode, action, token) {
+  try {
+    const res = await fetch('/api/visited-world', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ country: countryCode, action }),
+    });
+    if (!res.ok) console.error(`toggleWorldRemote PATCH failed: ${res.status}`);
+  } catch (err) { console.error('toggleWorldRemote network error:', err); }
 }
 
 export default function useVisitedCountries() {
@@ -51,6 +67,12 @@ export default function useVisitedCountries() {
   const [visited, setVisited] = useState(() => loadVisitedWorld(userId));
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+
+  // Debounce state for world PUT
+  const debounceTimerRef = useRef(null);
+  const pendingSaveRef = useRef(null);
+
+  const DEBOUNCE_MS = 800;
 
   // When user changes, reload from correct localStorage keys
   if (userId !== currentUserId) {
@@ -62,13 +84,14 @@ export default function useVisitedCountries() {
     }
   }
 
-  // Sync from server when logged in
+  // Sync from server when logged in (bulk endpoint)
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
-    fetchWorldRemote(token).then((remote) => {
-      if (cancelled || !remote) return;
+    fetchAllVisited(token).then((bulk) => {
+      if (cancelled || !bulk) return;
+      const remote = new Set(bulk.world || []);
       const local = loadVisitedWorld(userId);
       // Merge: if user had local data before logging in, push it up
       if (!prevLoggedIn.current && local.size > 0 && remote.size === 0) {
@@ -97,6 +120,51 @@ export default function useVisitedCountries() {
     }
   }, [isLoggedIn]);
 
+  // Re-fetch from server when the tab/app becomes visible again
+  useEffect(() => {
+    if (!isLoggedIn || !token) return;
+
+    const refetch = () => {
+      invalidateBulkCache();
+      fetchAllVisited(token, true).then((bulk) => {
+        if (!bulk) return;
+        const remote = new Set(bulk.world || []);
+        setVisited(remote);
+        saveVisitedWorld(remote, userId);
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refetch();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', refetch);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', refetch);
+    };
+  }, [isLoggedIn, token, userId]);
+
+  // Flush pending debounced save on page close
+  useEffect(() => {
+    const flush = () => {
+      if (pendingSaveRef.current) {
+        const { set, tok } = pendingSaveRef.current;
+        fetch('/api/visited-world', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
+          body: JSON.stringify({ countries: [...set] }),
+          keepalive: true,
+        });
+        pendingSaveRef.current = null;
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      }
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, []);
+
   const toggleCountry = useCallback(
     (countryCode) => {
       setVisited((prev) => {
@@ -108,7 +176,14 @@ export default function useVisitedCountries() {
         }
         saveVisitedWorld(next, userId);
         if (isLoggedIn && token) {
-          saveWorldRemote(next, token);
+          // Debounce: batch rapid toggles into a single PUT
+          if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+          pendingSaveRef.current = { set: next, tok: token };
+          debounceTimerRef.current = setTimeout(() => {
+            saveWorldRemote(next, token);
+            pendingSaveRef.current = null;
+            invalidateBulkCache();
+          }, DEBOUNCE_MS);
         }
         return next;
       });
