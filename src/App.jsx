@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Analytics } from '@vercel/analytics/react';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
@@ -324,6 +325,7 @@ export default function App() {
           </main>
         </>
       )}
+      <Analytics />
     </div>
   );
 }
