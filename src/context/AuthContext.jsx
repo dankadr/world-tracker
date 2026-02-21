@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { syncLocalDataToServer } from '../utils/syncLocalData';
 
 const AuthContext = createContext(null);
 
@@ -29,6 +30,13 @@ export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadAuth());
   const [loading, setLoading] = useState(false);
 
+  // On mount, if already logged in, check for any leftover anonymous data
+  useEffect(() => {
+    if (auth?.jwt_token && auth?.user?.id) {
+      syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const login = useCallback(async (googleToken) => {
     setLoading(true);
     try {
@@ -44,6 +52,11 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       setAuth(data);
       saveAuth(data);
+
+      // Sync any anonymous localStorage data to the server
+      if (data.jwt_token && data.user?.id) {
+        syncLocalDataToServer(data.jwt_token, data.user.id).catch(() => {});
+      }
     } catch (err) {
       console.error('Login error:', err);
       throw err;

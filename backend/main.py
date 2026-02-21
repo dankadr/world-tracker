@@ -49,7 +49,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-please")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 30
 
-VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca"}
+VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals"}
 
 
 # --------------- Lifespan ---------------
