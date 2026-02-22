@@ -171,3 +171,111 @@ export async function fetchActivity(token) {
   if (!res.ok) throw new Error('Failed to fetch activity');
   return res.json();
 }
+
+// ── Wishlist / Bucket List API ──
+
+export async function fetchWishlist(token) {
+  const res = await fetch('/api/wishlist', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch wishlist');
+  return res.json();
+}
+
+export async function fetchWishlistForTracker(token, trackerId) {
+  const res = await fetch(`/api/wishlist/${trackerId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch wishlist');
+  return res.json();
+}
+
+export async function upsertWishlistItem(token, trackerId, regionId, data = {}) {
+  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to save wishlist item');
+  return res.json();
+}
+
+export async function updateWishlistItem(token, trackerId, regionId, updates) {
+  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error('Failed to update wishlist item');
+  return res.json();
+}
+
+export async function deleteWishlistItem(token, trackerId, regionId) {
+  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to delete wishlist item');
+  return res.json();
+}
+
+// ── Challenges API ──
+
+export async function fetchChallenges(token) {
+  const res = await fetch('/api/challenges', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch challenges');
+  return res.json();
+}
+
+export async function createChallenge(token, data) {
+  const res = await fetch('/api/challenges', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to create challenge');
+  }
+  return res.json();
+}
+
+export async function fetchChallengeDetail(token, challengeId) {
+  const res = await fetch(`/api/challenges/${challengeId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch challenge detail');
+  return res.json();
+}
+
+export async function joinChallenge(token, challengeId) {
+  const res = await fetch(`/api/challenges/${challengeId}/join`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to join challenge');
+  }
+  return res.json();
+}
+
+export async function leaveChallenge(token, challengeId) {
+  const res = await fetch(`/api/challenges/${challengeId}/leave`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to leave challenge');
+  return res.json();
+}
+
+export async function deleteChallenge(token, challengeId) {
+  const res = await fetch(`/api/challenges/${challengeId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to delete challenge');
+  return res.json();
+}

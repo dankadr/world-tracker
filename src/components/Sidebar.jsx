@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -9,7 +9,9 @@ import ShareButton from './ShareButton';
 import StatsModal from './StatsModal';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
+import LevelBadge from './LevelBadge';
 import ConfirmDialog from './ConfirmDialog';
+import AddToBucketListModal from './AddToBucketListModal';
 import useAvatar from '../hooks/useAvatar';
 
 export default function Sidebar({
@@ -34,6 +36,9 @@ export default function Sidebar({
   onSearchFocus,
   onOpenFriends,
   friendsPendingCount,
+  onOpenBucketList,
+  bucketListItems,
+  onAddToBucketList,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
@@ -41,7 +46,14 @@ export default function Sidebar({
   const [showStats, setShowStats] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
+
+  // Compute bucket list set for this country
+  const bucketListSet = useMemo(
+    () => new Set(bucketListItems.filter((i) => i.tracker_id === country.id).map((i) => i.region_id)),
+    [bucketListItems, country.id]
+  );
 
   const regionList = country.data.features
     .filter((f) => !f.properties.isBorough)
@@ -66,7 +78,7 @@ export default function Sidebar({
 
   const renderRegionItem = ({ id, name }) => {
     const isVisited = visited.has(id);
-    const isWishlisted = wishlist?.has(id);
+    const isWishlisted = bucketListSet?.has(id);
     const dateVal = dates?.[id] || '';
     const noteVal = notes?.[id] || '';
     return (
@@ -117,8 +129,18 @@ export default function Sidebar({
             <span className="region-actions">
               <button
                 className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleWishlist(id); }}
-                title={isWishlisted ? 'Remove from planned' : 'Add to planned'}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isWishlisted) {
+                    onToggleWishlist(id);
+                  } else if (onAddToBucketList) {
+                    setBucketListModal({ regionId: id, name });
+                  } else {
+                    onToggleWishlist(id);
+                  }
+                }}
+                title={isWishlisted ? 'Remove from bucket list' : 'Add to bucket list'}
               >
                 {isWishlisted ? '★' : '☆'}
               </button>
@@ -151,6 +173,9 @@ export default function Sidebar({
         <div className="sidebar-header-top">
           <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
             <AvatarCanvas config={avatarConfig} size={40} />
+            <div className="avatar-level-badge-wrap">
+              <LevelBadge size={20} />
+            </div>
           </button>
           <div className="sidebar-title-group">
             <h1 className="sidebar-title">
@@ -170,6 +195,14 @@ export default function Sidebar({
                 </svg>
                 {friendsPendingCount > 0 && (
                   <span className="friends-badge">{friendsPendingCount}</span>
+                )}
+              </button>
+            )}
+            {!readOnly && onOpenBucketList && (
+              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List">
+                <span style={{ fontSize: '14px' }}>📌</span>
+                {bucketListItems?.length > 0 && (
+                  <span className="friends-badge">{bucketListItems.length}</span>
                 )}
               </button>
             )}
@@ -279,6 +312,20 @@ export default function Sidebar({
           setConfirmAction(null);
         }}
         onCancel={() => setConfirmAction(null)}
+      />
+      <AddToBucketListModal
+        isOpen={!!bucketListModal}
+        onClose={() => setBucketListModal(null)}
+        onAdd={(trackerId, regionId, opts) => {
+          if (onAddToBucketList) {
+            onAddToBucketList(trackerId, regionId, opts);
+          }
+          setBucketListModal(null);
+        }}
+        regionName={bucketListModal?.name || ''}
+        trackerId={country.id}
+        regionId={bucketListModal?.regionId || ''}
+        trackerFlag={country.flag}
       />
     </aside>
   );

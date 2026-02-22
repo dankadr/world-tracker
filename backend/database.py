@@ -225,6 +225,24 @@ def _backfill_friend_codes(conn):
         logger.info("backfill: assigned friend_code to %d users", len(rows))
 
 
+def _backfill_wishlist_items(conn):
+    """Migrate legacy visited_regions.wishlist arrays into the wishlist table."""
+    inspector = inspect(conn)
+    if not inspector.has_table("wishlist") or not inspector.has_table("visited_regions"):
+        return
+
+    try:
+        conn.execute(text("""
+            INSERT INTO wishlist (user_id, tracker_id, region_id, priority, target_date, notes, category, created_at, updated_at)
+            SELECT vr.user_id, vr.country_id, region_id, 'medium', NULL, NULL, 'solo', NOW(), NOW()
+            FROM visited_regions vr
+            CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(vr.wishlist, '[]'::jsonb)) AS region_id(region_id)
+            ON CONFLICT (user_id, tracker_id, region_id) DO NOTHING
+        """))
+    except Exception as exc:
+        logger.warning("backfill wishlist failed: %s", exc)
+
+
 async def init_db():
     """Create tables if they don't exist, and add missing columns to existing tables.
 
@@ -241,6 +259,8 @@ async def init_db():
             await conn.run_sync(_sync_add_missing_columns)
             # 3. Backfill friend codes for existing users
             await conn.run_sync(_backfill_friend_codes)
+            # 4. Backfill legacy wishlist entries
+            await conn.run_sync(_backfill_wishlist_items)
         logger.info("init_db: success")
     except Exception as e:
         if IS_SERVERLESS:

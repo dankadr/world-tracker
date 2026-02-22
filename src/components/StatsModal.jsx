@@ -1,6 +1,9 @@
 import { createPortal } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getAvailableYears } from '../utils/yearStats';
+import YearInReview from './YearInReview';
+import UnescoStatsCard from './UnescoStatsCard';
 import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
@@ -311,6 +314,8 @@ export default function StatsModal({ onClose }) {
   const { user, isLoggedIn } = useAuth();
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
+  const [yirYear, setYirYear] = useState(null);
+  const availableYears = useMemo(() => getAvailableYears(userId), [userId]);
 
   const stats = countryList.map((c) => {
     const total = c.data.features.filter(f => !f.properties?.isBorough).length;
@@ -330,6 +335,10 @@ export default function StatsModal({ onClose }) {
   const areaPopStats = computeAreaPopStats(userId);
   const capStats = computeCapitalSuperlatives(userId);
 
+  if (yirYear) {
+    return <YearInReview year={yirYear} onClose={() => setYirYear(null)} />;
+  }
+
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" ref={handleRef} onClick={(e) => e.stopPropagation()}>
@@ -338,6 +347,28 @@ export default function StatsModal({ onClose }) {
           <h2>Your Travel Statistics</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
         </div>
+
+        {availableYears.length > 0 && (
+          <div className="yir-button-row">
+            <button
+              className="yir-trigger-btn"
+              onClick={() => setYirYear(availableYears[0])}
+            >
+              🎉 Year in Review
+            </button>
+            {availableYears.length > 1 && (
+              <select
+                className="yir-year-select"
+                value={availableYears[0]}
+                onChange={(e) => setYirYear(Number(e.target.value))}
+              >
+                {availableYears.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
 
         <div className="stats-section">
           <h3>Progress by Country</h3>
@@ -616,6 +647,8 @@ export default function StatsModal({ onClose }) {
             )}
           </div>
         )}
+
+        <UnescoStatsCard />
 
         {timeline.length > 0 && (
           <div className="stats-section">

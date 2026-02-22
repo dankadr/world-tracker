@@ -29,5 +29,19 @@
     "icon": "👥",
     "overlay": true,
     "default": false
+  },
+  {
+    "id": "wishlist",
+    "label": "Bucket List",
+    "icon": "📌",
+    "overlay": true,
+    "default": true
+  },
+  {
+    "id": "unesco",
+    "label": "UNESCO Sites",
+    "icon": "🏛️",
+    "overlay": true,
+    "default": false
   }
 ]

@@ -5,6 +5,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { FriendsProvider } from './context/FriendsContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { XpProvider } from './hooks/useXp';
 import './App.css';
 
 Sentry.init({
@@ -17,9 +18,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <FriendsProvider>
-          <App />
-        </FriendsProvider>
+        <XpProvider>
+          <FriendsProvider>
+            <App />
+          </FriendsProvider>
+        </XpProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>

@@ -1077,7 +1077,53 @@ body {
   margin-top: 1px;
 }
 
-/* ======== Share Button ======== */
+/* ======== Achievement Progress Bars ======== */
+.badge-progress {
+  width: 100%;
+  margin-top: 5px;
+  padding: 0 2px;
+}
+
+.progress-bar-track {
+  height: 5px;
+  background: var(--bar-track);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2980b9);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+.achievement-badge.unlocked .progress-bar-fill {
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.achievement-badge.in-progress {
+  opacity: 1;
+  filter: none;
+  border-color: rgba(52, 152, 219, 0.3);
+  background: rgba(52, 152, 219, 0.06);
+}
+
+.progress-text {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  display: block;
+}
+
+.progress-done {
+  color: #2ecc71;
+  font-size: 0.7rem;
+  margin-top: 4px;
+}
 .sidebar-footer {
   display: flex;
   gap: 6px;
@@ -1347,6 +1393,19 @@ body {
 [data-theme="dark"] .achievement-badge.unlocked {
   background: rgba(46, 204, 113, 0.15);
   border-color: rgba(46, 204, 113, 0.25);
+}
+
+[data-theme="dark"] .achievement-badge.in-progress {
+  background: rgba(52, 152, 219, 0.1);
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+[data-theme="dark"] .progress-bar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .progress-text {
+  color: #8e99a4;
 }
 
 [data-theme="dark"] .geo-card {
@@ -3418,6 +3477,402 @@ body {
   margin-top: 1px;
 }
 
+/* ======== Bucket List ======== */
+.bucket-panel-modal {
+  padding: 0;
+}
+
+.bucket-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px 22px;
+}
+
+.bucket-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bucket-panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bucket-panel-title {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.bucket-panel-stats {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bucket-stat-sep {
+  opacity: 0.5;
+}
+
+.bucket-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bucket-tab {
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bucket-tab.active {
+  background: rgba(243, 156, 18, 0.12);
+  border-color: rgba(243, 156, 18, 0.35);
+  color: #e67e22;
+}
+
+.bucket-tab-count {
+  background: rgba(243, 156, 18, 0.18);
+  color: #e67e22;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 0.7rem;
+}
+
+.bucket-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bucket-sort-select,
+.bucket-filter-select {
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+}
+
+.bucket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bucket-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(243, 156, 18, 0.08);
+  border: 1px solid rgba(243, 156, 18, 0.2);
+}
+
+.bucket-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e67e22;
+}
+
+.bucket-group-count {
+  margin-left: auto;
+  background: rgba(243, 156, 18, 0.2);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+}
+
+.bucket-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bucket-item {
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+
+.bucket-priority-high {
+  border-left: 4px solid rgba(231, 76, 60, 0.6);
+}
+
+.bucket-priority-medium {
+  border-left: 4px solid rgba(243, 156, 18, 0.6);
+}
+
+.bucket-priority-low {
+  border-left: 4px solid rgba(46, 204, 113, 0.6);
+}
+
+.bucket-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.bucket-item-priority {
+  font-size: 1rem;
+}
+
+.bucket-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bucket-item-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.bucket-item-flag {
+  font-size: 0.95rem;
+}
+
+.bucket-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.bucket-item-expand {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.bucket-item-details {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--glass-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bucket-item-notes-preview {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.bucket-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bucket-btn {
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bucket-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glass-specular);
+}
+
+.bucket-btn-visit {
+  border-color: rgba(46, 204, 113, 0.35);
+  color: #27ae60;
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.bucket-btn-delete {
+  border-color: rgba(211, 47, 47, 0.35);
+  color: #d32f2f;
+  background: rgba(211, 47, 47, 0.08);
+}
+
+.bucket-btn-edit {
+  border-color: rgba(52, 152, 219, 0.35);
+  color: #2980b9;
+  background: rgba(52, 152, 219, 0.08);
+}
+
+.bucket-item-editing {
+  padding: 12px;
+}
+
+.bucket-edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.bucket-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bucket-edit-label,
+.bucket-modal-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.bucket-priority-picker,
+.bucket-category-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bucket-priority-btn,
+.bucket-category-btn {
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.bucket-priority-btn.active,
+.bucket-category-btn.active {
+  border-color: rgba(243, 156, 18, 0.4);
+  background: rgba(243, 156, 18, 0.12);
+  color: #e67e22;
+}
+
+.bucket-date-input,
+.bucket-notes-input {
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.bucket-notes-input {
+  resize: vertical;
+}
+
+.bucket-edit-actions,
+.bucket-modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bucket-btn-save {
+  border-color: rgba(46, 204, 113, 0.35);
+  color: #27ae60;
+  background: rgba(46, 204, 113, 0.12);
+}
+
+.bucket-btn-cancel {
+  border-color: rgba(149, 165, 166, 0.35);
+  color: #7f8c8d;
+  background: rgba(149, 165, 166, 0.12);
+}
+
+.bucket-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+}
+
+.bucket-empty-icon {
+  font-size: 1.6rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.bucket-empty-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.bucket-empty-hint {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+}
+
+.bucket-modal {
+  max-width: 520px;
+}
+
+.bucket-modal-body {
+  padding: 16px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bucket-modal-region {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bucket-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bucket-btn-add {
+  border-color: rgba(243, 156, 18, 0.4);
+  background: rgba(243, 156, 18, 0.15);
+  color: #e67e22;
+}
+
+.bucket-btn-quick {
+  border-color: rgba(52, 152, 219, 0.35);
+  background: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+}
+
 /* ======== Region Popup ======== */
 .region-popup .leaflet-popup-content-wrapper {
   background: rgba(255, 255, 255, 0.9);
@@ -4139,6 +4594,82 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ======== UNESCO Styles ======== */
+/* UNESCO Marker Cluster Styles */
+.unesco-cluster {
+  background: rgba(139, 69, 19, 0.6);
+  border-radius: 50%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.unesco-cluster div {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(139, 69, 19, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unesco-cluster span {
+  color: white;
+  font-size: 12px;
+}
+
+.marker-cluster-small.unesco-cluster div {
+  background: rgba(139, 69, 19, 0.7);
+}
+
+.marker-cluster-medium.unesco-cluster div {
+  background: rgba(139, 69, 19, 0.8);
+}
+
+.marker-cluster-large.unesco-cluster div {
+  background: rgba(139, 69, 19, 0.9);
+}
+
+/* UNESCO Site Popup */
+.unesco-site-popup .leaflet-popup-content-wrapper {
+  background: white;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .unesco-site-popup .leaflet-popup-content-wrapper {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.unesco-site-popup .leaflet-popup-content {
+  margin: 0;
+}
+
+.unesco-site-popup .leaflet-popup-tip {
+  background: white;
+}
+
+[data-theme="dark"] .unesco-site-popup .leaflet-popup-tip {
+  background: #2a2a2a;
+}
+
+.unesco-popup h3 {
+  color: #333;
+}
+
+[data-theme="dark"] .unesco-popup h3 {
+  color: #e0e0e0;
+}
+
+/* Layer Control Overlay Icon */
+.layer-option-overlay .layer-option-icon {
+  margin-right: 6px;
+  font-size: 14px;
 }
 
 /* ======== Friends Modal ======== */

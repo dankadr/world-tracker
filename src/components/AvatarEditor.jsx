@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { avatarCategories, hairColorOptions } from '../config/avatarParts';
 import getAchievements from '../data/achievements';
 import AvatarCanvas from './AvatarCanvas';
+import LevelBadge from './LevelBadge';
 import ConfirmDialog from './ConfirmDialog';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
+import useXp from '../hooks/useXp';
 
 const categoryOrder = ['background', 'body', 'hair', 'eyes', 'shirt', 'hat', 'accessory', 'shoes', 'glasses', 'cape', 'badge', 'pet'];
 
@@ -15,6 +17,7 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
   const { user } = useAuth();
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
+  const { level, totalXp, currentXp, nextLevelXp } = useXp();
 
   const achievements = getAchievements(userId);
   const unlockedIds = new Set(achievements.filter((a) => a.check()).map((a) => a.id));
@@ -43,6 +46,10 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
 
         <div className="avatar-editor-preview">
           <AvatarCanvas config={config} size={128} />
+          <div className="avatar-editor-level">
+            <LevelBadge size={36} />
+            <span className="avatar-editor-xp">{totalXp} XP</span>
+          </div>
         </div>
 
         <div className="avatar-category-tabs">
@@ -73,11 +80,47 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
             </div>
           )}
 
-          {category?.comingSoon ? (
+          {category?.comingSoon && category?.unlockLevel && level >= category.unlockLevel ? (
+            // Level met — show category parts normally
+            <div className="avatar-parts-grid">
+              {parts.map((part, i) => {
+                const unlocked = isUnlocked(part);
+                const isSelected = config[activeTab] === i;
+                const previewConfig = { ...config, [activeTab]: i };
+                return (
+                  <button
+                    key={part.id}
+                    className={`avatar-part-option ${isSelected ? 'selected' : ''} ${!unlocked ? 'locked' : ''}`}
+                    onClick={() => unlocked && onSetPart(activeTab, i)}
+                    disabled={!unlocked}
+                    title={unlocked ? part.name : `Locked: ${getAchievementName(part.requires)}`}
+                  >
+                    <AvatarCanvas config={previewConfig} size={48} />
+                    <span className="avatar-part-name">{part.name}</span>
+                    {!unlocked && (
+                      <span className="avatar-part-lock">
+                        <span className="lock-icon">&#128274;</span>
+                        <span className="lock-req">{getAchievementName(part.requires)}</span>
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : category?.comingSoon ? (
             <div className="avatar-coming-soon">
-              <span className="avatar-coming-soon-icon">🔮</span>
-              <h3 className="avatar-coming-soon-title">Coming Soon</h3>
-              <p className="avatar-coming-soon-desc">New {category.label.toLowerCase()} will be available in a future update!</p>
+              <span className="avatar-coming-soon-icon">🔒</span>
+              <h3 className="avatar-coming-soon-title">Unlocks at Level {category.unlockLevel}</h3>
+              <p className="avatar-coming-soon-desc">
+                Reach level {category.unlockLevel} to unlock {category.label.toLowerCase()}!
+                {level > 0 && ` (You're level ${level})`}
+              </p>
+              <div className="avatar-level-progress-bar">
+                <div
+                  className="avatar-level-progress-fill"
+                  style={{ width: `${Math.min((level / category.unlockLevel) * 100, 100)}%` }}
+                />
+              </div>
               <div className="avatar-coming-soon-items">
                 {parts.filter(p => p.requires).map((part) => (
                   <div key={part.id} className="avatar-coming-soon-item">

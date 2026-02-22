@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
 import FriendOverlayLegend from './FriendOverlayLegend';
+import ComparisonLegend from './ComparisonLegend';
 
 const UNVISITED_STYLE = {
   fillColor: '#cfd8dc',
@@ -113,13 +114,86 @@ function FriendsRegionOverlay({ country, friendOverlayData }) {
   );
 }
 
-export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes, friendsActive, onFriendsToggle, friendOverlayData }) {
+const COMPARISON_COLORS = {
+  both: '#2ecc71',
+  onlyMe: '#3498db',
+  onlyFriend: '#e67e22',
+};
+
+function ComparisonRegionOverlay({ country, visited, friendVisited, friendName }) {
+  const friendSet = useMemo(() => new Set(friendVisited || []), [friendVisited]);
+
+  const classify = useCallback((id) => {
+    const me = visited.has(id);
+    const them = friendSet.has(id);
+    if (me && them) return 'both';
+    if (me) return 'onlyMe';
+    if (them) return 'onlyFriend';
+    return null;
+  }, [visited, friendSet]);
+
+  const overlayData = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: country.data.features.filter(
+      (f) => !f.properties.isBorough && classify(f.properties.id) !== null
+    ),
+  }), [country.data.features, classify]);
+
+  const getStyle = useCallback((feature) => {
+    const cat = classify(feature.properties.id);
+    if (!cat) return { fillOpacity: 0, weight: 0 };
+    return {
+      fillColor: COMPARISON_COLORS[cat],
+      fillOpacity: 0.45,
+      color: COMPARISON_COLORS[cat],
+      weight: 1,
+    };
+  }, [classify]);
+
+  const pointToLayer = useCallback((feature, latlng) => {
+    const cat = classify(feature.properties.id);
+    if (!cat) return L.circleMarker(latlng, { radius: 0, fillOpacity: 0 });
+    return L.circleMarker(latlng, {
+      radius: 6,
+      fillColor: COMPARISON_COLORS[cat],
+      fillOpacity: 0.5,
+      color: COMPARISON_COLORS[cat],
+      weight: 1.5,
+    });
+  }, [classify]);
+
+  const onEachFeature = useCallback((feature, layer) => {
+    const cat = classify(feature.properties.id);
+    const labels = { both: 'Both visited', onlyMe: 'Only you', onlyFriend: `Only ${friendName?.split(' ')[0] || 'friend'}` };
+    layer.bindTooltip(
+      `${feature.properties.name}<br/><span style="opacity:0.7;font-size:0.85em">${labels[cat] || ''}</span>`,
+      { sticky: true, className: 'canton-tooltip', direction: 'top', offset: [0, -10] }
+    );
+    layer.on('click', (e) => { L.DomEvent.stopPropagation(e); });
+  }, [classify, friendName]);
+
+  if (overlayData.features.length === 0) return null;
+
+  return (
+    <GeoJSON
+      key={`comparison-region-overlay-${country.id}-${visited.size}-${friendSet.size}`}
+      data={overlayData}
+      style={getStyle}
+      pointToLayer={pointToLayer}
+      onEachFeature={onEachFeature}
+      pane="overlayPane"
+    />
+  );
+}
+
+export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
     dark ? LAYERS[0].dark : LAYERS[0].light
   );
+  const [wishlistActive, setWishlistActive] = useState(true);
 
   useEffect(() => {
     setTileUrl((prev) => {
@@ -181,17 +255,17 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
       if (feature.geometry.type === 'Point') return {};
       const id = feature.properties.id;
       if (visited.has(id)) return { ...visitedStyle };
-      if (wishlist?.has(id)) return { ...wishlistStyle };
+      if (wishlistActive && wishlist?.has(id)) return { ...wishlistStyle };
       return { ...UNVISITED_STYLE };
     },
-    [visited, wishlist, country.visitedColor]
+    [visited, wishlist, country.visitedColor, wishlistActive]
   );
 
   const pointToLayer = useCallback(
     (feature, latlng) => {
       const id = feature.properties.id;
       const isVisited = visited.has(id);
-      const isWishlisted = wishlist?.has(id);
+      const isWishlisted = wishlistActive && wishlist?.has(id);
       const radius = isPointMode ? 7 : 5;
       return L.circleMarker(latlng, {
         radius,
@@ -228,7 +302,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
             target.setStyle({ radius: isPointMode ? 10 : 7, fillOpacity: 0.9, weight: 2.5 });
           } else {
             const isVisited = visited.has(id);
-            const isWishlisted = wishlist?.has(id);
+              const isWishlisted = wishlistActive && wishlist?.has(id);
             if (isVisited) target.setStyle(hoverVisited);
             else if (isWishlisted) target.setStyle(hoverWishlist);
             else target.setStyle(hoverUnvisited);
@@ -239,7 +313,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
           const target = e.target;
           if (isPoint) {
             const isVisited = visited.has(id);
-            const isWishlisted = wishlist?.has(id);
+            const isWishlisted = wishlistActive && wishlist?.has(id);
             target.setStyle({
               radius: isPointMode ? 7 : 5,
               fillColor: isVisited ? country.visitedColor : isWishlisted ? country.visitedColor : '#b0bec5',
@@ -248,7 +322,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
             });
           } else {
             const isVisited = visited.has(id);
-            const isWishlisted = wishlist?.has(id);
+            const isWishlisted = wishlistActive && wishlist?.has(id);
             if (isVisited) target.setStyle(visitedStyle);
             else if (isWishlisted) target.setStyle(wishlistStyle);
             else target.setStyle(UNVISITED_STYLE);
@@ -281,7 +355,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
         },
       });
     },
-    [visited, wishlist, onToggle, country.visitedColor, isPointMode, dates, notes]
+    [visited, wishlist, onToggle, country.visitedColor, isPointMode, dates, notes, wishlistActive]
   );
 
   useEffect(() => {
@@ -337,7 +411,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
         url={tileUrl}
       />
       <GeoJSON
-        key={country.id + '-' + JSON.stringify([...visited]) + '-' + JSON.stringify([...(wishlist || [])])}
+        key={country.id + '-' + JSON.stringify([...visited]) + '-' + JSON.stringify([...(wishlist || [])]) + '-' + wishlistActive}
         ref={geoJsonRef}
         data={regionData}
         style={style}
@@ -356,15 +430,32 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
         onLayerChange={setTileUrl}
         onFriendsToggle={onFriendsToggle}
         friendsActive={friendsActive}
+        onWishlistToggle={setWishlistActive}
+        wishlistActive={wishlistActive}
       />
-      {friendsActive && friendOverlayData && (
+      {friendsActive && !comparisonFriend && friendOverlayData && (
         <FriendsRegionOverlay
           country={country}
           friendOverlayData={friendOverlayData}
         />
       )}
-      {friendsActive && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+      {comparisonFriend && (
+        <ComparisonRegionOverlay
+          country={country}
+          visited={visited}
+          friendVisited={comparisonFriend.visitedRegions}
+          friendName={comparisonFriend.name}
+        />
+      )}
+      {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
         <FriendOverlayLegend friendOverlayData={friendOverlayData} />
+      )}
+      {comparisonFriend && (
+        <ComparisonLegend
+          friendName={comparisonFriend.name}
+          friendPicture={comparisonFriend.picture}
+          onClose={onExitComparison}
+        />
       )}
     </MapContainer>
   );

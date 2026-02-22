@@ -10,6 +10,7 @@ import AvatarEditor from './AvatarEditor';
 import useAvatar from '../hooks/useAvatar';
 import Achievements from './Achievements';
 import StatsModal from './StatsModal';
+import UnescoPanel from './UnescoPanel';
 import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs';
 
 const CONTINENT_EMOJI = {
@@ -59,6 +60,7 @@ export default function WorldSidebar({
   const [openContinents, setOpenContinents] = useState({});
   const [showAvatar, setShowAvatar] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showUnesco, setShowUnesco] = useState(false);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -255,6 +257,20 @@ export default function WorldSidebar({
       <div className="world-quick-links">
         <h2 className="list-heading">Region Trackers</h2>
         <div className="world-tracker-grid">
+          <button
+            className="world-tracker-card"
+            onClick={() => setShowUnesco(true)}
+          >
+            <span className="world-tracker-flag">🏛️</span>
+            <span className="world-tracker-name">UNESCO Sites</span>
+            <div className="world-tracker-bar">
+              <div
+                className="world-tracker-bar-fill"
+                style={{ width: `0%`, background: '#8B4513' }}
+              />
+            </div>
+            <span className="world-tracker-pct">New!</span>
+          </button>
           {trackerStats.map((t) => (
             <button
               key={t.id}
@@ -329,6 +345,7 @@ export default function WorldSidebar({
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {showUnesco && <UnescoPanel onClose={() => setShowUnesco(false)} />}
       {showAvatar && (
         <AvatarEditor
           config={avatarConfig}

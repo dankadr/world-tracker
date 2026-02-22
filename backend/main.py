@@ -27,10 +27,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
 try:
     from backend.database import get_db, init_db, engine
-    from backend.models import User, VisitedRegions, VisitedWorld, FriendRequest, Friendship, generate_friend_code
+    from backend.models import (
+        User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
+        Challenge, ChallengeParticipant, WishlistItem, XpLog,
+        generate_friend_code, generate_challenge_id,
+    )
 except ImportError:
     from database import get_db, init_db, engine
-    from models import User, VisitedRegions, VisitedWorld, FriendRequest, Friendship, generate_friend_code
+    from models import (
+        User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
+        Challenge, ChallengeParticipant, WishlistItem, XpLog,
+        generate_friend_code, generate_challenge_id,
+    )
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -49,7 +57,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-please")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 30
 
-VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals"}
+VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco"}
 
 
 # --------------- Lifespan ---------------
@@ -151,6 +159,44 @@ class ToggleWorldRequest(BaseModel):
 
 class FriendRequestCreate(BaseModel):
     friend_code: str
+
+
+class WishlistItemCreate(BaseModel):
+    priority: str = "medium"  # high | medium | low
+    target_date: str | None = None  # YYYY-MM
+    notes: str | None = None
+    category: str = "solo"  # solo | friends | family | work
+
+
+class WishlistItemUpdate(BaseModel):
+    priority: str | None = None
+    target_date: str | None = None
+    notes: str | None = None
+    category: str | None = None
+
+
+class WishlistItemResponse(BaseModel):
+    tracker_id: str
+    region_id: str
+    priority: str
+    target_date: str | None
+    notes: str | None
+    category: str
+    created_at: str
+
+
+class ChallengeCreate(BaseModel):
+    title: str
+    description: str | None = None
+    tracker_id: str  # 'world', 'ch', 'us', etc.
+    target_regions: list[str]  # region IDs or ['*'] for all
+    challenge_type: str = "collaborative"  # 'collaborative' | 'race'
+    invite_friend_ids: list[int] = []
+
+
+class ChallengeUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
 
 
 # --------------- Auth helpers ---------------
@@ -830,6 +876,702 @@ async def get_activity(user: CurrentUser = Depends(get_current_user), db: AsyncS
     # Sort combined by updated_at descending, take top 50
     activities.sort(key=lambda a: a.get("updated_at") or "", reverse=True)
     return activities[:50]
+
+
+# --------------- Challenges endpoints ---------------
+
+TRACKER_MAP = {
+    "world": "world",
+    "ch": "ch",
+    "us": "us",
+    "usparks": "usparks",
+    "nyc": "nyc",
+    "no": "no",
+    "ca": "ca",
+    "capitals": "capitals",
+}
+
+
+def _get_user_visited_for_tracker(tracker_id: str, regions_data, world_data):
+    """Extract relevant visited regions for a given tracker from raw DB data."""
+    if tracker_id == "world":
+        return set(world_data)
+    else:
+        return set(regions_data.get(tracker_id, []))
+
+
+async def _get_visited_for_user(user_id: int, db: AsyncSession):
+    """Return (regions_dict, world_list) for a user."""
+    result = await db.execute(
+        select(VisitedRegions).where(VisitedRegions.user_id == user_id)
+    )
+    records = result.scalars().all()
+    regions = {}
+    for r in records:
+        regions[r.country_id] = r.regions or []
+
+    result = await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == user_id)
+    )
+    world_record = result.scalar_one_or_none()
+    world = world_record.countries if world_record else []
+
+    return regions, world
+
+
+async def _compute_challenge_progress(challenge, db: AsyncSession):
+    """Compute progress for a challenge, returning participant details."""
+    target = challenge.target_regions or []
+    is_all = target == ["*"]
+
+    participants_result = await db.execute(
+        select(ChallengeParticipant, User)
+        .join(User, ChallengeParticipant.user_id == User.id)
+        .where(ChallengeParticipant.challenge_id == challenge.id)
+    )
+    participants = participants_result.all()
+
+    participant_progress = []
+    all_visited = set()
+    total_target = None
+
+    for cp, u in participants:
+        regions, world = await _get_visited_for_user(cp.user_id, db)
+        user_visited = _get_user_visited_for_tracker(challenge.tracker_id, regions, world)
+
+        if is_all:
+            user_matching = user_visited
+            if total_target is None:
+                # For "all" targets, total is hard to know without data files,
+                # so we just track what people have visited
+                total_target = -1  # will be set below
+        else:
+            user_matching = user_visited & set(target)
+
+        all_visited |= user_matching
+        participant_progress.append({
+            "user_id": u.id,
+            "name": u.name,
+            "picture": u.picture,
+            "visited_count": len(user_matching),
+            "visited_regions": list(user_matching),
+        })
+
+    if is_all:
+        total = len(all_visited) if all_visited else 0
+    else:
+        total = len(target)
+
+    collab_count = len(all_visited) if not is_all else len(all_visited)
+
+    return {
+        "participants": participant_progress,
+        "total": total,
+        "collaborative_count": collab_count,
+        "collaborative_pct": round(collab_count / total * 100) if total > 0 else 0,
+    }
+
+
+@app.get("/api/challenges")
+async def list_challenges(user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """List all challenges the current user is participating in."""
+    result = await db.execute(
+        select(Challenge)
+        .join(ChallengeParticipant, ChallengeParticipant.challenge_id == Challenge.id)
+        .where(ChallengeParticipant.user_id == user.id)
+        .order_by(Challenge.created_at.desc())
+    )
+    challenges = result.scalars().all()
+
+    out = []
+    for c in challenges:
+        # Get participant count & avatars
+        parts = await db.execute(
+            select(User)
+            .join(ChallengeParticipant, ChallengeParticipant.user_id == User.id)
+            .where(ChallengeParticipant.challenge_id == c.id)
+        )
+        part_users = parts.scalars().all()
+
+        progress = await _compute_challenge_progress(c, db)
+
+        out.append({
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "tracker_id": c.tracker_id,
+            "challenge_type": c.challenge_type,
+            "target_regions": c.target_regions,
+            "created_at": c.created_at.isoformat(),
+            "creator_id": c.creator_id,
+            "participant_count": len(part_users),
+            "participants": [{"id": u.id, "name": u.name, "picture": u.picture} for u in part_users[:5]],
+            "progress": progress,
+        })
+
+    return out
+
+
+@app.post("/api/challenges")
+async def create_challenge(body: ChallengeCreate, user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Create a new challenge."""
+    if body.challenge_type not in ("collaborative", "race"):
+        raise HTTPException(400, "challenge_type must be 'collaborative' or 'race'")
+
+    # Limit: max 10 active challenges per user
+    count = (await db.execute(
+        select(func.count())
+        .select_from(ChallengeParticipant)
+        .where(ChallengeParticipant.user_id == user.id)
+    )).scalar()
+    if count >= 10:
+        raise HTTPException(400, "Maximum 10 active challenges reached")
+
+    challenge = Challenge(
+        id=generate_challenge_id(),
+        creator_id=user.id,
+        title=body.title[:100],
+        description=(body.description or "")[:500],
+        tracker_id=body.tracker_id,
+        target_regions=body.target_regions,
+        challenge_type=body.challenge_type,
+    )
+    db.add(challenge)
+
+    # Auto-join creator
+    db.add(ChallengeParticipant(challenge_id=challenge.id, user_id=user.id))
+
+    # Invite friends (auto-join them)
+    if body.invite_friend_ids:
+        # Validate they are actual friends
+        friends_result = await db.execute(
+            select(Friendship.friend_id).where(
+                Friendship.user_id == user.id,
+                Friendship.friend_id.in_(body.invite_friend_ids)
+            )
+        )
+        valid_friend_ids = {r[0] for r in friends_result.all()}
+
+        for fid in valid_friend_ids:
+            db.add(ChallengeParticipant(challenge_id=challenge.id, user_id=fid))
+
+    await db.commit()
+
+    return {
+        "id": challenge.id,
+        "title": challenge.title,
+        "description": challenge.description,
+        "tracker_id": challenge.tracker_id,
+        "challenge_type": challenge.challenge_type,
+        "target_regions": challenge.target_regions,
+        "created_at": challenge.created_at.isoformat(),
+        "creator_id": challenge.creator_id,
+    }
+
+
+@app.get("/api/challenges/{challenge_id}")
+async def get_challenge_detail(challenge_id: str, user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Get full detail of a challenge including progress."""
+    challenge = (await db.execute(
+        select(Challenge).where(Challenge.id == challenge_id)
+    )).scalar_one_or_none()
+    if not challenge:
+        raise HTTPException(404, "Challenge not found")
+
+    # Verify user is a participant
+    is_participant = (await db.execute(
+        select(ChallengeParticipant).where(
+            ChallengeParticipant.challenge_id == challenge_id,
+            ChallengeParticipant.user_id == user.id,
+        )
+    )).scalar_one_or_none()
+    if not is_participant:
+        raise HTTPException(403, "You are not a participant in this challenge")
+
+    progress = await _compute_challenge_progress(challenge, db)
+
+    # Get all participants
+    parts = await db.execute(
+        select(ChallengeParticipant, User)
+        .join(User, ChallengeParticipant.user_id == User.id)
+        .where(ChallengeParticipant.challenge_id == challenge_id)
+    )
+
+    return {
+        "id": challenge.id,
+        "title": challenge.title,
+        "description": challenge.description,
+        "tracker_id": challenge.tracker_id,
+        "challenge_type": challenge.challenge_type,
+        "target_regions": challenge.target_regions,
+        "created_at": challenge.created_at.isoformat(),
+        "creator_id": challenge.creator_id,
+        "participants": [
+            {"id": u.id, "name": u.name, "picture": u.picture, "joined_at": cp.joined_at.isoformat()}
+            for cp, u in parts.all()
+        ],
+        "progress": progress,
+    }
+
+
+@app.post("/api/challenges/{challenge_id}/join")
+async def join_challenge(challenge_id: str, user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Join a challenge (must be friends with creator)."""
+    challenge = (await db.execute(
+        select(Challenge).where(Challenge.id == challenge_id)
+    )).scalar_one_or_none()
+    if not challenge:
+        raise HTTPException(404, "Challenge not found")
+
+    # Check not already joined
+    existing = (await db.execute(
+        select(ChallengeParticipant).where(
+            ChallengeParticipant.challenge_id == challenge_id,
+            ChallengeParticipant.user_id == user.id,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(400, "Already joined")
+
+    # Max 20 participants
+    part_count = (await db.execute(
+        select(func.count()).select_from(ChallengeParticipant)
+        .where(ChallengeParticipant.challenge_id == challenge_id)
+    )).scalar()
+    if part_count >= 20:
+        raise HTTPException(400, "Challenge is full (max 20 participants)")
+
+    db.add(ChallengeParticipant(challenge_id=challenge_id, user_id=user.id))
+    await db.commit()
+    return {"status": "joined"}
+
+
+@app.delete("/api/challenges/{challenge_id}/leave")
+async def leave_challenge(challenge_id: str, user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Leave a challenge."""
+    challenge = (await db.execute(
+        select(Challenge).where(Challenge.id == challenge_id)
+    )).scalar_one_or_none()
+    if not challenge:
+        raise HTTPException(404, "Challenge not found")
+
+    participant = (await db.execute(
+        select(ChallengeParticipant).where(
+            ChallengeParticipant.challenge_id == challenge_id,
+            ChallengeParticipant.user_id == user.id,
+        )
+    )).scalar_one_or_none()
+    if not participant:
+        raise HTTPException(404, "Not a participant")
+
+    await db.execute(
+        delete(ChallengeParticipant).where(
+            ChallengeParticipant.challenge_id == challenge_id,
+            ChallengeParticipant.user_id == user.id,
+        )
+    )
+
+    # If creator leaves or 0 participants remain, delete the challenge
+    remaining = (await db.execute(
+        select(func.count()).select_from(ChallengeParticipant)
+        .where(ChallengeParticipant.challenge_id == challenge_id)
+    )).scalar()
+
+    if remaining == 0 or challenge.creator_id == user.id:
+        await db.execute(delete(ChallengeParticipant).where(ChallengeParticipant.challenge_id == challenge_id))
+        await db.execute(delete(Challenge).where(Challenge.id == challenge_id))
+
+    await db.commit()
+    return {"status": "left"}
+
+
+@app.delete("/api/challenges/{challenge_id}")
+async def delete_challenge(challenge_id: str, user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Delete a challenge (creator only)."""
+    challenge = (await db.execute(
+        select(Challenge).where(Challenge.id == challenge_id)
+    )).scalar_one_or_none()
+    if not challenge:
+        raise HTTPException(404, "Challenge not found")
+    if challenge.creator_id != user.id:
+        raise HTTPException(403, "Only the creator can delete a challenge")
+
+    await db.execute(delete(ChallengeParticipant).where(ChallengeParticipant.challenge_id == challenge_id))
+    await db.execute(delete(Challenge).where(Challenge.id == challenge_id))
+    await db.commit()
+    return {"status": "deleted"}
+
+
+# --------------- Wishlist / Bucket List endpoints ---------------
+
+@app.get("/api/wishlist")
+async def get_all_wishlist(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all wishlist items across all trackers."""
+    result = await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.user_id == user.id)
+        .order_by(WishlistItem.created_at.desc())
+    )
+    items = result.scalars().all()
+    return [
+        {
+            "tracker_id": item.tracker_id,
+            "region_id": item.region_id,
+            "priority": item.priority,
+            "target_date": item.target_date,
+            "notes": item.notes,
+            "category": item.category,
+            "created_at": item.created_at.isoformat() if item.created_at else None,
+        }
+        for item in items
+    ]
+
+
+@app.get("/api/wishlist/{tracker_id}")
+async def get_wishlist_for_tracker(
+    tracker_id: str,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get wishlist items for a specific tracker."""
+    result = await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.user_id == user.id, WishlistItem.tracker_id == tracker_id)
+        .order_by(WishlistItem.created_at.desc())
+    )
+    items = result.scalars().all()
+    return [
+        {
+            "tracker_id": item.tracker_id,
+            "region_id": item.region_id,
+            "priority": item.priority,
+            "target_date": item.target_date,
+            "notes": item.notes,
+            "category": item.category,
+            "created_at": item.created_at.isoformat() if item.created_at else None,
+        }
+        for item in items
+    ]
+
+
+@app.put("/api/wishlist/{tracker_id}/{region_id}")
+async def upsert_wishlist_item(
+    tracker_id: str,
+    region_id: str,
+    body: WishlistItemCreate,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add or update a wishlist item."""
+    if body.priority not in ("high", "medium", "low"):
+        raise HTTPException(400, "priority must be 'high', 'medium', or 'low'")
+    if body.category not in ("solo", "friends", "family", "work"):
+        raise HTTPException(400, "category must be 'solo', 'friends', 'family', or 'work'")
+
+    result = await db.execute(
+        select(WishlistItem).where(
+            WishlistItem.user_id == user.id,
+            WishlistItem.tracker_id == tracker_id,
+            WishlistItem.region_id == region_id,
+        )
+    )
+    item = result.scalar_one_or_none()
+
+    if item:
+        item.priority = body.priority
+        item.target_date = body.target_date
+        item.notes = body.notes
+        item.category = body.category
+        item.updated_at = datetime.now(timezone.utc)
+    else:
+        item = WishlistItem(
+            user_id=user.id,
+            tracker_id=tracker_id,
+            region_id=region_id,
+            priority=body.priority,
+            target_date=body.target_date,
+            notes=body.notes,
+            category=body.category,
+        )
+        db.add(item)
+
+    await db.commit()
+    return {
+        "tracker_id": item.tracker_id,
+        "region_id": item.region_id,
+        "priority": item.priority,
+        "target_date": item.target_date,
+        "notes": item.notes,
+        "category": item.category,
+        "created_at": item.created_at.isoformat() if item.created_at else None,
+    }
+
+
+@app.patch("/api/wishlist/{tracker_id}/{region_id}")
+async def patch_wishlist_item(
+    tracker_id: str,
+    region_id: str,
+    body: WishlistItemUpdate,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Partially update a wishlist item."""
+    result = await db.execute(
+        select(WishlistItem).where(
+            WishlistItem.user_id == user.id,
+            WishlistItem.tracker_id == tracker_id,
+            WishlistItem.region_id == region_id,
+        )
+    )
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(404, "Wishlist item not found")
+
+    if body.priority is not None:
+        if body.priority not in ("high", "medium", "low"):
+            raise HTTPException(400, "priority must be 'high', 'medium', or 'low'")
+        item.priority = body.priority
+    if body.target_date is not None:
+        item.target_date = body.target_date if body.target_date else None
+    if body.notes is not None:
+        item.notes = body.notes if body.notes else None
+    if body.category is not None:
+        if body.category not in ("solo", "friends", "family", "work"):
+            raise HTTPException(400, "category must be 'solo', 'friends', 'family', or 'work'")
+        item.category = body.category
+
+    item.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    return {
+        "tracker_id": item.tracker_id,
+        "region_id": item.region_id,
+        "priority": item.priority,
+        "target_date": item.target_date,
+        "notes": item.notes,
+        "category": item.category,
+        "created_at": item.created_at.isoformat() if item.created_at else None,
+    }
+
+
+@app.delete("/api/wishlist/{tracker_id}/{region_id}")
+async def delete_wishlist_item(
+    tracker_id: str,
+    region_id: str,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove a wishlist item."""
+    result = await db.execute(
+        delete(WishlistItem).where(
+            WishlistItem.user_id == user.id,
+            WishlistItem.tracker_id == tracker_id,
+            WishlistItem.region_id == region_id,
+        )
+    )
+    if result.rowcount == 0:
+        raise HTTPException(404, "Wishlist item not found")
+    await db.commit()
+    return {"status": "deleted"}
+
+
+# --------------- XP / Leveling endpoints ---------------
+import math
+
+def _xp_for_level(level: int) -> int:
+    """XP needed to advance from `level` to level+1."""
+    if level <= 1:
+        return 0
+    return round(50 * math.pow(level, 1.5))
+
+def _level_from_xp(total_xp: int) -> dict:
+    level = 1
+    cumulative = 0
+    while True:
+        next_xp = _xp_for_level(level + 1)
+        if cumulative + next_xp > total_xp:
+            break
+        cumulative += next_xp
+        level += 1
+    return {
+        "level": level,
+        "current_xp": total_xp - cumulative,
+        "next_level_xp": _xp_for_level(level + 1),
+    }
+
+
+class AddXpRequest(BaseModel):
+    amount: int
+    reason: str
+    tracker_id: str | None = None
+
+
+@app.get("/api/user/xp")
+async def get_user_xp(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get total XP, level, and progress for the current user."""
+    result = await db.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one_or_none()
+    if not db_user:
+        raise HTTPException(404, "User not found")
+
+    total_xp = db_user.xp or 0
+    info = _level_from_xp(total_xp)
+
+    return {
+        "total_xp": total_xp,
+        "level": info["level"],
+        "current_xp": info["current_xp"],
+        "next_level_xp": info["next_level_xp"],
+    }
+
+
+@app.post("/api/user/xp")
+async def add_user_xp(
+    body: AddXpRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add XP for the current user and log the transaction."""
+    if body.amount <= 0:
+        raise HTTPException(400, "Amount must be positive")
+    if body.amount > 500:
+        raise HTTPException(400, "Amount too large")
+
+    result = await db.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one_or_none()
+    if not db_user:
+        raise HTTPException(404, "User not found")
+
+    old_xp = db_user.xp or 0
+    new_xp = old_xp + body.amount
+    new_level_info = _level_from_xp(new_xp)
+
+    db_user.xp = new_xp
+    db_user.level = new_level_info["level"]
+
+    # Log the XP transaction
+    log_entry = XpLog(
+        user_id=user.id,
+        amount=body.amount,
+        reason=body.reason,
+        tracker_id=body.tracker_id,
+    )
+    db.add(log_entry)
+
+    await db.commit()
+
+    return {
+        "total_xp": new_xp,
+        "level": new_level_info["level"],
+        "current_xp": new_level_info["current_xp"],
+        "next_level_xp": new_level_info["next_level_xp"],
+        "xp_gained": body.amount,
+    }
+
+
+class XpResponse(BaseModel):
+    total_xp: int
+    level: int
+    current_xp: int
+    next_level_xp: int
+
+
+class AddXpRequest(BaseModel):
+    amount: int
+    reason: str
+    tracker_id: str | None = None
+
+
+# --------------- XP endpoints ---------------
+@app.get("/api/user/xp", response_model=XpResponse)
+async def get_user_xp(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get user's current XP, level, and progress."""
+    result = await db.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one_or_none()
+    if not db_user:
+        raise HTTPException(404, "User not found")
+
+    total_xp = db_user.xp or 0
+    # Calculate level from XP (xpForLevel(N) = 50 * N^1.5)
+    level = 1
+    cumulative = 0
+    while True:
+        next_xp = round(50 * pow(level + 1, 1.5))
+        if cumulative + next_xp > total_xp:
+            break
+        cumulative += next_xp
+        level += 1
+
+    current_xp = total_xp - cumulative
+    next_level_xp = round(50 * pow(level + 1, 1.5))
+
+    return XpResponse(
+        total_xp=total_xp,
+        level=level,
+        current_xp=current_xp,
+        next_level_xp=next_level_xp,
+    )
+
+
+@app.post("/api/user/xp", response_model=XpResponse)
+async def add_user_xp(
+    body: AddXpRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add XP to user account."""
+    if body.amount <= 0:
+        raise HTTPException(400, "Amount must be positive")
+
+    result = await db.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one_or_none()
+    if not db_user:
+        raise HTTPException(404, "User not found")
+
+    # Update user XP
+    db_user.xp = (db_user.xp or 0) + body.amount
+
+    # Calculate new level
+    total_xp = db_user.xp
+    level = 1
+    cumulative = 0
+    while True:
+        next_xp = round(50 * pow(level + 1, 1.5))
+        if cumulative + next_xp > total_xp:
+            break
+        cumulative += next_xp
+        level += 1
+
+    db_user.level = level
+
+    # Log the XP entry
+    xp_log = XpLog(
+        user_id=user.id,
+        amount=body.amount,
+        reason=body.reason,
+        tracker_id=body.tracker_id,
+    )
+    db.add(xp_log)
+    await db.commit()
+
+    current_xp = total_xp - cumulative
+    next_level_xp = round(50 * pow(level + 1, 1.5))
+
+    return XpResponse(
+        total_xp=total_xp,
+        level=level,
+        current_xp=current_xp,
+        next_level_xp=next_level_xp,
+    )
 
 
 # --------------- Health check ---------------

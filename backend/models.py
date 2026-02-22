@@ -26,9 +26,12 @@ class User(Base):
     name = Column(String, nullable=True)
     picture = Column(String, nullable=True)
     friend_code = Column(String(8), unique=True, nullable=True, index=True)
+    xp = Column(Integer, nullable=False, server_default="0", default=0)
+    level = Column(Integer, nullable=False, server_default="1", default=1)
 
     visited_regions = relationship("VisitedRegions", back_populates="user", cascade="all, delete-orphan")
     visited_world = relationship("VisitedWorld", back_populates="user", cascade="all, delete-orphan", uselist=False)
+    xp_logs = relationship("XpLog", back_populates="user", cascade="all, delete-orphan")
 
 
 class VisitedRegions(Base):
@@ -79,6 +82,27 @@ class FriendRequest(Base):
     )
 
 
+class WishlistItem(Base):
+    __tablename__ = "wishlist"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    tracker_id = Column(String(20), nullable=False)  # country_id or 'world'
+    region_id = Column(String(50), nullable=False)
+    priority = Column(String(10), nullable=False, default="medium")  # high | medium | low
+    target_date = Column(String(7), nullable=True)  # YYYY-MM format
+    notes = Column(String, nullable=True)
+    category = Column(String(20), nullable=False, default="solo")  # solo | friends | family | work
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", backref="wishlist_items")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "tracker_id", "region_id", name="uq_wishlist_item"),
+    )
+
+
 class Friendship(Base):
     __tablename__ = "friendships"
 
@@ -92,4 +116,55 @@ class Friendship(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "friend_id", name="uq_friendship"),
+    )
+
+
+class XpLog(Base):
+    __tablename__ = "xp_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount = Column(Integer, nullable=False)
+    reason = Column(String, nullable=False)  # 'visit_region', 'visit_country', 'unlock_achievement', etc.
+    tracker_id = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="xp_logs")
+
+
+def generate_challenge_id():
+    """Generate a random 12-char alphanumeric challenge ID."""
+    chars = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(chars, k=12))
+
+
+class Challenge(Base):
+    __tablename__ = "challenges"
+
+    id = Column(String, primary_key=True, default=generate_challenge_id)
+    creator_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    tracker_id = Column(String, nullable=False)  # e.g. 'world', 'ch', 'us'
+    target_regions = Column(JSONB, nullable=False, default=list)  # list of region IDs or ['*']
+    challenge_type = Column(String, nullable=False, default="collaborative")  # 'collaborative' | 'race'
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    creator = relationship("User", foreign_keys=[creator_id])
+    participants = relationship("ChallengeParticipant", back_populates="challenge", cascade="all, delete-orphan")
+
+
+class ChallengeParticipant(Base):
+    __tablename__ = "challenge_participants"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    challenge_id = Column(String, ForeignKey("challenges.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    joined_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    challenge = relationship("Challenge", back_populates="participants")
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("challenge_id", "user_id", name="uq_challenge_participant"),
     )

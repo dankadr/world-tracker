@@ -32,6 +32,8 @@ export default defineConfig({
           'geo-no': ['./src/data/norway.json'],
           'geo-ca': ['./src/data/canada.json'],
           'geo-capitals': ['./src/data/capitals.json'],
+          'geo-jp': ['./src/data/japan.json'],
+          'geo-au': ['./src/data/australia.json'],
         },
       },
     },

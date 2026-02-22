@@ -335,7 +335,7 @@
   border-radius: 4px;
   transition: all 0.15s;
   flex-shrink: 0;
-  opacity: 0;
+  opacity: 0.4;
 }
 
 .fp-friend:hover .fp-remove-btn {

@@ -1,0 +1,312 @@
+.unesco-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.unesco-panel.dark {
+  background: #1e1e1e;
+  color: #e0e0e0;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.unesco-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.unesco-panel.dark .unesco-panel-header {
+  border-bottom-color: #333;
+}
+
+.unesco-panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
+}
+
+.unesco-panel.dark .close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.unesco-stats {
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.unesco-panel.dark .unesco-stats {
+  background: #252525;
+  border-bottom-color: #333;
+}
+
+.stat-main {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-weight: 700;
+  color: #28a745;
+  font-size: 24px;
+}
+
+.stat-total {
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.stat-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.stat-types {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.unesco-filters {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.unesco-panel.dark .unesco-filters {
+  border-bottom-color: #333;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.unesco-panel.dark .search-input {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4169E1;
+  box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.1);
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filter-row:last-child {
+  margin-bottom: 0;
+}
+
+.filter-row select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.unesco-panel.dark .filter-row select {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+.filter-row select:focus {
+  outline: none;
+  border-color: #4169E1;
+}
+
+.unesco-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px;
+}
+
+.unesco-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.unesco-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.unesco-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.unesco-panel.dark .unesco-list::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+.country-group {
+  margin-bottom: 20px;
+}
+
+.country-header {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unesco-panel.dark .country-header {
+  border-bottom-color: #333;
+}
+
+.site-count {
+  font-weight: 400;
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.site-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+}
+
+.site-item:hover {
+  background: rgba(65, 105, 225, 0.05);
+  border-color: rgba(65, 105, 225, 0.2);
+}
+
+.unesco-panel.dark .site-item:hover {
+  background: rgba(65, 105, 225, 0.1);
+}
+
+.site-item.visited {
+  background: rgba(40, 167, 69, 0.05);
+}
+
+.unesco-panel.dark .site-item.visited {
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.site-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.2s;
+}
+
+.site-item.visited .site-checkbox {
+  background: #28a745;
+  border-color: #28a745;
+  color: white;
+  font-weight: bold;
+}
+
+.site-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.site-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.site-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+  .unesco-panel {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}

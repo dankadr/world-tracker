@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import getAchievements from '../data/achievements';
+import { computeProgress } from '../utils/achievementProgress';
+import AchievementCard from './AchievementCard';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 export default function Achievements() {
@@ -10,9 +12,17 @@ export default function Achievements() {
   const userId = user?.id || null;
 
   const achievements = getAchievements(userId);
-  const results = achievements.map((a) => ({
+
+  // First pass: compute unlocked status
+  const baseResults = achievements.map((a) => ({
     ...a,
     unlocked: a.check(),
+  }));
+
+  // Second pass: compute progress (needs baseResults for meta-achievements)
+  const results = baseResults.map((a) => ({
+    ...a,
+    progress: computeProgress(a.rule, userId, baseResults),
   }));
 
   const unlockedCount = results.filter((r) => r.unlocked).length;
@@ -23,6 +33,18 @@ export default function Achievements() {
     const cat = a.category || 'General';
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(a);
+  });
+
+  // Sort within each group: in-progress first, then completed, then locked (0 progress)
+  Object.values(groups).forEach((badges) => {
+    badges.sort((a, b) => {
+      const aScore = a.unlocked ? 1 : a.progress.pct > 0 ? 2 : 0;
+      const bScore = b.unlocked ? 1 : b.progress.pct > 0 ? 2 : 0;
+      // in-progress (2) first, then completed (1), then locked (0)
+      if (aScore !== bScore) return bScore - aScore;
+      // Within same group, sort by progress percentage descending
+      return b.progress.pct - a.progress.pct;
+    });
   });
 
   return (
@@ -54,14 +76,7 @@ export default function Achievements() {
                     </h3>
                     <div className="achievements-grid">
                       {badges.map((a) => (
-                        <div
-                          key={a.id}
-                          className={`achievement-badge ${a.unlocked ? 'unlocked' : 'locked'}`}
-                        >
-                          <span className="badge-icon">{a.icon}</span>
-                          <span className="badge-title">{a.title}</span>
-                          <span className="badge-desc">{a.desc}</span>
-                        </div>
+                        <AchievementCard key={a.id} achievement={a} />
                       ))}
                     </div>
                   </div>

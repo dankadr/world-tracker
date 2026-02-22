@@ -1,0 +1,499 @@
+/* ===== Year in Review Overlay ===== */
+.yir-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: yir-fade-in 0.3s ease;
+}
+
+@keyframes yir-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== Container ===== */
+.yir-container {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: 85vh;
+  max-height: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(165deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(99, 102, 241, 0.1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.yir-container.yir-empty {
+  height: auto;
+  max-height: 400px;
+}
+
+/* Close button */
+.yir-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.yir-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* ===== Progress Dots ===== */
+.yir-dots {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.yir-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.yir-dot-active {
+  background: #fff;
+  transform: scale(1.3);
+}
+
+.yir-dot-done {
+  background: rgba(99, 102, 241, 0.6);
+}
+
+/* ===== Card Wrapper & Animations ===== */
+.yir-card-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.yir-slide-in {
+  animation: yir-slide-in 0.35s ease-out;
+}
+
+.yir-slide-left {
+  animation: yir-slide-out-left 0.25s ease-in;
+}
+
+.yir-slide-right {
+  animation: yir-slide-out-right 0.25s ease-in;
+}
+
+@keyframes yir-slide-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes yir-slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-60px); }
+}
+
+@keyframes yir-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(60px); }
+}
+
+/* ===== Card Base ===== */
+.yir-card {
+  width: 100%;
+  text-align: center;
+  color: #fff;
+}
+
+.yir-card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: yir-bounce-in 0.6s ease-out;
+}
+
+@keyframes yir-bounce-in {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== Title Card ===== */
+.yir-globe {
+  font-size: 80px;
+  margin-bottom: 16px;
+  animation: yir-spin 4s linear infinite;
+}
+
+@keyframes yir-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+.yir-year-text {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.yir-subtitle {
+  font-size: 20px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 8px 0 0;
+}
+
+.yir-tagline {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 24px;
+  animation: yir-fade-up 1s ease-out 0.5s both;
+}
+
+@keyframes yir-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Big Number ===== */
+.yir-big-number {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  margin: 8px 0;
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.yir-card-label {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 4px 0;
+}
+
+.yir-card-detail {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 4px 0;
+}
+
+.yir-card-highlight {
+  font-size: 14px;
+  color: #a78bfa;
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+
+/* ===== Tracker List ===== */
+.yir-tracker-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.yir-tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  animation: yir-fade-up 0.4s ease-out both;
+}
+
+.yir-tracker-row:nth-child(1) { animation-delay: 0.1s; }
+.yir-tracker-row:nth-child(2) { animation-delay: 0.2s; }
+.yir-tracker-row:nth-child(3) { animation-delay: 0.3s; }
+.yir-tracker-row:nth-child(4) { animation-delay: 0.4s; }
+.yir-tracker-row:nth-child(5) { animation-delay: 0.5s; }
+.yir-tracker-row:nth-child(6) { animation-delay: 0.6s; }
+.yir-tracker-row:nth-child(7) { animation-delay: 0.7s; }
+
+.yir-tracker-flag {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.yir-tracker-name {
+  flex: 1;
+  text-align: left;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.yir-tracker-count {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ===== Top Tracker ===== */
+.yir-top-tracker-flag {
+  font-size: 56px;
+  margin: 8px 0;
+}
+
+.yir-top-tracker-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #fff;
+}
+
+/* ===== Month Chart ===== */
+.yir-month-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 100px;
+  margin-top: 20px;
+  padding: 0 8px;
+}
+
+.yir-month-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.yir-month-bar {
+  width: 100%;
+  max-width: 24px;
+  min-height: 3px;
+  background: linear-gradient(to top, #6366f1, #a78bfa);
+  border-radius: 4px 4px 0 0;
+  animation: yir-bar-grow 0.5s ease-out both;
+}
+
+@keyframes yir-bar-grow {
+  from { height: 0 !important; }
+}
+
+.yir-month-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 4px;
+}
+
+/* ===== Comparison Card ===== */
+.yir-comp-text {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 8px 0;
+  color: #fff;
+}
+
+.yir-comp-number {
+  font-size: 64px;
+}
+
+/* ===== Summary Card ===== */
+.yir-summary-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 4px 0 24px;
+  color: #fff;
+}
+
+.yir-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 0 auto;
+  max-width: 320px;
+}
+
+.yir-summary-stat {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: yir-fade-up 0.5s ease-out both;
+}
+
+.yir-summary-stat:nth-child(1) { animation-delay: 0.1s; }
+.yir-summary-stat:nth-child(2) { animation-delay: 0.2s; }
+.yir-summary-stat:nth-child(3) { animation-delay: 0.3s; }
+.yir-summary-stat:nth-child(4) { animation-delay: 0.4s; }
+
+.yir-summary-num {
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.yir-summary-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Navigation ===== */
+.yir-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 16px;
+}
+
+.yir-nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.yir-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.yir-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.yir-nav-download {
+  width: auto;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 14px;
+  gap: 6px;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+}
+
+.yir-nav-download:hover {
+  background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+}
+
+.yir-nav-counter {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Year in Review Button (in StatsModal) ===== */
+.yir-button-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.yir-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.yir-trigger-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.yir-year-select {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+
+.yir-year-select option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 480px) {
+  .yir-container {
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .yir-big-number {
+    font-size: 56px;
+  }
+
+  .yir-year-text {
+    font-size: 28px;
+  }
+
+  .yir-globe {
+    font-size: 60px;
+  }
+}

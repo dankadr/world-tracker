@@ -4,7 +4,9 @@ import { useFriends } from '../context/FriendsContext';
 import { lookupFriendCode } from '../utils/api';
 import AuthButton from './AuthButton';
 import ConfirmDialog from './ConfirmDialog';
+import ChallengesPanel from './ChallengesPanel';
 import './FriendsPanel.css';
+import './ChallengesPanel.css';
 
 function Avatar({ user, size = 32 }) {
   if (user?.picture) {
@@ -26,11 +28,10 @@ function Avatar({ user, size = 32 }) {
   );
 }
 
-export default function FriendsPanel({ onClose }) {
+export default function FriendsPanel({ onClose, onCompare, comparisonFriendId }) {
   const { user, token, isLoggedIn } = useAuth();
   const { friends, requests, myProfile, loading, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend } = useFriends();
-
-  const [friendCode, setFriendCode] = useState('');
+  const [activeTab, setActiveTab] = useState('friends');  const [friendCode, setFriendCode] = useState('');
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [error, setError] = useState('');
@@ -154,10 +155,30 @@ export default function FriendsPanel({ onClose }) {
   return (
     <div className="friends-panel">
       <div className="fp-header">
-        <h2 className="fp-title">👥 Friends</h2>
+        <h2 className="fp-title">{activeTab === 'friends' ? '👥 Friends' : '🏆 Challenges'}</h2>
         {onClose && <button className="fp-close" onClick={onClose} aria-label="Close">&times;</button>}
       </div>
 
+      {/* Tab Bar */}
+      <div className="fp-tab-bar">
+        <button
+          className={`fp-tab ${activeTab === 'friends' ? 'active' : ''}`}
+          onClick={() => setActiveTab('friends')}
+        >
+          👥 Friends
+          {totalRequests > 0 && <span className="fp-tab-badge">{totalRequests}</span>}
+        </button>
+        <button
+          className={`fp-tab ${activeTab === 'challenges' ? 'active' : ''}`}
+          onClick={() => setActiveTab('challenges')}
+        >
+          🏆 Challenges
+        </button>
+      </div>
+
+      {activeTab === 'challenges' ? (
+        <ChallengesPanel />
+      ) : (
       <div className="fp-scrollable">
         {/* My Friend Code */}
         <div className="fp-section">
@@ -275,18 +296,30 @@ export default function FriendsPanel({ onClose }) {
                   <span className="fp-friend-stat">{friend.world_countries} countries</span>
                 )}
               </div>
-              <button
-                className="fp-remove-btn"
-                onClick={() => setConfirmRemove(friend)}
-                disabled={actionLoading === `remove-${friend.id}`}
-                title="Remove friend"
-              >
-                ✕
-              </button>
+              <div className="fp-friend-actions">
+                {onCompare && (
+                  <button
+                    className={`fp-compare-btn ${comparisonFriendId === friend.id ? 'active' : ''}`}
+                    onClick={() => onCompare(comparisonFriendId === friend.id ? null : friend)}
+                    title={comparisonFriendId === friend.id ? 'Exit comparison' : 'Compare maps'}
+                  >
+                    {comparisonFriendId === friend.id ? '✕ Exit' : '⚔️ Compare'}
+                  </button>
+                )}
+                <button
+                  className="fp-remove-btn"
+                  onClick={() => setConfirmRemove(friend)}
+                  disabled={actionLoading === `remove-${friend.id}`}
+                  title="Remove friend"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
+      )}
 
       <ConfirmDialog
         isOpen={!!confirmRemove}

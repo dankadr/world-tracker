@@ -8,6 +8,8 @@ import nycData from './nyc.json';
 import norwayData from './norway.json';
 import canadaData from './canada.json';
 import capitalsData from './capitals.json';
+import japanData from './japan.json';
+import australiaData from './australia.json';
 
 // Map geoFile names to imported data
 const geoMap = {
@@ -18,6 +20,8 @@ const geoMap = {
   'norway.json': norwayData,
   'canada.json': canadaData,
   'capitals.json': capitalsData,
+  'japan.json': japanData,
+  'australia.json': australiaData,
 };
 
 // Build countries object from config

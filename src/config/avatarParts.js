@@ -1032,11 +1032,11 @@ export const avatarCategories = {
   shirt: { label: 'Shirt', parts: shirts },
   hat: { label: 'Hat', parts: hats },
   accessory: { label: 'Accessory', parts: accessories },
-  shoes: { label: 'Shoes', parts: shoes, comingSoon: true },
-  glasses: { label: 'Glasses', parts: glasses, comingSoon: true },
-  cape: { label: 'Cape', parts: capes, comingSoon: true },
-  badge: { label: 'Badge', parts: badges, comingSoon: true },
-  pet: { label: 'Pet', parts: pets, comingSoon: true },
+  shoes: { label: 'Shoes', parts: shoes, comingSoon: true, unlockLevel: 3 },
+  glasses: { label: 'Glasses', parts: glasses, comingSoon: true, unlockLevel: 5 },
+  cape: { label: 'Cape', parts: capes, comingSoon: true, unlockLevel: 10 },
+  badge: { label: 'Badge', parts: badges, comingSoon: true, unlockLevel: 15 },
+  pet: { label: 'Pet', parts: pets, comingSoon: true, unlockLevel: 20 },
 };
 
 export const hairColorOptions = hairColors;

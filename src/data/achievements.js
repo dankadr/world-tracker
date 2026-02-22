@@ -4,6 +4,7 @@ import continentMap from '../config/continents.json';
 import worldData from './world.json';
 import countryMeta from '../config/countryMeta.json';
 import capitalsData from './capitals.json';
+import unescoData from './unesco-sites.json';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -202,6 +203,37 @@ function evaluateRule(rule, userId) {
       } catch {
         return false;
       }
+    }
+
+    case 'unescoVisited':
+      return getVisited('unesco', userId) >= rule.min;
+
+    case 'unescoTypesVisited': {
+      const visitedUnescoIds = getVisitedIds('unesco', userId);
+      const types = new Set();
+      visitedUnescoIds.forEach(idStr => {
+        const site = unescoData.find(s => String(s.id) === idStr);
+        if (site) types.add(site.type);
+      });
+      return types.size >= rule.min;
+    }
+
+    case 'unescoRegionsVisited': {
+      const visitedUnescoIds = getVisitedIds('unesco', userId);
+      const regions = new Set();
+      visitedUnescoIds.forEach(idStr => {
+        const site = unescoData.find(s => String(s.id) === idStr);
+        if (site) regions.add(site.region);
+      });
+      return regions.size >= rule.min;
+    }
+
+    case 'unescoOldSiteVisited': {
+      const visitedUnescoIds = getVisitedIds('unesco', userId);
+      return visitedUnescoIds.some(idStr => {
+        const site = unescoData.find(s => String(s.id) === idStr);
+        return site && site.year < rule.year;
+      });
     }
 
     default:

@@ -129,5 +129,14 @@
   { "id": "collect-all-geo", "icon": "🗿", "title": "Geo Master", "desc": "Unlock all Geographic Feats achievements", "category": "Collector", "rule": { "type": "categoryComplete", "category": "Geographic Feats" } },
   { "id": "collect-all-fun", "icon": "🎭", "title": "Fun Facts Master", "desc": "Unlock all Fun Facts achievements", "category": "Collector", "rule": { "type": "categoryComplete", "category": "Fun Facts" } },
 
+  { "id": "unesco-first", "icon": "🏛️", "title": "World Heritage Explorer", "desc": "Visit your first UNESCO World Heritage Site", "category": "UNESCO", "rule": { "type": "unescoVisited", "min": 1 } },
+  { "id": "unesco-10", "icon": "🏺", "title": "Heritage Hunter", "desc": "Visit 10 UNESCO sites", "category": "UNESCO", "rule": { "type": "unescoVisited", "min": 10 } },
+  { "id": "unesco-25", "icon": "🗿", "title": "Heritage Collector", "desc": "Visit 25 UNESCO sites", "category": "UNESCO", "rule": { "type": "unescoVisited", "min": 25 } },
+  { "id": "unesco-50", "icon": "🏰", "title": "Heritage Master", "desc": "Visit 50 UNESCO sites", "category": "UNESCO", "rule": { "type": "unescoVisited", "min": 50 } },
+  { "id": "unesco-100", "icon": "🌍", "title": "Heritage Legend", "desc": "Visit 100 UNESCO sites", "category": "UNESCO", "rule": { "type": "unescoVisited", "min": 100 } },
+  { "id": "unesco-all-types", "icon": "🎨", "title": "Cultural & Natural", "desc": "Visit all 3 types of UNESCO sites (cultural, natural, mixed)", "category": "UNESCO", "rule": { "type": "unescoTypesVisited", "min": 3 } },
+  { "id": "unesco-all-regions", "icon": "🌏", "title": "Global Heritage", "desc": "Visit UNESCO sites on all continents", "category": "UNESCO", "rule": { "type": "unescoRegionsVisited", "min": 6 } },
+  { "id": "unesco-historic", "icon": "📜", "title": "Time Traveler", "desc": "Visit a UNESCO site inscribed before 1980", "category": "UNESCO", "rule": { "type": "unescoOldSiteVisited", "year": 1980 } },
+
   { "id": "easter-greater-israel", "icon": "🕎", "title": "ארץ ישראל השלמה", "desc": "Discover the ancient vision", "category": "Secret", "rule": { "type": "easterEggToggled", "easterEgg": "greater-israel" } }
 ]

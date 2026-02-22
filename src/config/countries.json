@@ -98,5 +98,33 @@
     "visitedColor": "#f39c12",
     "visitedHover": "#e67e22",
     "pointMode": true
+  },
+  {
+    "id": "jp",
+    "name": "Japan",
+    "flag": "🇯🇵",
+    "regionLabel": "Prefectures",
+    "regionLabelSingular": "prefecture",
+    "geoFile": "japan.json",
+    "center": [36.5, 138.0],
+    "zoom": 5,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#dc143c",
+    "visitedHover": "#b01030"
+  },
+  {
+    "id": "au",
+    "name": "Australia",
+    "flag": "🇦🇺",
+    "regionLabel": "States & Territories",
+    "regionLabelSingular": "state/territory",
+    "geoFile": "australia.json",
+    "center": [-25.0, 134.0],
+    "zoom": 4,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#f4a020",
+    "visitedHover": "#d48b1a"
   }
 ]

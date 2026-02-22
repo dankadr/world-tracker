@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -14,19 +14,26 @@ import MobileBottomSheet from './components/MobileBottomSheet';
 import EasterEggPrompt from './components/EasterEggPrompt';
 import StatsModal from './components/StatsModal';
 import FriendsPanel from './components/FriendsPanel';
+import ComparisonStats from './components/ComparisonStats';
+import './components/ComparisonView.css';
+import XpNotification from './components/XpNotification';
+import BucketListPanel from './components/BucketListPanel';
 import { useFriends } from './context/FriendsContext';
 import { useFriendsData } from './hooks/useFriendsData';
 import useVisitedRegions from './hooks/useVisitedCantons';
 import useVisitedCountries from './hooks/useVisitedCountries';
+import useWishlist from './hooks/useWishlist';
 import useCustomColors from './hooks/useCustomColors';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import useDeviceType from './hooks/useDeviceType';
+import useXp, { XpProvider } from './hooks/useXp';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import getAchievements from './data/achievements';
 import countries from './data/countries';
 import { countryList } from './data/countries';
 import worldData from './data/world.json';
+import './xp-styles.css';
 
 function parseShareHash() {
   try {
@@ -45,6 +52,7 @@ function AchievementToasts() {
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
+  const { addXp, XP_RULES: xpRules } = useXp();
 
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
@@ -69,6 +77,8 @@ function AchievementToasts() {
     if (newlyUnlocked.length > 0) {
       const newToasts = newlyUnlocked.map((id) => {
         const a = achievements.find((x) => x.id === id);
+        // Grant XP for achievement unlock
+        addXp(xpRules.UNLOCK_ACHIEVEMENT, 'unlock_achievement');
         return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
       });
       setToasts((prev) => [...prev, ...newToasts]);
@@ -79,7 +89,7 @@ function AchievementToasts() {
     // This lets them re-trigger a toast if re-earned later.
     prevUnlocked.current = new Set(currentUnlocked);
     localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
-  }, [seenKey, userId]);
+  }, [seenKey, userId, addXp, xpRules]);
 
   useEffect(() => {
     checkAchievements();
@@ -127,17 +137,154 @@ export default function App() {
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
+  const { token, isLoggedIn, user } = useAuth();
+  const userId = user?.id || null;
 
   const rawCountry = countries[countryId];
   const country = applyColors(rawCountry);
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist } = useVisitedRegions(countryId);
   const { visited: worldVisited, toggleCountry: toggleWorldCountry } = useVisitedCountries();
+  const { addXp, XP_RULES: xpRules } = useXp();
+  const {
+    items: bucketListItems,
+    addToWishlist,
+    updateItem: updateBucketItem,
+    removeFromWishlist,
+    isInWishlist,
+  } = useWishlist();
+  const [showBucketList, setShowBucketList] = useState(false);
+  const [pendingBucketVisit, setPendingBucketVisit] = useState(null);
+
+  // Track which trackers have been visited for first-visit XP
+  const trackerFirstVisitRef = useRef(() => {
+    try {
+      const raw = localStorage.getItem('swiss-tracker-first-visit-trackers');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+  });
+  const firstVisitTrackers = useRef(trackerFirstVisitRef.current());
+
+  // XP-granting wrappers
+  const handleToggleRegion = useCallback((regionId) => {
+    const wasVisited = visited.has(regionId);
+    toggle(regionId);
+    if (!wasVisited) {
+      // Grant region visit XP
+      addXp(xpRules.VISIT_REGION, 'visit_region', countryId);
+      // Check first tracker visit
+      if (!firstVisitTrackers.current.has(countryId)) {
+        firstVisitTrackers.current.add(countryId);
+        localStorage.setItem('swiss-tracker-first-visit-trackers', JSON.stringify([...firstVisitTrackers.current]));
+        addXp(xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
+      }
+    }
+  }, [toggle, visited, addXp, xpRules, countryId]);
+
+  const handleToggleWishlist = useCallback((regionId) => {
+    const wasWishlisted = regionWishlist.has(regionId);
+    if (wasWishlisted && isInWishlist(countryId, regionId)) {
+      removeFromWishlist(countryId, regionId);
+    }
+  }, [regionWishlist, isInWishlist, removeFromWishlist, countryId]);
+
+  const wishlistStorageKey = useCallback((trackerId) => {
+    return `${userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-'}wishlist-${trackerId}`;
+  }, [userId]);
+
+  const removeLegacyWishlistEntry = useCallback((trackerId, regionId) => {
+    try {
+      const key = wishlistStorageKey(trackerId);
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          const next = arr.filter((id) => id !== regionId);
+          localStorage.setItem(key, JSON.stringify(next));
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (isLoggedIn && token) {
+      fetch(`/api/visited/${trackerId}/wishlist`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ region: regionId, action: 'remove' }),
+      }).catch(() => {});
+    }
+  }, [wishlistStorageKey, isLoggedIn, token]);
+
+  const handleDeleteBucketItem = useCallback((trackerId, regionId) => {
+    removeFromWishlist(trackerId, regionId);
+    if (trackerId === 'world') return;
+    if (trackerId === countryId) {
+      if (wishlist.has(regionId)) handleToggleWishlist(regionId);
+      return;
+    }
+    removeLegacyWishlistEntry(trackerId, regionId);
+  }, [removeFromWishlist, countryId, wishlist, handleToggleWishlist, removeLegacyWishlistEntry]);
+
+  const handleAddToBucketList = useCallback((trackerId, regionId, opts) => {
+    addToWishlist(trackerId, regionId, opts);
+  }, [addToWishlist]);
+
+  const handleMarkVisitedBucketList = useCallback((trackerId, regionId) => {
+    if (trackerId === 'world') {
+      toggleWorldCountry(regionId);
+      removeFromWishlist(trackerId, regionId);
+      return;
+    }
+
+    if (trackerId === countryId) {
+      if (!visited.has(regionId)) {
+        handleToggleRegion(regionId);
+      }
+      if (wishlist.has(regionId)) {
+        handleToggleWishlist(regionId);
+      }
+      removeFromWishlist(trackerId, regionId);
+      return;
+    }
+
+    setPendingBucketVisit({ trackerId, regionId });
+    setCountryId(trackerId);
+    setView('detail');
+    setShowBucketList(false);
+  }, [countryId, handleToggleRegion, handleToggleWishlist, removeFromWishlist, toggleWorldCountry, visited, wishlist]);
+
+  useEffect(() => {
+    if (!pendingBucketVisit) return;
+    if (pendingBucketVisit.trackerId !== countryId) return;
+
+    const { regionId, trackerId } = pendingBucketVisit;
+    if (!visited.has(regionId)) {
+      handleToggleRegion(regionId);
+    }
+    if (wishlist.has(regionId)) {
+      handleToggleWishlist(regionId);
+    }
+    removeFromWishlist(trackerId, regionId);
+    setPendingBucketVisit(null);
+  }, [pendingBucketVisit, countryId, visited, wishlist, handleToggleRegion, handleToggleWishlist, removeFromWishlist]);
+
+  const handleToggleWorldCountry = useCallback((countryCode) => {
+    const wasVisited = worldVisited.has(countryCode);
+    toggleWorldCountry(countryCode);
+    if (!wasVisited) {
+      addXp(xpRules.VISIT_COUNTRY, 'visit_country', 'world');
+    }
+  }, [toggleWorldCountry, worldVisited, addXp, xpRules]);
 
   // Friends state
   const { friends, pendingCount } = useFriends();
-  const { friendOverlayData, loadOverlayData, clearCache } = useFriendsData();
+  const { friendOverlayData, loadOverlayData, loadFriendVisited, clearCache } = useFriendsData();
   const [showFriends, setShowFriends] = useState(false);
   const [friendsActive, setFriendsActive] = useState(false);
+
+  // Comparison state: { id, name, picture, visited (Set of country ids), visitedRegions (array of region ids for current country) }
+  const [comparisonFriend, setComparisonFriend] = useState(null);
+  const [comparisonData, setComparisonData] = useState(null); // raw API data
+  const [showComparisonStats, setShowComparisonStats] = useState(false);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
 
   // Load/clear friend overlay data when toggled
   useEffect(() => {
@@ -159,6 +306,56 @@ export default function App() {
   const handleCloseFriends = useCallback(() => {
     setShowFriends(false);
   }, []);
+
+  // Comparison handlers
+  const handleCompare = useCallback(async (friend) => {
+    if (!friend) {
+      // Exit comparison
+      setComparisonFriend(null);
+      setComparisonData(null);
+      setShowComparisonStats(false);
+      return;
+    }
+    setComparisonLoading(true);
+    try {
+      const data = await loadFriendVisited(friend.id);
+      if (data) {
+        setComparisonData(data);
+        const friendWorldCountries = new Set(data.world?.countries || []);
+        // Extract regions for the current country
+        const countryRegions = (data.regions || [])
+          .filter((r) => r.country_id === countryId)
+          .flatMap((r) => r.regions || []);
+        setComparisonFriend({
+          id: friend.id,
+          name: friend.name,
+          picture: friend.picture,
+          visited: friendWorldCountries,
+          visitedRegions: countryRegions,
+        });
+        setShowFriends(false);
+      }
+    } catch (err) {
+      console.error('Failed to load comparison data:', err);
+    } finally {
+      setComparisonLoading(false);
+    }
+  }, [loadFriendVisited, countryId]);
+
+  const handleExitComparison = useCallback(() => {
+    setComparisonFriend(null);
+    setComparisonData(null);
+    setShowComparisonStats(false);
+  }, []);
+
+  // Update comparison friend's region data when switching countries
+  useEffect(() => {
+    if (!comparisonData) return;
+    const countryRegions = (comparisonData.regions || [])
+      .filter((r) => r.country_id === countryId)
+      .flatMap((r) => r.regions || []);
+    setComparisonFriend((prev) => prev ? { ...prev, visitedRegions: countryRegions } : null);
+  }, [countryId, comparisonData]);
 
   const handleExploreCountry = useCallback((id) => {
     setCountryId(id);
@@ -185,7 +382,7 @@ export default function App() {
     : null;
 
   const displayVisited = isShareMode ? (sharedVisited || new Set()) : visited;
-  const handleToggle = isShareMode ? () => {} : toggle;
+  const handleToggle = isShareMode ? () => {} : handleToggleRegion;
 
   const exitShareMode = () => {
     setShareData(null);
@@ -196,7 +393,15 @@ export default function App() {
   const total = regionList.length;
   const count = displayVisited.size;
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  const wishlistCount = isShareMode ? 0 : wishlist.size;
+  const wishlistCount = isShareMode ? 0 : regionWishlist.size;
+  const worldWishlist = useMemo(
+    () => new Set(bucketListItems.filter((i) => i.tracker_id === 'world').map((i) => i.region_id)),
+    [bucketListItems]
+  );
+  const regionWishlist = useMemo(
+    () => new Set(bucketListItems.filter((i) => i.tracker_id === countryId).map((i) => i.region_id)),
+    [bucketListItems, countryId]
+  );
 
   const prevPct = useRef(pct);
   const prevCountryRef = useRef(countryId);
@@ -285,6 +490,7 @@ export default function App() {
   return (
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
       {!isShareMode && <AchievementToasts />}
+      {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       <Onboarding />
@@ -328,7 +534,7 @@ export default function App() {
             >
               <WorldSidebar
                 visited={worldVisited}
-                onToggle={toggleWorldCountry}
+                onToggle={handleToggleWorldCountry}
                 onExploreCountry={handleExploreCountry}
                 collapsed={false}
                 onOpenFriends={handleOpenFriends}
@@ -338,7 +544,7 @@ export default function App() {
           ) : (
             <WorldSidebar
               visited={worldVisited}
-              onToggle={toggleWorldCountry}
+              onToggle={handleToggleWorldCountry}
               onExploreCountry={handleExploreCountry}
               collapsed={sidebarCollapsed}
               onOpenFriends={handleOpenFriends}
@@ -363,11 +569,14 @@ export default function App() {
             )}
             <WorldMap
               visited={worldVisited}
-              onToggle={toggleWorldCountry}
+              onToggle={handleToggleWorldCountry}
               onExploreCountry={handleExploreCountry}
               friendsActive={friendsActive}
               onFriendsToggle={handleFriendsToggle}
               friendOverlayData={friendOverlayData}
+              comparisonFriend={comparisonFriend}
+              onExitComparison={handleExitComparison}
+              wishlist={worldWishlist}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#2ecc71' }}>
@@ -392,6 +601,11 @@ export default function App() {
                   <AnimatedNumber value={Math.round((worldVisited.size / worldData.features.length) * 100)} suffix="%" />
                 </p>
               </div>
+            )}
+            {comparisonFriend && (
+              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+                📊 Compare Stats
+              </button>
             )}
           </main>
         </>
@@ -442,7 +656,10 @@ export default function App() {
                 onSetColor={(c) => setColor(countryId, c)}
                 collapsed={false}
                 wishlist={isShareMode ? new Set() : wishlist}
-                onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+                onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
+                onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
+                bucketListItems={isShareMode ? [] : bucketListItems}
+                onAddToBucketList={isShareMode ? null : handleAddToBucketList}
                 searchRef={searchRef}
                 onBackToWorld={handleBackToWorld}
                 onSearchFocus={handleSearchFocus}
@@ -467,7 +684,10 @@ export default function App() {
               onSetColor={(c) => setColor(countryId, c)}
               collapsed={sidebarCollapsed}
               wishlist={isShareMode ? new Set() : wishlist}
-              onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
+              onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
+              onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
+              bucketListItems={isShareMode ? [] : bucketListItems}
+              onAddToBucketList={isShareMode ? null : handleAddToBucketList}
               searchRef={searchRef}
               onBackToWorld={handleBackToWorld}
               onOpenFriends={handleOpenFriends}
@@ -488,12 +708,14 @@ export default function App() {
               country={country}
               visited={displayVisited}
               onToggle={handleToggle}
-              wishlist={isShareMode ? new Set() : wishlist}
+              wishlist={isShareMode ? new Set() : regionWishlist}
               dates={isShareMode ? {} : dates}
               notes={isShareMode ? {} : notes}
               friendsActive={friendsActive}
               onFriendsToggle={handleFriendsToggle}
               friendOverlayData={friendOverlayData}
+              comparisonFriend={comparisonFriend}
+              onExitComparison={handleExitComparison}
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {isMobile && !isShareMode && (
@@ -543,6 +765,11 @@ export default function App() {
                 </p>
               </div>
             )}
+            {comparisonFriend && (
+              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+                📊 Compare Stats
+              </button>
+            )}
           </main>
         </>
       )}
@@ -551,16 +778,40 @@ export default function App() {
         isMobile ? (
           <div className="modal-overlay" onClick={handleCloseFriends}>
             <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '80vh' }}>
-              <FriendsPanel onClose={handleCloseFriends} />
+              <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
             </div>
           </div>
         ) : (
           <div className="modal-overlay" onClick={handleCloseFriends}>
             <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '70vh' }}>
-              <FriendsPanel onClose={handleCloseFriends} />
+              <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
             </div>
           </div>
         )
+      )}
+      {showBucketList && (
+        <div className="modal-overlay" onClick={() => setShowBucketList(false)}>
+          <div className="modal-content bucket-panel-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620, height: '80vh' }}>
+            <BucketListPanel
+              items={bucketListItems}
+              onUpdate={updateBucketItem}
+              onDelete={handleDeleteBucketItem}
+              onMarkVisited={handleMarkVisitedBucketList}
+              onClose={() => setShowBucketList(false)}
+            />
+          </div>
+        </div>
+      )}
+      {showComparisonStats && comparisonFriend && (
+        <ComparisonStats
+          myVisited={isWorldView ? worldVisited : visited}
+          friendVisited={isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || [])}
+          total={isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length}
+          friendName={comparisonFriend.name}
+          friendPicture={comparisonFriend.picture}
+          regionLabel={isWorldView ? 'Countries' : country.regionLabel}
+          onClose={() => setShowComparisonStats(false)}
+        />
       )}
       <Analytics />
       <SpeedInsights />
