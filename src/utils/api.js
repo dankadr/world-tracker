@@ -64,3 +64,110 @@ export async function deleteAllVisited(token) {
     console.error('deleteAllVisited network error:', err);
   }
 }
+
+// ── Friends API ──
+
+export async function fetchMe(token) {
+  const res = await fetch('/api/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch profile');
+  return res.json();
+}
+
+export async function lookupFriendCode(token, friendCode) {
+  const res = await fetch(`/api/user/${friendCode}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('User not found');
+  return res.json();
+}
+
+export async function sendFriendRequest(token, friendCode) {
+  const res = await fetch('/api/friends/request', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ friend_code: friendCode }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Failed to send request');
+  }
+  return res.json();
+}
+
+export async function fetchFriendRequests(token) {
+  const res = await fetch('/api/friends/requests', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch requests');
+  return res.json();
+}
+
+export async function acceptFriendRequest(token, requestId) {
+  const res = await fetch(`/api/friends/requests/${requestId}/accept`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to accept request');
+  return res.json();
+}
+
+export async function declineFriendRequest(token, requestId) {
+  const res = await fetch(`/api/friends/requests/${requestId}/decline`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to decline request');
+  return res.json();
+}
+
+export async function cancelFriendRequest(token, requestId) {
+  const res = await fetch(`/api/friends/requests/${requestId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to cancel request');
+  return res.json();
+}
+
+export async function fetchFriends(token) {
+  const res = await fetch('/api/friends', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch friends');
+  return res.json();
+}
+
+export async function removeFriend(token, friendId) {
+  const res = await fetch(`/api/friends/${friendId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to remove friend');
+  return res.json();
+}
+
+export async function fetchFriendVisited(token, friendId) {
+  const res = await fetch(`/api/friends/${friendId}/visited`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch friend data');
+  return res.json();
+}
+
+export async function fetchLeaderboard(token) {
+  const res = await fetch('/api/friends/leaderboard', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch leaderboard');
+  return res.json();
+}
+
+export async function fetchActivity(token) {
+  const res = await fetch('/api/friends/activity', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to fetch activity');
+  return res.json();
+}

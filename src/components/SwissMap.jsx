@@ -1,8 +1,9 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
+import FriendOverlayLegend from './FriendOverlayLegend';
 
 const UNVISITED_STYLE = {
   fillColor: '#cfd8dc',
@@ -35,7 +36,84 @@ function pulseLayer(layer, isPoint, isPointMode, finalStyle) {
   }
 }
 
-export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes }) {
+function FriendsRegionOverlay({ country, friendOverlayData }) {
+  // Build map: regionId -> [{ name, color }]
+  const friendsByRegion = useMemo(() => {
+    const map = {};
+    Object.entries(friendOverlayData).forEach(([, data]) => {
+      const regions = data.regions || [];
+      // Filter to current country's regions
+      const countryRegions = regions
+        .filter((r) => r.country_id === country.id)
+        .flatMap((r) => r.regions || []);
+      countryRegions.forEach((regionId) => {
+        if (!map[regionId]) map[regionId] = [];
+        map[regionId].push({ name: data.name || 'Friend', color: data.color });
+      });
+    });
+    return map;
+  }, [friendOverlayData, country.id]);
+
+  const overlayData = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: country.data.features.filter(
+      (f) => !f.properties.isBorough && friendsByRegion[f.properties.id]
+    ),
+  }), [country.data.features, friendsByRegion]);
+
+  const getStyle = useCallback((feature) => {
+    const friends = friendsByRegion[feature.properties.id];
+    if (!friends || friends.length === 0) return { fillOpacity: 0, weight: 0 };
+    return {
+      fillColor: friends[0].color,
+      fillOpacity: 0.3,
+      color: friends[0].color,
+      weight: 1,
+      dashArray: '4 3',
+    };
+  }, [friendsByRegion]);
+
+  const pointToLayer = useCallback((feature, latlng) => {
+    const friends = friendsByRegion[feature.properties.id];
+    if (!friends || friends.length === 0) return L.circleMarker(latlng, { radius: 0, fillOpacity: 0 });
+    return L.circleMarker(latlng, {
+      radius: 5,
+      fillColor: friends[0].color,
+      fillOpacity: 0.4,
+      color: friends[0].color,
+      weight: 1,
+      dashArray: '3 2',
+    });
+  }, [friendsByRegion]);
+
+  const onEachFeature = useCallback((feature, layer) => {
+    const friends = friendsByRegion[feature.properties.id];
+    if (!friends) return;
+    const names = friends.map((f) => f.name).join(', ');
+    layer.bindTooltip(`${feature.properties.name}<br/><span style="opacity:0.7;font-size:0.85em">Visited by: ${names}</span>`, {
+      sticky: true,
+      className: 'canton-tooltip',
+      direction: 'top',
+      offset: [0, -10],
+    });
+    layer.on('click', (e) => { L.DomEvent.stopPropagation(e); });
+  }, [friendsByRegion]);
+
+  if (overlayData.features.length === 0) return null;
+
+  return (
+    <GeoJSON
+      key={`friends-region-overlay-${country.id}-${JSON.stringify(Object.keys(friendOverlayData))}`}
+      data={overlayData}
+      style={getStyle}
+      pointToLayer={pointToLayer}
+      onEachFeature={onEachFeature}
+      pane="overlayPane"
+    />
+  );
+}
+
+export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes, friendsActive, onFriendsToggle, friendOverlayData }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
@@ -274,7 +352,20 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
           onEachFeature={boroughOnEach}
         />
       )}
-      <MapLayerControl onLayerChange={setTileUrl} />
+      <MapLayerControl
+        onLayerChange={setTileUrl}
+        onFriendsToggle={onFriendsToggle}
+        friendsActive={friendsActive}
+      />
+      {friendsActive && friendOverlayData && (
+        <FriendsRegionOverlay
+          country={country}
+          friendOverlayData={friendOverlayData}
+        />
+      )}
+      {friendsActive && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+        <FriendOverlayLegend friendOverlayData={friendOverlayData} />
+      )}
     </MapContainer>
   );
 }

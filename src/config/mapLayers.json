@@ -22,5 +22,12 @@
     "label": "Terrain",
     "light": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     "dark": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+  },
+  {
+    "id": "friends",
+    "label": "Friends' visits",
+    "icon": "👥",
+    "overlay": true,
+    "default": false
   }
 ]

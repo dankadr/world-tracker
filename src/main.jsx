@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { FriendsProvider } from './context/FriendsContext';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <App />
+        <FriendsProvider>
+          <App />
+        </FriendsProvider>
       </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>

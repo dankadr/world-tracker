@@ -1,0 +1,104 @@
+.activity-feed {
+  padding: 14px 20px;
+}
+
+.af-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+}
+
+.af-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* Day groups */
+.af-day-group {
+  margin-bottom: 12px;
+}
+
+.af-day-group:last-child {
+  margin-bottom: 0;
+}
+
+.af-day-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 6px;
+}
+
+/* Items */
+.af-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+}
+
+.af-item + .af-item {
+  border-top: 1px solid var(--divider);
+}
+
+.af-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.af-item-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.af-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.af-item-desc {
+  color: var(--text-secondary);
+}
+
+.af-item-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Avatar */
+.af-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.af-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3498db, #2ecc71);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .activity-feed {
+    padding: 12px 16px;
+  }
+}

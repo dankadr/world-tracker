@@ -1,0 +1,146 @@
+.leaderboard {
+  padding: 14px 20px;
+}
+
+.lb-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+}
+
+.lb-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
+}
+
+.lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.lb-row:hover {
+  background: var(--hover-bg);
+}
+
+.lb-row.is-self {
+  background: rgba(52, 152, 219, 0.08);
+  border: 1px solid rgba(52, 152, 219, 0.15);
+}
+
+[data-theme="dark"] .lb-row.is-self {
+  background: rgba(52, 152, 219, 0.12);
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+/* Rank badges */
+.lb-rank {
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-width: 26px;
+  text-align: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.lb-rank.gold {
+  color: #f39c12;
+}
+
+.lb-rank.silver {
+  color: #95a5a6;
+}
+
+.lb-rank.bronze {
+  color: #cd6839;
+}
+
+/* Avatar */
+.lb-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.lb-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3498db, #2ecc71);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Name */
+.lb-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  width: 70px;
+}
+
+.lb-row.is-self .lb-name {
+  font-weight: 600;
+}
+
+/* Bar */
+.lb-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--bar-track);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.lb-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  transition: width 0.4s ease;
+}
+
+.lb-row.is-self .lb-bar {
+  background: linear-gradient(90deg, #3498db, #2980b9);
+}
+
+/* Count */
+.lb-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .leaderboard {
+    padding: 12px 16px;
+  }
+
+  .lb-name {
+    width: 60px;
+  }
+}

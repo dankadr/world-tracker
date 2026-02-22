@@ -3,6 +3,7 @@ import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
+import FriendOverlayLegend from './FriendOverlayLegend';
 import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
 
@@ -66,7 +67,68 @@ function MapController({ center, zoom }) {
   return null;
 }
 
-export default function WorldMap({ visited, onToggle, onExploreCountry }) {
+function FriendsWorldOverlay({ worldData, friendOverlayData }) {
+  // Build a map: countryId -> [{ name, color }]
+  const friendsByCountry = useMemo(() => {
+    const map = {};
+    Object.entries(friendOverlayData).forEach(([, data]) => {
+      const countries = data.world?.countries || [];
+      countries.forEach((cId) => {
+        if (!map[cId]) map[cId] = [];
+        map[cId].push({ name: data.name || 'Friend', color: data.color });
+      });
+    });
+    return map;
+  }, [friendOverlayData]);
+
+  // Filter world GeoJSON to only friend-visited countries
+  const overlayData = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: worldData.features.filter((f) => friendsByCountry[f.properties.id]),
+  }), [worldData, friendsByCountry]);
+
+  const getStyle = useCallback((feature) => {
+    const friends = friendsByCountry[feature.properties.id];
+    if (!friends || friends.length === 0) return { fillOpacity: 0, weight: 0 };
+    // Use first friend's color with transparency
+    return {
+      fillColor: friends[0].color,
+      fillOpacity: 0.3,
+      color: friends[0].color,
+      weight: 1,
+      dashArray: '4 3',
+    };
+  }, [friendsByCountry]);
+
+  const onEachFeature = useCallback((feature, layer) => {
+    const friends = friendsByCountry[feature.properties.id];
+    if (!friends) return;
+    const names = friends.map((f) => f.name).join(', ');
+    layer.bindTooltip(`${feature.properties.name}<br/><span style="opacity:0.7;font-size:0.85em">Visited by: ${names}</span>`, {
+      sticky: true,
+      className: 'canton-tooltip',
+      direction: 'top',
+      offset: [0, -10],
+    });
+    // Make non-interactive (no click)
+    layer.options.interactive = true;
+    layer.on('click', (e) => { L.DomEvent.stopPropagation(e); });
+  }, [friendsByCountry]);
+
+  if (overlayData.features.length === 0) return null;
+
+  return (
+    <GeoJSON
+      key={`friends-overlay-${JSON.stringify(Object.keys(friendOverlayData))}`}
+      data={overlayData}
+      style={getStyle}
+      onEachFeature={onEachFeature}
+      pane="overlayPane"
+    />
+  );
+}
+
+export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData }) {
   const geoJsonRef = useRef(null);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
@@ -263,7 +325,20 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
         style={getStyle}
         onEachFeature={onEachFeature}
       />
-      <MapLayerControl onLayerChange={setTileUrl} />
+      {friendsActive && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+        <FriendsWorldOverlay
+          worldData={modifiedWorldData}
+          friendOverlayData={friendOverlayData}
+        />
+      )}
+      <MapLayerControl
+        onLayerChange={setTileUrl}
+        onFriendsToggle={onFriendsToggle}
+        friendsActive={friendsActive}
+      />
+      {friendsActive && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+        <FriendOverlayLegend friendOverlayData={friendOverlayData} />
+      )}
     </MapContainer>
   );
 }

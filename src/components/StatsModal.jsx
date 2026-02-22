@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
@@ -6,6 +7,8 @@ import worldData from '../data/world.json';
 import countryMeta from '../config/countryMeta.json';
 import capitalsData from '../data/capitals.json';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
+import { useFriendsData } from '../hooks/useFriendsData';
+import { useFriends } from '../context/FriendsContext';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -305,7 +308,7 @@ function computeCapitalSuperlatives(userId) {
 }
 
 export default function StatsModal({ onClose }) {
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth();
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
 
@@ -628,8 +631,61 @@ export default function StatsModal({ onClose }) {
             </div>
           </div>
         )}
+
+        {isLoggedIn && <FriendsCompare worldVisited={worldStats.visitedCount} />}
       </div>
     </div>,
     document.body
+  );
+}
+
+function FriendsCompare({ worldVisited }) {
+  const { friends } = useFriends();
+  const { leaderboard, loadLeaderboard } = useFriendsData();
+
+  useEffect(() => {
+    if (friends.length > 0 && leaderboard.length === 0) {
+      loadLeaderboard();
+    }
+  }, [friends.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (friends.length === 0 || leaderboard.length === 0) return null;
+
+  const sorted = [...leaderboard].sort((a, b) => (b.world_countries || 0) - (a.world_countries || 0));
+  const myRank = sorted.findIndex(e => e.is_self) + 1;
+
+  return (
+    <div className="stats-section">
+      <h3>Compare with Friends</h3>
+      {myRank > 0 && (
+        <p className="stats-highlight" style={{ marginBottom: '10px' }}>
+          You rank #{myRank} of {sorted.length} friends for world countries
+        </p>
+      )}
+      <div className="stats-bars">
+        {sorted.slice(0, 8).map((entry, i) => {
+          const count = entry.world_countries || 0;
+          const maxCount = sorted[0]?.world_countries || 1;
+          const pct = Math.round((count / maxCount) * 100);
+          return (
+            <div key={entry.user_id || i} className="stats-bar-row">
+              <span className="stats-bar-label" style={entry.is_self ? { fontWeight: 700 } : {}}>
+                {entry.is_self ? '⭐ You' : entry.name}
+              </span>
+              <div className="stats-bar-track">
+                <div
+                  className="stats-bar-fill"
+                  style={{
+                    width: `${pct}%`,
+                    background: entry.is_self ? '#3498db' : '#2ecc71',
+                  }}
+                />
+              </div>
+              <span className="stats-bar-value">{count}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

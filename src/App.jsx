@@ -13,6 +13,9 @@ import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
 import EasterEggPrompt from './components/EasterEggPrompt';
 import StatsModal from './components/StatsModal';
+import FriendsPanel from './components/FriendsPanel';
+import { useFriends } from './context/FriendsContext';
+import { useFriendsData } from './hooks/useFriendsData';
 import useVisitedRegions from './hooks/useVisitedCantons';
 import useVisitedCountries from './hooks/useVisitedCountries';
 import useCustomColors from './hooks/useCustomColors';
@@ -69,9 +72,13 @@ function AchievementToasts() {
         return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
       });
       setToasts((prev) => [...prev, ...newToasts]);
-      prevUnlocked.current = new Set(currentUnlocked);
-      localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
     }
+
+    // Always sync prevUnlocked & seen with the current state so that
+    // achievements lost after unmarking a region/country are removed.
+    // This lets them re-trigger a toast if re-earned later.
+    prevUnlocked.current = new Set(currentUnlocked);
+    localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
   }, [seenKey, userId]);
 
   useEffect(() => {
@@ -125,6 +132,33 @@ export default function App() {
   const country = applyColors(rawCountry);
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist } = useVisitedRegions(countryId);
   const { visited: worldVisited, toggleCountry: toggleWorldCountry } = useVisitedCountries();
+
+  // Friends state
+  const { friends, pendingCount } = useFriends();
+  const { friendOverlayData, loadOverlayData, clearCache } = useFriendsData();
+  const [showFriends, setShowFriends] = useState(false);
+  const [friendsActive, setFriendsActive] = useState(false);
+
+  // Load/clear friend overlay data when toggled
+  useEffect(() => {
+    if (friendsActive && friends.length > 0) {
+      loadOverlayData(friends.map((f) => f.id));
+    } else if (!friendsActive) {
+      clearCache();
+    }
+  }, [friendsActive, friends]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFriendsToggle = useCallback((active) => {
+    setFriendsActive(active);
+  }, []);
+
+  const handleOpenFriends = useCallback(() => {
+    setShowFriends(true);
+  }, []);
+
+  const handleCloseFriends = useCallback(() => {
+    setShowFriends(false);
+  }, []);
 
   const handleExploreCountry = useCallback((id) => {
     setCountryId(id);
@@ -297,6 +331,8 @@ export default function App() {
                 onToggle={toggleWorldCountry}
                 onExploreCountry={handleExploreCountry}
                 collapsed={false}
+                onOpenFriends={handleOpenFriends}
+                friendsPendingCount={pendingCount}
               />
             </MobileBottomSheet>
           ) : (
@@ -305,6 +341,8 @@ export default function App() {
               onToggle={toggleWorldCountry}
               onExploreCountry={handleExploreCountry}
               collapsed={sidebarCollapsed}
+              onOpenFriends={handleOpenFriends}
+              friendsPendingCount={pendingCount}
             />
           )}
           <main
@@ -327,6 +365,9 @@ export default function App() {
               visited={worldVisited}
               onToggle={toggleWorldCountry}
               onExploreCountry={handleExploreCountry}
+              friendsActive={friendsActive}
+              onFriendsToggle={handleFriendsToggle}
+              friendOverlayData={friendOverlayData}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#2ecc71' }}>
@@ -405,6 +446,8 @@ export default function App() {
                 searchRef={searchRef}
                 onBackToWorld={handleBackToWorld}
                 onSearchFocus={handleSearchFocus}
+                onOpenFriends={handleOpenFriends}
+                friendsPendingCount={pendingCount}
               />
             </MobileBottomSheet>
           ) : (
@@ -427,6 +470,8 @@ export default function App() {
               onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
               searchRef={searchRef}
               onBackToWorld={handleBackToWorld}
+              onOpenFriends={handleOpenFriends}
+              friendsPendingCount={pendingCount}
             />
           )}
           <main className="map-container">
@@ -446,6 +491,9 @@ export default function App() {
               wishlist={isShareMode ? new Set() : wishlist}
               dates={isShareMode ? {} : dates}
               notes={isShareMode ? {} : notes}
+              friendsActive={friendsActive}
+              onFriendsToggle={handleFriendsToggle}
+              friendOverlayData={friendOverlayData}
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {isMobile && !isShareMode && (
@@ -499,6 +547,21 @@ export default function App() {
         </>
       )}
       {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
+      {showFriends && (
+        isMobile ? (
+          <div className="modal-overlay" onClick={handleCloseFriends}>
+            <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '80vh' }}>
+              <FriendsPanel onClose={handleCloseFriends} />
+            </div>
+          </div>
+        ) : (
+          <div className="modal-overlay" onClick={handleCloseFriends}>
+            <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '70vh' }}>
+              <FriendsPanel onClose={handleCloseFriends} />
+            </div>
+          </div>
+        )
+      )}
       <Analytics />
       <SpeedInsights />
     </div>

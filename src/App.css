@@ -2142,6 +2142,14 @@ body {
     left: auto !important;
   }
 
+  /* Friend overlay legend — mobile position */
+  .friend-overlay-legend {
+    bottom: calc(var(--sheet-height, 20vh) + 12px);
+    left: 8px;
+    padding: 8px 10px;
+    max-width: 160px;
+  }
+
   /* Sidebar inside bottom sheet: compact */
   .sidebar-header {
     padding: 8px 14px 6px;
@@ -4047,4 +4055,107 @@ body {
 /* World Floating Stats */
 .world-floating-stats .stats-label {
   color: #27ae60;
+}
+
+/* ======== Friends Badge ======== */
+.friends-header-btn {
+  position: relative;
+}
+
+.friends-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.4);
+}
+
+/* ======== Friends Overlay Layer Toggle ======== */
+.layer-option-overlay {
+  border-top: 1px solid var(--divider);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layer-option-icon {
+  font-size: 0.9em;
+}
+
+/* ======== Friend Overlay Legend ======== */
+.friend-overlay-legend {
+  position: absolute;
+  bottom: 24px;
+  left: 12px;
+  z-index: 999;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  min-width: 120px;
+  max-width: 200px;
+}
+
+.friend-legend-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.friend-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.friend-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.friend-legend-name {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ======== Friends Modal ======== */
+.friends-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.friends-modal .friends-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-modal .friends-panel-content {
+  flex: 1;
+  overflow-y: auto;
 }

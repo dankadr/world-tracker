@@ -174,7 +174,7 @@ def _get_column_default_sql(column) -> str:
 def _column_type_sql(column) -> str:
     """Return a simple SQL type string for a SQLAlchemy column."""
     from sqlalchemy.dialects.postgresql import JSONB as PG_JSONB
-    from sqlalchemy import Integer as SA_Integer, String as SA_String
+    from sqlalchemy import Integer as SA_Integer, String as SA_String, DateTime as SA_DateTime
 
     col_type = type(column.type)
     if col_type is PG_JSONB:
@@ -184,6 +184,8 @@ def _column_type_sql(column) -> str:
     if col_type is SA_String:
         length = getattr(column.type, "length", None)
         return f"VARCHAR({length})" if length else "VARCHAR"
+    if col_type is SA_DateTime:
+        return "TIMESTAMPTZ" if getattr(column.type, 'timezone', False) else "TIMESTAMP"
     # Fallback: let SQLAlchemy compile the type
     return column.type.compile(engine.dialect)
 
@@ -205,6 +207,24 @@ def _sync_add_missing_columns(conn):
                 conn.execute(text(stmt))
 
 
+def _backfill_friend_codes(conn):
+    """Generate friend_code for any user that doesn't have one yet."""
+    from backend.models import generate_friend_code
+    result = conn.execute(text("SELECT id FROM users WHERE friend_code IS NULL"))
+    rows = result.fetchall()
+    for row in rows:
+        code = generate_friend_code()
+        # Retry on uniqueness collision (unlikely with 8 chars)
+        for _ in range(5):
+            try:
+                conn.execute(text("UPDATE users SET friend_code = :code WHERE id = :uid"), {"code": code, "uid": row[0]})
+                break
+            except Exception:
+                code = generate_friend_code()
+    if rows:
+        logger.info("backfill: assigned friend_code to %d users", len(rows))
+
+
 async def init_db():
     """Create tables if they don't exist, and add missing columns to existing tables.
 
@@ -219,6 +239,8 @@ async def init_db():
             await conn.run_sync(Base.metadata.create_all)
             # 2. Add missing columns to existing tables (lightweight auto-migration)
             await conn.run_sync(_sync_add_missing_columns)
+            # 3. Backfill friend codes for existing users
+            await conn.run_sync(_backfill_friend_codes)
         logger.info("init_db: success")
     except Exception as e:
         if IS_SERVERLESS:

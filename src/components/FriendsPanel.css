@@ -1,0 +1,421 @@
+.friends-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.fp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--glass-bg-subtle);
+  flex-shrink: 0;
+}
+
+.fp-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.fp-close {
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.15s;
+}
+
+.fp-close:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.fp-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.fp-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.fp-section:last-child {
+  border-bottom: none;
+}
+
+.fp-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+}
+
+/* My Code */
+.fp-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.fp-code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+  flex: 1;
+  user-select: all;
+}
+
+.fp-copy-btn {
+  border: none;
+  background: var(--glass-bg-subtle);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border: 1px solid var(--glass-border-subtle);
+  line-height: 1;
+}
+
+.fp-copy-btn:hover {
+  background: var(--hover-bg);
+  box-shadow: var(--glass-hover-glow);
+}
+
+.fp-copy-btn.copied {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.3);
+  color: #2ecc71;
+}
+
+/* Add Friend */
+.fp-add-row {
+  display: flex;
+  gap: 6px;
+}
+
+.fp-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.fp-input::placeholder {
+  color: var(--text-muted);
+  font-family: inherit;
+  letter-spacing: normal;
+}
+
+.fp-input:focus {
+  border-color: rgba(52, 152, 219, 0.4);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.fp-search-btn {
+  border: none;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.fp-search-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+  box-shadow: var(--glass-hover-glow);
+}
+
+.fp-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fp-error {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin: 8px 0 0;
+}
+
+.fp-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 10px;
+}
+
+.fp-preview-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.fp-add-btn {
+  border: none;
+  background: #3498db;
+  color: #fff;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fp-add-btn:hover:not(:disabled) {
+  background: #2980b9;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.fp-add-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Requests */
+.fp-request {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.fp-request + .fp-request {
+  border-top: 1px solid var(--divider);
+}
+
+.fp-request-arrow {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.fp-request-name {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-request-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fp-accept-btn {
+  border: none;
+  background: rgba(46, 204, 113, 0.15);
+  color: #27ae60;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.fp-accept-btn:hover:not(:disabled) {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.fp-decline-btn {
+  border: none;
+  background: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.fp-decline-btn:hover:not(:disabled) {
+  background: rgba(231, 76, 60, 0.25);
+}
+
+.fp-cancel-btn {
+  border: none;
+  background: var(--glass-bg-subtle);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.fp-cancel-btn:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-secondary);
+}
+
+/* Friends List */
+.fp-friend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.fp-friend + .fp-friend {
+  border-top: 1px solid var(--divider);
+}
+
+.fp-friend-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fp-friend-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-friend-stat {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+.fp-remove-btn {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.fp-friend:hover .fp-remove-btn {
+  opacity: 1;
+}
+
+.fp-remove-btn:hover {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+/* Avatar */
+.fp-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fp-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3498db, #2ecc71);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Empty & Login */
+.fp-empty {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.fp-login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.fp-login-prompt p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Dark mode */
+[data-theme="dark"] .fp-accept-btn {
+  color: #2ecc71;
+}
+
+[data-theme="dark"] .fp-decline-btn {
+  color: #e74c3c;
+}
+
+[data-theme="dark"] .fp-copy-btn.copied {
+  background: rgba(46, 204, 113, 0.15);
+}
+
+[data-theme="dark"] .fp-input:focus {
+  border-color: rgba(52, 152, 219, 0.5);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .fp-section {
+    padding: 12px 16px;
+  }
+
+  .fp-header {
+    padding: 12px 16px 10px;
+  }
+
+  .fp-remove-btn {
+    opacity: 1;
+  }
+}

@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import LAYERS from '../config/mapLayers.json';
 
-export default function MapLayerControl({ onLayerChange }) {
+const BASE_LAYERS = LAYERS.filter((l) => !l.overlay);
+const OVERLAY_LAYERS = LAYERS.filter((l) => l.overlay);
+
+export default function MapLayerControl({ onLayerChange, onFriendsToggle, friendsActive }) {
   const [active, setActive] = useState('clean');
   const [open, setOpen] = useState(false);
   const { dark } = useTheme();
@@ -45,12 +48,24 @@ export default function MapLayerControl({ onLayerChange }) {
       </button>
       {open && (
         <div className="layer-options">
-          {LAYERS.map((l) => (
+          {BASE_LAYERS.map((l) => (
             <button
               key={l.id}
               className={`layer-option ${l.id === active ? 'active' : ''}`}
               onClick={() => handleSelect(l)}
             >
+              {l.label}
+            </button>
+          ))}
+          {onFriendsToggle && OVERLAY_LAYERS.map((l) => (
+            <button
+              key={l.id}
+              className={`layer-option layer-option-overlay ${l.id === 'friends' && friendsActive ? 'active' : ''}`}
+              onClick={() => {
+                if (l.id === 'friends') onFriendsToggle(!friendsActive);
+              }}
+            >
+              {l.icon && <span className="layer-option-icon">{l.icon}</span>}
               {l.label}
             </button>
           ))}
