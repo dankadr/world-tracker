@@ -49,7 +49,6 @@ export default function WorldSidebar({
   onToggle,
   onExploreCountry,
   collapsed,
-  isMobile,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();

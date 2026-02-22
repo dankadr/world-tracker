@@ -5,6 +5,7 @@ import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
 import countryMeta from '../config/countryMeta.json';
 import capitalsData from '../data/capitals.json';
+import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -306,6 +307,7 @@ function computeCapitalSuperlatives(userId) {
 export default function StatsModal({ onClose }) {
   const { user } = useAuth();
   const userId = user?.id || null;
+  const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
 
   const stats = countryList.map((c) => {
     const total = c.data.features.filter(f => !f.properties?.isBorough).length;
@@ -327,8 +329,9 @@ export default function StatsModal({ onClose }) {
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+      <div className="modal-content" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header" {...dragHandlers}>
+          <div className="drag-handle" />
           <h2>Your Travel Statistics</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import LAYERS from '../config/mapLayers.json';
 
@@ -6,6 +6,23 @@ export default function MapLayerControl({ onLayerChange }) {
   const [active, setActive] = useState('clean');
   const [open, setOpen] = useState(false);
   const { dark } = useTheme();
+  const wrapperRef = useRef(null);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
+  }, [open]);
 
   const handleSelect = (layer) => {
     setActive(layer.id);
@@ -14,7 +31,7 @@ export default function MapLayerControl({ onLayerChange }) {
   };
 
   return (
-    <div className="layer-control">
+    <div className="layer-control" ref={wrapperRef}>
       <button
         className="layer-control-btn"
         onClick={() => setOpen(!open)}

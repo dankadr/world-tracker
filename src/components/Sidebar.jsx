@@ -9,6 +9,7 @@ import ShareButton from './ShareButton';
 import StatsModal from './StatsModal';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
+import ConfirmDialog from './ConfirmDialog';
 import useAvatar from '../hooks/useAvatar';
 
 export default function Sidebar({
@@ -30,13 +31,14 @@ export default function Sidebar({
   onToggleWishlist,
   searchRef,
   onBackToWorld,
-  isMobile,
+  onSearchFocus,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const regionList = country.data.features
@@ -202,7 +204,7 @@ export default function Sidebar({
       </nav>
 
       {!readOnly && (
-        <CitySearch country={country} visited={visited} onToggle={onToggle} searchRef={searchRef} />
+        <CitySearch country={country} visited={visited} onToggle={onToggle} searchRef={searchRef} onSearchFocus={onSearchFocus} />
       )}
 
       {!readOnly && <Achievements />}
@@ -230,14 +232,14 @@ export default function Sidebar({
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
         {!readOnly && (
-          <button className="reset-btn" onClick={() => { if (window.confirm(`Reset all ${country.regionLabel} progress?`)) onReset(); }}>
+          <button className="reset-btn" onClick={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}>
             Reset {country.regionLabel}
           </button>
         )}
       </div>
       {!readOnly && (
         <div className="sidebar-footer-secondary">
-          <button className="reset-all-btn" onClick={() => { if (window.confirm('Reset ALL countries? This cannot be undone.')) onResetAll(); }}>
+          <button className="reset-all-btn" onClick={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}>
             Reset Everything
           </button>
         </div>
@@ -252,6 +254,17 @@ export default function Sidebar({
           onClose={() => setShowAvatar(false)}
         />
       )}
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        message={confirmAction?.message || ''}
+        confirmLabel="Reset"
+        onConfirm={() => {
+          if (confirmAction?.type === 'reset') onReset();
+          else if (confirmAction?.type === 'resetAll') onResetAll();
+          setConfirmAction(null);
+        }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </aside>
   );
 }

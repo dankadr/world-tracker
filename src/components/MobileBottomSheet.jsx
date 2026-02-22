@@ -4,19 +4,41 @@ import { useState, useRef, useCallback, useEffect } from 'react';
  * MobileBottomSheet — a draggable bottom-sheet container for mobile.
  *
  * Snap points (% of viewport height):
- *   collapsed  : shows only grab handle + mini stats  (  ~8vh )
- *   half       : shows list + tabs                    ( 50vh )
- *   full       : shows everything                     ( 92vh )
+ *   peek       : shows grab handle + header info + quick actions  ( 20vh )
+ *   half       : shows list + tabs                                ( 50vh )
+ *   full       : shows everything                                 ( 92vh )
  */
 
-const SNAP_COLLAPSED = 8;
+const SNAP_PEEK = 20;
 const SNAP_HALF = 50;
 const SNAP_FULL = 92;
 
-export default function MobileBottomSheet({ children, miniContent }) {
-  const [snap, setSnap] = useState(SNAP_COLLAPSED); // current snap height %
+const SPRING_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
+
+export default function MobileBottomSheet({ children, peekContent, onSnapChange, expandTo }) {
+  const [snap, setSnap] = useState(SNAP_PEEK);
   const sheetRef = useRef(null);
   const dragState = useRef(null);
+  // Rolling window of last 3 touch positions for velocity calc
+  const touchHistory = useRef([]);
+
+  const animateTo = useCallback((target) => {
+    setSnap(target);
+    if (onSnapChange) onSnapChange(target);
+    if (sheetRef.current) {
+      sheetRef.current.style.height = `${target}vh`;
+      sheetRef.current.style.transition = `height 0.45s ${SPRING_EASING}`;
+    }
+    // Set CSS custom property for map controls positioning
+    document.documentElement.style.setProperty('--sheet-height', `${target}vh`);
+  }, [onSnapChange]);
+
+  // Allow parent to programmatically expand (e.g. search focus -> half)
+  useEffect(() => {
+    if (expandTo && expandTo !== snap) {
+      animateTo(expandTo);
+    }
+  }, [expandTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startDrag = useCallback((clientY) => {
     dragState.current = {
@@ -24,6 +46,7 @@ export default function MobileBottomSheet({ children, miniContent }) {
       startSnap: snap,
       startH: (snap / 100) * window.innerHeight,
     };
+    touchHistory.current = [{ y: clientY, t: Date.now() }];
   }, [snap]);
 
   const onDrag = useCallback((clientY) => {
@@ -33,6 +56,13 @@ export default function MobileBottomSheet({ children, miniContent }) {
     const pct = (newH / window.innerHeight) * 100;
     sheetRef.current.style.height = `${pct}vh`;
     sheetRef.current.style.transition = 'none';
+
+    // Keep rolling window of last 3 positions
+    const now = Date.now();
+    touchHistory.current.push({ y: clientY, t: now });
+    if (touchHistory.current.length > 3) {
+      touchHistory.current.shift();
+    }
   }, []);
 
   const endDrag = useCallback((clientY) => {
@@ -42,7 +72,7 @@ export default function MobileBottomSheet({ children, miniContent }) {
     const pct = (newH / window.innerHeight) * 100;
 
     // Find nearest snap point
-    const snaps = [SNAP_COLLAPSED, SNAP_HALF, SNAP_FULL];
+    const snaps = [SNAP_PEEK, SNAP_HALF, SNAP_FULL];
     let target = snaps[0];
     let minDist = Infinity;
     for (const s of snaps) {
@@ -53,29 +83,34 @@ export default function MobileBottomSheet({ children, miniContent }) {
       }
     }
 
-    // Velocity: if user swiped fast, go to next snap in direction
-    const velocity = delta / (Date.now() - (dragState.current.ts || Date.now()) || 1);
-    if (Math.abs(velocity) > 0.3) {
-      const idx = snaps.indexOf(target);
-      if (velocity > 0 && idx < snaps.length - 1) target = snaps[idx + 1];
-      if (velocity < 0 && idx > 0) target = snaps[idx - 1];
+    // Velocity from rolling window (last 3 points)
+    const history = touchHistory.current;
+    if (history.length >= 2) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const dt = last.t - first.t;
+      if (dt > 0) {
+        const velocity = (first.y - last.y) / dt; // positive = swipe up
+        if (Math.abs(velocity) > 0.3) {
+          const idx = snaps.indexOf(target);
+          if (velocity > 0 && idx < snaps.length - 1) target = snaps[idx + 1];
+          if (velocity < 0 && idx > 0) target = snaps[idx - 1];
+        }
+      }
     }
 
-    setSnap(target);
-    if (sheetRef.current) {
-      sheetRef.current.style.height = `${target}vh`;
-      sheetRef.current.style.transition = 'height 0.35s cubic-bezier(.4,0,.2,1)';
-    }
+    animateTo(target);
     dragState.current = null;
-  }, []);
+    touchHistory.current = [];
+  }, [animateTo]);
 
   // Touch handlers
   const handleTouchStart = useCallback((e) => {
     startDrag(e.touches[0].clientY);
-    dragState.current.ts = Date.now();
   }, [startDrag]);
 
   const handleTouchMove = useCallback((e) => {
+    e.preventDefault();
     onDrag(e.touches[0].clientY);
   }, [onDrag]);
 
@@ -87,7 +122,6 @@ export default function MobileBottomSheet({ children, miniContent }) {
   const handleMouseDown = useCallback((e) => {
     e.preventDefault();
     startDrag(e.clientY);
-    dragState.current.ts = Date.now();
 
     const onMove = (ev) => onDrag(ev.clientY);
     const onUp = (ev) => {
@@ -99,26 +133,21 @@ export default function MobileBottomSheet({ children, miniContent }) {
     window.addEventListener('mouseup', onUp);
   }, [startDrag, onDrag, endDrag]);
 
-  // Quick tap on handle toggles between collapsed/half
+  // Quick tap on handle area cycles: peek -> half -> peek
   const handleTap = useCallback(() => {
-    setSnap((prev) => {
-      const next = prev === SNAP_COLLAPSED ? SNAP_HALF : SNAP_COLLAPSED;
-      if (sheetRef.current) {
-        sheetRef.current.style.height = `${next}vh`;
-        sheetRef.current.style.transition = 'height 0.35s cubic-bezier(.4,0,.2,1)';
-      }
-      return next;
-    });
-  }, []);
+    const next = snap === SNAP_PEEK ? SNAP_HALF : SNAP_PEEK;
+    animateTo(next);
+  }, [snap, animateTo]);
 
   // Set initial height
   useEffect(() => {
     if (sheetRef.current) {
-      sheetRef.current.style.height = `${snap}vh`;
+      sheetRef.current.style.height = `${SNAP_PEEK}vh`;
     }
+    document.documentElement.style.setProperty('--sheet-height', `${SNAP_PEEK}vh`);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isCollapsed = snap === SNAP_COLLAPSED;
+  const isPeek = snap === SNAP_PEEK;
 
   return (
     <div ref={sheetRef} className="mobile-bottom-sheet" data-snap={snap}>
@@ -130,13 +159,13 @@ export default function MobileBottomSheet({ children, miniContent }) {
         onMouseDown={handleMouseDown}
       >
         <div className="sheet-handle" />
-        {isCollapsed && miniContent && (
-          <div className="sheet-mini-content" onClick={handleTap}>
-            {miniContent}
+        {peekContent && (
+          <div className="sheet-peek-content" onClick={handleTap}>
+            {peekContent}
           </div>
         )}
       </div>
-      <div className="sheet-body" style={{ display: isCollapsed ? 'none' : 'flex' }}>
+      <div className="sheet-body" style={{ display: isPeek ? 'none' : 'flex' }}>
         {children}
       </div>
     </div>

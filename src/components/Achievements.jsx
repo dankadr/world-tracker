@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import getAchievements from '../data/achievements';
+import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 export default function Achievements() {
   const [open, setOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function Achievements() {
   }));
 
   const unlockedCount = results.filter((r) => r.unlocked).length;
+  const { handleRef, dragHandlers } = useSwipeToDismiss(() => setOpen(false));
 
   const groups = {};
   results.forEach((a) => {
@@ -35,8 +37,9 @@ export default function Achievements() {
 
       {open && createPortal(
         <div className="modal-overlay" onClick={() => setOpen(false)}>
-          <div className="modal-content achievements-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+          <div className="modal-content achievements-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" {...dragHandlers}>
+              <div className="drag-handle" />
               <h2>Achievements ({unlockedCount}/{results.length})</h2>
               <button className="modal-close" onClick={() => setOpen(false)}>&times;</button>
             </div>

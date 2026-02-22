@@ -158,6 +158,10 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
       });
 
       layer.on({
+        add: (e) => {
+          const el = e.target.getElement?.();
+          if (el) el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
+        },
         mouseover: (e) => {
           const target = e.target;
           const isVisited = visited.has(id);
@@ -189,12 +193,12 @@ export default function WorldMap({ visited, onToggle, onExploreCountry }) {
             const statusHtml = isVisited
               ? '<span class="world-popup-status visited">Visited</span>'
               : '<span class="world-popup-status">Not visited</span>';
-            const html = `<div class="world-popup-content">
+            const html = `<div class="world-popup-content" style="min-width:200px">
               <strong class="world-popup-name">${name}</strong>
               ${statusHtml}
               <div class="world-popup-actions">
                 <button class="world-popup-toggle" onclick="document.dispatchEvent(new CustomEvent('world-toggle',{detail:'${id}'}))">${isVisited ? 'Mark unvisited' : 'Mark visited'}</button>
-                <button class="world-popup-explore" onclick="document.dispatchEvent(new CustomEvent('world-explore',{detail:'${trackerId}'}))">Explore Regions &rarr;</button>
+                <button class="world-popup-explore" onclick="document.dispatchEvent(new CustomEvent('world-explore',{detail:'${trackerId}'}))">Explore Regions &#8594;</button>
               </div>
             </div>`;
             L.popup({ className: 'world-country-popup', closeButton: true, offset: [0, -5] })

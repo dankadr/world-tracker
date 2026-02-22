@@ -12,6 +12,7 @@ import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
 import EasterEggPrompt from './components/EasterEggPrompt';
+import StatsModal from './components/StatsModal';
 import useVisitedRegions from './hooks/useVisitedCantons';
 import useVisitedCountries from './hooks/useVisitedCountries';
 import useCustomColors from './hooks/useCustomColors';
@@ -194,7 +195,8 @@ export default function App() {
     onOpenEasterEggPrompt: handleOpenEasterEggPrompt,
   });
 
-  const { isMobile } = useDeviceType();
+  const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
+  const [sheetExpandTo, setSheetExpandTo] = useState(null);
   const isWorldView = view === 'world' && !isShareMode;
   const longPressTimerRef = useRef(null);
   const longPressStartRef = useRef(null);
@@ -228,8 +230,26 @@ export default function App() {
     }
   }, [clearLongPress]);
 
+  const handleSearchFocus = useCallback(() => {
+    if (isMobile) setSheetExpandTo(50);
+  }, [isMobile]);
+
+  const handleSheetSnap = useCallback((snapVal) => {
+    // Reset expandTo after snap completes so it can be triggered again
+    setSheetExpandTo(null);
+  }, []);
+
+  // Pill button handlers for bottom sheet peek
+  const handlePeekSearch = useCallback(() => {
+    setSheetExpandTo(50);
+    // Focus the search input after sheet expands
+    setTimeout(() => searchRef.current?.focus(), 400);
+  }, [searchRef]);
+
+  const [peekStatsOpen, setPeekStatsOpen] = useState(false);
+
   return (
-    <div className={`app ${isMobile ? 'is-mobile' : ''}`}>
+    <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
       {!isShareMode && <AchievementToasts />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
@@ -245,11 +265,30 @@ export default function App() {
         <>
           {isMobile ? (
             <MobileBottomSheet
-              miniContent={
-                <div className="sheet-mini-stats">
-                  <span className="sheet-mini-icon">🌍</span>
-                  <span className="sheet-mini-text">{worldVisited.size} countries</span>
-                  <span className="sheet-mini-expand">TAP TO EXPAND</span>
+              expandTo={sheetExpandTo}
+              onSnapChange={handleSheetSnap}
+              peekContent={
+                <div className="sheet-peek-header">
+                  <div className="sheet-peek-info">
+                    <span className="sheet-peek-icon">🌍</span>
+                    <div className="sheet-peek-text">
+                      <span className="sheet-peek-title">{worldVisited.size} / {worldData.features.length} countries</span>
+                      <span className="sheet-peek-subtitle">{Math.round((worldVisited.size / worldData.features.length) * 100)}% of the world</span>
+                    </div>
+                  </div>
+                  <div className="sheet-peek-progress">
+                    <div
+                      className="sheet-peek-progress-fill"
+                      style={{
+                        width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
+                        background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
+                      }}
+                    />
+                  </div>
+                  <div className="sheet-peek-pills">
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
+                  </div>
                 </div>
               }
             >
@@ -275,52 +314,74 @@ export default function App() {
             onTouchEnd={clearLongPress}
             onTouchCancel={clearLongPress}
           >
-            <button
-              className="sidebar-toggle"
-              onClick={() => setSidebarCollapsed((c) => !c)}
-              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-            >
-              {sidebarCollapsed ? '\u25B6' : '\u25C0'}
-            </button>
+            {!isMobile && (
+              <button
+                className="sidebar-toggle"
+                onClick={() => setSidebarCollapsed((c) => !c)}
+                title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+              >
+                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+              </button>
+            )}
             <WorldMap
               visited={worldVisited}
               onToggle={toggleWorldCountry}
               onExploreCountry={handleExploreCountry}
             />
-            <div className="floating-stats world-floating-stats" style={{ '--accent': '#2ecc71' }}>
-              <div className="stats-card-header">
-                <div className="stats-numbers">
-                  <span className="stats-count"><AnimatedNumber value={worldVisited.size} /></span>
-                  <span className="stats-separator">/</span>
-                  <span className="stats-total">{worldData.features.length}</span>
+            {!isMobile && (
+              <div className="floating-stats world-floating-stats" style={{ '--accent': '#2ecc71' }}>
+                <div className="stats-card-header">
+                  <div className="stats-numbers">
+                    <span className="stats-count"><AnimatedNumber value={worldVisited.size} /></span>
+                    <span className="stats-separator">/</span>
+                    <span className="stats-total">{worldData.features.length}</span>
+                  </div>
                 </div>
+                <p className="stats-label">countries visited</p>
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
+                      background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
+                    }}
+                  />
+                </div>
+                <p className="stats-pct" style={{ color: '#2ecc71' }}>
+                  <AnimatedNumber value={Math.round((worldVisited.size / worldData.features.length) * 100)} suffix="%" />
+                </p>
               </div>
-              <p className="stats-label">countries visited</p>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
-                    background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
-                  }}
-                />
-              </div>
-              <p className="stats-pct" style={{ color: '#2ecc71' }}>
-                <AnimatedNumber value={Math.round((worldVisited.size / worldData.features.length) * 100)} suffix="%" />
-              </p>
-            </div>
+            )}
           </main>
         </>
       ) : (
         <>
           {isMobile ? (
             <MobileBottomSheet
-              miniContent={
-                <div className="sheet-mini-stats">
-                  <span className="sheet-mini-icon">{country.flag}</span>
-                  <span className="sheet-mini-text">{count}/{total} {country.regionLabel.toLowerCase()}</span>
-                  <span className="sheet-mini-pct" style={{ color: country.visitedColor }}>{pct}%</span>
-                  <span className="sheet-mini-expand">TAP TO EXPAND</span>
+              expandTo={sheetExpandTo}
+              onSnapChange={handleSheetSnap}
+              peekContent={
+                <div className="sheet-peek-header">
+                  <div className="sheet-peek-info">
+                    <span className="sheet-peek-icon">{country.flag}</span>
+                    <div className="sheet-peek-text">
+                      <span className="sheet-peek-title">{count} / {total} {country.regionLabel.toLowerCase()}</span>
+                      <span className="sheet-peek-subtitle" style={{ color: country.visitedColor }}>{pct}% visited{wishlistCount > 0 ? ` · ${wishlistCount} planned` : ''}</span>
+                    </div>
+                  </div>
+                  <div className="sheet-peek-progress">
+                    <div
+                      className="sheet-peek-progress-fill"
+                      style={{
+                        width: `${pct}%`,
+                        background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
+                      }}
+                    />
+                  </div>
+                  <div className="sheet-peek-pills">
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
+                  </div>
                 </div>
               }
             >
@@ -343,7 +404,7 @@ export default function App() {
                 onToggleWishlist={isShareMode ? () => {} : toggleWishlist}
                 searchRef={searchRef}
                 onBackToWorld={handleBackToWorld}
-                isMobile={true}
+                onSearchFocus={handleSearchFocus}
               />
             </MobileBottomSheet>
           ) : (
@@ -369,13 +430,15 @@ export default function App() {
             />
           )}
           <main className="map-container">
-            <button
-              className="sidebar-toggle"
-              onClick={() => setSidebarCollapsed((c) => !c)}
-              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-            >
-              {sidebarCollapsed ? '\u25B6' : '\u25C0'}
-            </button>
+            {!isMobile && (
+              <button
+                className="sidebar-toggle"
+                onClick={() => setSidebarCollapsed((c) => !c)}
+                title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+              >
+                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+              </button>
+            )}
             <RegionMap
               country={country}
               visited={displayVisited}
@@ -384,50 +447,58 @@ export default function App() {
               dates={isShareMode ? {} : dates}
               notes={isShareMode ? {} : notes}
             />
-            {!isShareMode && <ExportButton country={country} />}
+            {!isShareMode && !isMobile && <ExportButton country={country} />}
+            {isMobile && !isShareMode && (
+              <div className="map-controls-cluster">
+                <ExportButton country={country} />
+              </div>
+            )}
 
-            <div className="floating-stats" style={{ '--accent': country.visitedColor }}>
-              <div className="stats-card-header">
-                <div className="stats-numbers">
-                  <span className="stats-count"><AnimatedNumber value={count} /></span>
-                  <span className="stats-separator">/</span>
-                  <span className="stats-total"><AnimatedNumber value={total} /></span>
+            {!isMobile && (
+              <div className="floating-stats" style={{ '--accent': country.visitedColor }}>
+                <div className="stats-card-header">
+                  <div className="stats-numbers">
+                    <span className="stats-count"><AnimatedNumber value={count} /></span>
+                    <span className="stats-separator">/</span>
+                    <span className="stats-total"><AnimatedNumber value={total} /></span>
+                  </div>
+                  {!isShareMode && (
+                    <label className="color-picker-label" title="Custom color">
+                      <input
+                        type="color"
+                        className="color-picker"
+                        value={colors[countryId] || country.visitedColor}
+                        onChange={(e) => setColor(countryId, e.target.value)}
+                      />
+                      <span
+                        className="color-dot"
+                        style={{ background: country.visitedColor }}
+                      />
+                    </label>
+                  )}
                 </div>
-                {!isShareMode && (
-                  <label className="color-picker-label" title="Custom color">
-                    <input
-                      type="color"
-                      className="color-picker"
-                      value={colors[countryId] || country.visitedColor}
-                      onChange={(e) => setColor(countryId, e.target.value)}
-                    />
-                    <span
-                      className="color-dot"
-                      style={{ background: country.visitedColor }}
-                    />
-                  </label>
+                <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
+                {wishlistCount > 0 && (
+                  <p className="stats-wishlist-count">{wishlistCount} planned</p>
                 )}
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${pct}%`,
+                      background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
+                    }}
+                  />
+                </div>
+                <p className="stats-pct" style={{ color: country.visitedColor }}>
+                  <AnimatedNumber value={pct} suffix="%" />
+                </p>
               </div>
-              <p className="stats-label">{country.regionLabel.toLowerCase()} visited</p>
-              {wishlistCount > 0 && (
-                <p className="stats-wishlist-count">{wishlistCount} planned</p>
-              )}
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${country.visitedColor}, ${country.visitedHover})`,
-                  }}
-                />
-              </div>
-              <p className="stats-pct" style={{ color: country.visitedColor }}>
-                <AnimatedNumber value={pct} suffix="%" />
-              </p>
-            </div>
+            )}
           </main>
         </>
       )}
+      {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
       <Analytics />
       <SpeedInsights />
     </div>

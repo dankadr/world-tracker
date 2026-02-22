@@ -4,13 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { avatarCategories, hairColorOptions } from '../config/avatarParts';
 import getAchievements from '../data/achievements';
 import AvatarCanvas from './AvatarCanvas';
+import ConfirmDialog from './ConfirmDialog';
+import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 const categoryOrder = ['background', 'body', 'hair', 'eyes', 'shirt', 'hat', 'accessory', 'shoes', 'glasses', 'cape', 'badge', 'pet'];
 
 export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
   const [activeTab, setActiveTab] = useState('body');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const { user } = useAuth();
   const userId = user?.id || null;
+  const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
 
   const achievements = getAchievements(userId);
   const unlockedIds = new Set(achievements.filter((a) => a.check()).map((a) => a.id));
@@ -30,8 +34,9 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content avatar-editor-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+      <div className="modal-content avatar-editor-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header" {...dragHandlers}>
+          <div className="drag-handle" />
           <h2>Customize Avatar</h2>
           <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
@@ -113,10 +118,17 @@ export default function AvatarEditor({ config, onSetPart, onReset, onClose }) {
         </div>
 
         <div className="avatar-editor-footer">
-          <button className="avatar-reset-btn" onClick={() => { if (window.confirm('Reset avatar to default?')) onReset(); }}>
+          <button className="avatar-reset-btn" onClick={() => setShowResetConfirm(true)}>
             Reset Avatar
           </button>
         </div>
+        <ConfirmDialog
+          isOpen={showResetConfirm}
+          message="Reset avatar to default?"
+          confirmLabel="Reset"
+          onConfirm={() => { onReset(); setShowResetConfirm(false); }}
+          onCancel={() => setShowResetConfirm(false)}
+        />
       </div>
     </div>,
     document.body

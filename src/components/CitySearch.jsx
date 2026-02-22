@@ -4,7 +4,7 @@ import { findRegion } from '../utils/geo';
 // Map country IDs to ISO 3166-1 alpha-2 codes for Nominatim countrycodes param
 const ISO_CODES = { ch: 'ch', us: 'us', usparks: 'us', nyc: 'us', no: 'no', ca: 'ca' };
 
-export default function CitySearch({ country, visited, onToggle, searchRef }) {
+export default function CitySearch({ country, visited, onToggle, searchRef, onSearchFocus }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,11 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
       }
     }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
   }, []);
 
   // Auto-hide message after 4 seconds
@@ -166,14 +170,20 @@ export default function CitySearch({ country, visited, onToggle, searchRef }) {
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
-          type="text"
+          type="search"
           className="search-input"
           placeholder={`Search a city in ${country.name}...`}
           value={query}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          onFocus={() => results.length > 0 && setShowDropdown(true)}
+          onFocus={() => {
+            if (results.length > 0) setShowDropdown(true);
+            if (onSearchFocus) onSearchFocus();
+          }}
           ref={searchRef}
+          enterKeyHint="search"
+          autoComplete="off"
+          spellCheck={false}
         />
         {loading && <span className="search-spinner" />}
       </div>

@@ -181,7 +181,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
           if (isVisited && (dates?.[id] || notes?.[id])) {
             const dateStr = dates?.[id] ? `<div style="font-size:0.75rem;color:#95a5a6;margin-top:4px">${dates[id]}</div>` : '';
             const noteStr = notes?.[id] ? `<div style="font-size:0.78rem;margin-top:4px;font-style:italic;color:#7f8c9b">${notes[id]}</div>` : '';
-            const html = `<div style="min-width:120px"><strong>${name}</strong>${dateStr}${noteStr}<button onclick="this.parentElement.closest('.leaflet-popup').remove();document.dispatchEvent(new CustomEvent('region-uncheck',{detail:'${id}'}))" style="margin-top:6px;font-size:0.7rem;border:none;background:rgba(211,47,47,0.1);color:#d32f2f;padding:2px 8px;border-radius:4px;cursor:pointer">Uncheck</button></div>`;
+            const html = `<div style="min-width:180px"><strong style="font-size:0.95rem">${name}</strong>${dateStr}${noteStr}<button onclick="this.parentElement.closest('.leaflet-popup').remove();document.dispatchEvent(new CustomEvent('region-uncheck',{detail:'${id}'}))" style="margin-top:8px;font-size:0.82rem;border:none;background:rgba(211,47,47,0.1);color:#d32f2f;padding:10px 16px;border-radius:8px;cursor:pointer;min-height:44px;width:100%;font-weight:600;-webkit-tap-highlight-color:rgba(211,47,47,0.2)">Uncheck</button></div>`;
             L.popup({ className: 'region-popup', closeButton: true, offset: [0, -5] })
               .setLatLng(e.latlng)
               .setContent(html)

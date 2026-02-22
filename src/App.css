@@ -329,6 +329,16 @@ body {
   white-space: nowrap;
 }
 
+@media (max-width: 768px) {
+  .search-results {
+    max-height: 40vh;
+  }
+
+  .search-result-btn {
+    min-height: 44px;
+  }
+}
+
 .search-message {
   margin-top: 6px;
   padding: 6px 10px;
@@ -1619,6 +1629,27 @@ body {
   justify-content: space-between;
   padding: 20px 24px 12px;
   border-bottom: 1px solid var(--divider);
+  flex-wrap: wrap;
+}
+
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  flex-basis: 100%;
+  margin: 0 auto 8px;
+  display: none;
+}
+
+[data-theme="dark"] .drag-handle {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 768px) {
+  .drag-handle {
+    display: block;
+  }
 }
 
 .modal-header h2 {
@@ -1880,7 +1911,7 @@ body {
   box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15),
               var(--glass-specular);
   overflow: hidden;
-  transition: height 0.35s cubic-bezier(.4,0,.2,1);
+  transition: height 0.45s cubic-bezier(0.32, 0.72, 0, 1);
   will-change: height;
   display: flex;
   flex-direction: column;
@@ -1911,41 +1942,129 @@ body {
   flex-shrink: 0;
 }
 
-.sheet-mini-content {
+.sheet-peek-content {
   width: 100%;
   cursor: pointer;
-  padding: 4px 0 2px;
+  padding: 2px 0 4px;
 }
 
-.sheet-mini-stats {
+.sheet-peek-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.sheet-peek-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  justify-content: center;
-  padding: 2px 0;
+  gap: 10px;
 }
 
-.sheet-mini-icon {
-  font-size: 1.1rem;
+.sheet-peek-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
 }
 
-.sheet-mini-text {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
+.sheet-peek-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
 }
 
-.sheet-mini-pct {
-  font-size: 0.85rem;
+.sheet-peek-title {
+  font-size: 0.95rem;
   font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.sheet-mini-expand {
-  font-size: 0.65rem;
+.sheet-peek-subtitle {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-left: auto;
+  line-height: 1.2;
+}
+
+.sheet-peek-progress {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sheet-peek-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+[data-theme="dark"] .sheet-peek-progress {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Peek quick-action pills */
+.sheet-peek-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sheet-peek-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.sheet-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  min-height: 36px;
+  white-space: nowrap;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur-light));
+  -webkit-backdrop-filter: blur(var(--glass-blur-light));
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sheet-pill:active {
+  transform: scale(0.95);
+  background: var(--glass-bg-heavy);
+}
+
+[data-theme="dark"] .sheet-pill {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Map controls cluster (mobile) */
+.map-controls-cluster {
+  position: fixed;
+  bottom: calc(var(--sheet-height, 20vh) + 16px);
+  right: 12px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  transition: bottom 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.map-controls-cluster .export-btn {
+  position: static;
+  top: auto;
+  right: auto;
 }
 
 .sheet-body {
@@ -1988,61 +2107,39 @@ body {
     display: none;
   }
 
-  /* Sidebar toggle hidden on mobile */
-  .sidebar-toggle {
-    display: none !important;
+  /* Floating stats hidden on mobile — moved into bottom sheet peek */
+  .app.is-mobile .floating-stats {
+    display: none;
   }
 
-  /* Floating stats — top center, compact */
-  .floating-stats {
-    bottom: auto;
-    top: 12px;
-    min-width: 160px;
-    padding: 8px 16px;
-    border-radius: 14px;
-    transform: translateX(-50%);
-    max-width: calc(100vw - 100px);
+  /* Map controls — use CSS custom property for dynamic positioning */
+  .export-btn:not(.map-controls-cluster .export-btn) {
+    top: auto;
+    bottom: calc(var(--sheet-height, 20vh) + 12px);
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
   }
 
-  .floating-stats:hover {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .floating-stats .stats-numbers {
-    font-size: 1.4rem;
-  }
-
-  .floating-stats .stats-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.5px;
-  }
-
-  .floating-stats .progress-bar {
-    margin-top: 6px;
-  }
-
-  .floating-stats .stats-pct {
-    font-size: 0.75rem;
-  }
-
-  /* Export button — below floating stats */
-  .export-btn {
-    top: 8px;
-    right: 8px;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-
-  /* Layer control */
   .layer-control {
-    top: 48px;
-    right: 8px;
+    top: auto;
+    bottom: calc(var(--sheet-height, 20vh) + 60px);
+    right: 12px;
   }
 
   .layer-control-btn {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Leaflet zoom controls — reposition to bottom right */
+  .swiss-map .leaflet-control-zoom {
+    position: absolute;
+    bottom: calc(var(--sheet-height, 20vh) + 108px) !important;
+    right: 12px !important;
+    top: auto !important;
+    left: auto !important;
   }
 
   /* Sidebar inside bottom sheet: compact */
@@ -2063,15 +2160,44 @@ body {
     height: 22px;
   }
 
-  /* Country tabs — horizontally scrollable, compact */
+  /* Country tabs — horizontally scrollable, scroll-snap */
   .country-tabs {
     padding: 0;
     gap: 0;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
 
   .country-tab {
-    padding: 6px 3px 5px;
-    min-width: 42px;
+    padding: 8px 16px;
+    min-width: 48px;
+    min-height: 44px;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    scroll-snap-align: center;
+    border-bottom: none;
+  }
+
+  .country-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--text-primary);
+    transform: scaleX(0);
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .country-tab.active::after {
+    transform: scaleX(1);
+  }
+
+  .country-tab.active {
+    border-bottom: none;
   }
 
   .tab-flag {
@@ -2079,7 +2205,7 @@ body {
   }
 
   .tab-name {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
   }
 
   /* Region list touch-friendly */
@@ -2395,9 +2521,13 @@ body {
   /* Map popup */
   .world-popup-toggle,
   .world-popup-explore {
-    padding: 8px 12px;
-    min-height: 36px;
+    padding: 10px 16px;
+    min-height: 44px;
     font-size: 0.8rem;
+  }
+
+  .world-popup-name {
+    font-size: 1rem;
   }
 }
 
@@ -2460,13 +2590,21 @@ body {
   }
 }
 
+/* ---- Tablet portrait (class-based, applied by App.jsx) ---- */
+.app.tablet-portrait .sidebar {
+  width: 280px;
+  min-width: 280px;
+}
+
+/* ---- Touch tablet: enlarged touch targets ---- */
+.app.touch-tablet button,
+.app.touch-tablet .tab-btn,
+.app.touch-tablet .search-result-btn {
+  min-height: 44px;
+}
+
 /* ---- Tablet (769px – 1024px) ---- */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .sidebar {
-    width: 280px;
-    min-width: 280px;
-  }
-
   .sidebar-header {
     padding: 14px 16px 10px;
   }
@@ -2660,7 +2798,8 @@ body {
 
   .world-popup-toggle,
   .world-popup-explore {
-    min-height: 40px;
+    min-height: 44px;
+    padding: 10px 16px;
   }
 }
 
