@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useFriends } from '../context/FriendsContext';
 import countries, { countryList } from '../data/countries';
 import './ChallengesPanel.css';
@@ -81,7 +82,7 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
     }
   }, [title, description, trackerId, useAllRegions, selectedRegions, challengeType, selectedFriends, onCreate]);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content ch-create-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
         <div className="ch-create-header" {...dragHandlers}>
@@ -314,6 +315,7 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

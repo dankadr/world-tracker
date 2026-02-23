@@ -1,4 +1,5 @@
 import './ChallengesPanel.css';
+import { createPortal } from 'react-dom';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 import countries from '../data/countries';
 import { useState } from 'react';
@@ -100,7 +101,7 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay ch-detail-overlay" onClick={onClose}>
       <div className="modal-content ch-detail-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
         <div className="ch-detail-header" {...dragHandlers}>
@@ -253,6 +254,7 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
