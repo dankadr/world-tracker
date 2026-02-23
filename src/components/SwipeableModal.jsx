@@ -16,7 +16,7 @@ export default function SwipeableModal({ onClose, children, maxWidth = 420, heig
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={`modal-content ${className}`}
+        className={['modal-content', className].filter(Boolean).join(' ')}
         ref={handleRef}
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth, height }}
