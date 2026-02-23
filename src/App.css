@@ -1,31 +1,31 @@
 /* ======== Liquid Glass Design System ======== */
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.22);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.38);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.35);
-  --glass-border-subtle: rgba(255, 255, 255, 0.18);
-  --glass-highlight: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 248, 240, 0.22);
+  --glass-bg-heavy: rgba(255, 248, 240, 0.42);
+  --glass-bg-subtle: rgba(255, 248, 240, 0.12);
+  --glass-border: rgba(255, 235, 210, 0.40);
+  --glass-border-subtle: rgba(255, 235, 210, 0.22);
+  --glass-highlight: rgba(255, 248, 240, 0.65);
   --glass-blur: 16px;
   --glass-blur-heavy: 24px;
   --glass-blur-light: 10px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --glass-specular: inset 1px 1px 0 rgba(255, 255, 255, 0.5),
-                     inset 0 0 8px rgba(255, 255, 255, 0.15);
-  --glass-specular-strong: inset 1px 1px 0 rgba(255, 255, 255, 0.7),
-                            inset 0 0 12px rgba(255, 255, 255, 0.2);
-  --glass-hover-glow: 0 0 20px rgba(255, 255, 255, 0.25);
-  --body-bg: linear-gradient(135deg, #dfe9f3 0%, #c4d7e6 40%, #b8c9db 100%);
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a5568;
-  --text-tertiary: #718096;
-  --text-muted: #a0aec0;
-  --text-on-glass: #2d3748;
-  --bar-track: rgba(0, 0, 0, 0.08);
-  --divider: rgba(255, 255, 255, 0.25);
-  --input-bg: rgba(255, 255, 255, 0.3);
-  --hover-bg: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px rgba(80, 40, 10, 0.08);
+  --glass-shadow-elevated: 0 12px 40px rgba(80, 40, 10, 0.12);
+  --glass-specular: inset 1px 1px 0 rgba(255, 248, 240, 0.55),
+                     inset 0 0 8px rgba(255, 248, 240, 0.18);
+  --glass-specular-strong: inset 1px 1px 0 rgba(255, 248, 240, 0.75),
+                            inset 0 0 12px rgba(255, 248, 240, 0.22);
+  --glass-hover-glow: 0 0 20px rgba(255, 220, 180, 0.30);
+  --body-bg: linear-gradient(135deg, #f5ede0 0%, #eddfd0 40%, #e2d2c0 100%);
+  --text-primary: #2c1f14;
+  --text-secondary: #5a4030;
+  --text-tertiary: #8a6a50;
+  --text-muted: #b09070;
+  --text-on-glass: #3a2c20;
+  --bar-track: rgba(100, 60, 20, 0.08);
+  --divider: rgba(200, 170, 140, 0.30);
+  --input-bg: rgba(255, 248, 240, 0.35);
+  --hover-bg: rgba(255, 248, 240, 0.22);
 }
 
 /* ======== Reset & Base ======== */
@@ -1230,29 +1230,29 @@ body {
 
 /* ======== Dark Mode ======== */
 [data-theme="dark"] {
-  --glass-bg: rgba(30, 40, 65, 0.45);
-  --glass-bg-heavy: rgba(25, 35, 58, 0.7);
-  --glass-bg-subtle: rgba(25, 35, 55, 0.3);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-border-subtle: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.4);
-  --glass-specular: inset 1px 1px 0 rgba(255, 255, 255, 0.14),
-                     inset 0 0 8px rgba(255, 255, 255, 0.05);
-  --glass-specular-strong: inset 1px 1px 0 rgba(255, 255, 255, 0.18),
-                            inset 0 0 12px rgba(255, 255, 255, 0.07);
-  --glass-hover-glow: 0 0 20px rgba(100, 140, 220, 0.12);
-  --body-bg: linear-gradient(135deg, #0d1117 0%, #161b2e 40%, #1a2332 100%);
-  --text-primary: #ecf0f1;
-  --text-secondary: #bdc3c7;
-  --text-tertiary: #95a0ad;
-  --text-muted: #7a8899;
-  --text-on-glass: #e0e0e0;
-  --bar-track: rgba(255, 255, 255, 0.1);
-  --divider: rgba(255, 255, 255, 0.12);
-  --input-bg: rgba(255, 255, 255, 0.08);
-  --hover-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(60, 38, 18, 0.42);
+  --glass-bg-heavy: rgba(70, 46, 22, 0.62);
+  --glass-bg-subtle: rgba(55, 34, 15, 0.28);
+  --glass-border: rgba(180, 130, 80, 0.18);
+  --glass-border-subtle: rgba(160, 110, 60, 0.12);
+  --glass-highlight: rgba(255, 220, 170, 0.10);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
+  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.50);
+  --glass-specular: inset 1px 1px 0 rgba(255, 220, 170, 0.12),
+                     inset 0 0 8px rgba(255, 200, 140, 0.05);
+  --glass-specular-strong: inset 1px 1px 0 rgba(255, 220, 170, 0.16),
+                            inset 0 0 12px rgba(255, 200, 140, 0.07);
+  --glass-hover-glow: 0 0 20px rgba(200, 140, 60, 0.15);
+  --body-bg: linear-gradient(135deg, #1c1510 0%, #251a12 40%, #2a1f15 100%);
+  --text-primary: #f0e6d8;
+  --text-secondary: #c8b09a;
+  --text-tertiary: #a08060;
+  --text-muted: #7a6048;
+  --text-on-glass: #e8dcc8;
+  --bar-track: rgba(255, 200, 140, 0.10);
+  --divider: rgba(180, 130, 80, 0.18);
+  --input-bg: rgba(60, 38, 18, 0.45);
+  --hover-bg: rgba(80, 50, 22, 0.35);
 }
 
 [data-theme="dark"] body {
