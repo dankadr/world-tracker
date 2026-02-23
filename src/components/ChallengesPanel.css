@@ -846,9 +846,9 @@
   border-color: rgba(192, 122, 48, 0.35);
 }
 .ch-target-tag.visited {
-  background: rgba(46, 204, 113, 0.12);
-  border-color: rgba(46, 204, 113, 0.3);
-  color: #27ae60;
+  background: rgba(216, 150, 72, 0.12);
+  border-color: rgba(216, 150, 72, 0.3);
+  color: #d89648;
 }
 
 .ch-detail-footer-info {

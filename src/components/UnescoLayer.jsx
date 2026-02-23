@@ -86,7 +86,7 @@ export default function UnescoLayer() {
             style="
               width: 100%;
               padding: 6px 12px;
-              background: ${visited ? '#dc3545' : '#28a745'};
+              background: ${visited ? '#dc3545' : '#d89648'};
               color: white;
               border: none;
               border-radius: 4px;

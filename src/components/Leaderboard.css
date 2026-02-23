@@ -81,7 +81,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c07a30, #2ecc71);
+  background: linear-gradient(135deg, #c07a30, #e8a84a);
   color: #fff;
   font-weight: 600;
 }
@@ -116,7 +116,7 @@
 .lb-bar {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  background: linear-gradient(90deg, #e8a84a, #d89648);
   transition: width 0.4s ease;
 }
 

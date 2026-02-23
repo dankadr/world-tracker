@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c07a30, #2ecc71);
+  background: linear-gradient(135deg, #c07a30, #e8a84a);
   color: #fff;
   font-size: 0.55rem;
   font-weight: 700;
@@ -280,7 +280,7 @@
 }
 
 .comparison-stats-card.both {
-  background: rgba(46, 204, 113, 0.1);
+  background: rgba(216, 150, 72, 0.1);
 }
 
 .comparison-stats-card.only-me {
@@ -298,7 +298,7 @@
 }
 
 .comparison-stats-card.both .comparison-stats-card-number {
-  color: #27ae60;
+  color: #e8a84a;
 }
 
 .comparison-stats-card.only-me .comparison-stats-card-number {
@@ -403,7 +403,7 @@
 }
 
 [data-theme="dark"] .comparison-stats-card.both {
-  background: rgba(46, 204, 113, 0.08);
+  background: rgba(216, 150, 72, 0.08);
 }
 
 [data-theme="dark"] .comparison-stats-card.only-me {

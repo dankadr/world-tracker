@@ -115,7 +115,7 @@ function FriendsRegionOverlay({ country, friendOverlayData }) {
 }
 
 const COMPARISON_COLORS = {
-  both: '#2ecc71',
+  both: '#e8a84a',
   onlyMe: '#c07a30',
   onlyFriend: '#e67e22',
 };

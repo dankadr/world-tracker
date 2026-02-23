@@ -433,7 +433,7 @@ export default function StatsModal({ onClose }) {
                     <div key={continent} className="stats-bar-row">
                       <span className="stats-bar-label">{continent}</span>
                       <div className="stats-bar-track">
-                        <div className="stats-bar-fill" style={{ width: `${cpct}%`, background: '#2ecc71' }} />
+                        <div className="stats-bar-fill" style={{ width: `${cpct}%`, background: '#e8a84a' }} />
                       </div>
                       <span className="stats-bar-value">{s.visited}/{s.total}</span>
                     </div>
@@ -710,7 +710,7 @@ function FriendsCompare({ worldVisited }) {
                   className="stats-bar-fill"
                   style={{
                     width: `${pct}%`,
-                    background: entry.is_self ? '#c07a30' : '#2ecc71',
+                    background: entry.is_self ? '#c07a30' : '#e8a84a',
                   }}
                 />
               </div>
