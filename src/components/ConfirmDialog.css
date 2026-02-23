@@ -35,7 +35,7 @@
 
 .confirm-dialog-message {
   font-size: 0.95rem;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
   text-align: center;
   margin: 0 0 20px;
   line-height: 1.5;
@@ -70,14 +70,14 @@
 }
 
 .confirm-dialog-btn.confirm {
-  background: #3498db;
+  background: #c07a30;
   color: white;
 }
 
 .confirm-dialog-btn.confirm:hover {
-  background: #2980b9;
+  background: #a06020;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 12px rgba(192, 122, 48, 0.3);
 }
 
 .confirm-dialog-btn.confirm.destructive {

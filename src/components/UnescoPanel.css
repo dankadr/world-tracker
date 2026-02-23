@@ -137,8 +137,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #4169E1;
-  box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.1);
+  border-color: #c07a30;
+  box-shadow: 0 0 0 3px rgba(192, 122, 48, 0.1);
 }
 
 .filter-row {
@@ -170,7 +170,7 @@
 
 .filter-row select:focus {
   outline: none;
-  border-color: #4169E1;
+  border-color: #c07a30;
 }
 
 .unesco-list {
@@ -241,12 +241,12 @@
 }
 
 .site-item:hover {
-  background: rgba(65, 105, 225, 0.05);
-  border-color: rgba(65, 105, 225, 0.2);
+  background: rgba(192, 122, 48, 0.05);
+  border-color: rgba(192, 122, 48, 0.2);
 }
 
 .unesco-panel.dark .site-item:hover {
-  background: rgba(65, 105, 225, 0.1);
+  background: rgba(192, 122, 48, 0.1);
 }
 
 .site-item.visited {

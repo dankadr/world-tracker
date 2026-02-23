@@ -134,8 +134,8 @@
 }
 
 .fp-input:focus {
-  border-color: rgba(52, 152, 219, 0.4);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+  border-color: rgba(192, 122, 48, 0.4);
+  box-shadow: 0 0 0 2px rgba(192, 122, 48, 0.1);
 }
 
 .fp-search-btn {
@@ -185,7 +185,7 @@
 
 .fp-add-btn {
   border: none;
-  background: #3498db;
+  background: #c07a30;
   color: #fff;
   padding: 5px 14px;
   border-radius: 6px;
@@ -196,8 +196,8 @@
 }
 
 .fp-add-btn:hover:not(:disabled) {
-  background: #2980b9;
-  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  background: #a06020;
+  box-shadow: 0 2px 8px rgba(192, 122, 48, 0.3);
 }
 
 .fp-add-btn:disabled {
@@ -359,7 +359,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3498db, #2ecc71);
+  background: linear-gradient(135deg, #c07a30, #2ecc71);
   color: #fff;
   font-weight: 600;
 }
@@ -401,8 +401,8 @@
 }
 
 [data-theme="dark"] .fp-input:focus {
-  border-color: rgba(52, 152, 219, 0.5);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+  border-color: rgba(192, 122, 48, 0.5);
+  box-shadow: 0 0 0 2px rgba(192, 122, 48, 0.15);
 }
 
 /* Mobile */

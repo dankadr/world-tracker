@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3498db, #2ecc71);
+  background: linear-gradient(135deg, #c07a30, #2ecc71);
   color: #fff;
   font-size: 0.55rem;
   font-weight: 700;
@@ -49,7 +49,7 @@
 
 .comparison-legend-name {
   font-weight: 600;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -70,7 +70,7 @@
 
 .comparison-legend-close:hover {
   background: var(--hover-bg, rgba(0, 0, 0, 0.06));
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
 }
 
 .comparison-legend-items {
@@ -144,7 +144,7 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
 }
 
 .comparison-stats-close {
@@ -161,7 +161,7 @@
 
 .comparison-stats-close:hover {
   background: var(--hover-bg, rgba(0, 0, 0, 0.06));
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
 }
 
 .comparison-stats-versus {
@@ -198,7 +198,7 @@
 .comparison-stats-user-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
 }
 
 .comparison-stats-vs {
@@ -249,7 +249,7 @@
 }
 
 .comparison-stats-bar-fill.you {
-  background: linear-gradient(90deg, #3498db, #2980b9);
+  background: linear-gradient(90deg, #c07a30, #a06020);
 }
 
 .comparison-stats-bar-fill.friend {
@@ -284,7 +284,7 @@
 }
 
 .comparison-stats-card.only-me {
-  background: rgba(52, 152, 219, 0.1);
+  background: rgba(192, 122, 48, 0.1);
 }
 
 .comparison-stats-card.only-friend {
@@ -294,7 +294,7 @@
 .comparison-stats-card-number {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
 }
 
 .comparison-stats-card.both .comparison-stats-card-number {
@@ -302,7 +302,7 @@
 }
 
 .comparison-stats-card.only-me .comparison-stats-card-number {
-  color: #2980b9;
+  color: #a06020;
 }
 
 .comparison-stats-card.only-friend .comparison-stats-card-number {
@@ -326,8 +326,8 @@
 /* ── Compare button in FriendsPanel ── */
 .fp-compare-btn {
   border: none;
-  background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  background: rgba(192, 122, 48, 0.1);
+  color: #c07a30;
   padding: 4px 10px;
   border-radius: 5px;
   font-size: 0.72rem;
@@ -339,8 +339,8 @@
 }
 
 .fp-compare-btn:hover:not(:disabled) {
-  background: rgba(52, 152, 219, 0.2);
-  box-shadow: 0 1px 4px rgba(52, 152, 219, 0.15);
+  background: rgba(192, 122, 48, 0.2);
+  box-shadow: 0 1px 4px rgba(192, 122, 48, 0.15);
 }
 
 .fp-compare-btn:disabled {
@@ -349,12 +349,12 @@
 }
 
 .fp-compare-btn.active {
-  background: #3498db;
+  background: #c07a30;
   color: #fff;
 }
 
 .fp-compare-btn.active:hover {
-  background: #2980b9;
+  background: #a06020;
 }
 
 .fp-friend-actions {
@@ -379,7 +379,7 @@
   padding: 8px 14px;
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-primary, #1a1a2e);
+  color: var(--text-primary, #2c1f14);
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
@@ -407,7 +407,7 @@
 }
 
 [data-theme="dark"] .comparison-stats-card.only-me {
-  background: rgba(52, 152, 219, 0.08);
+  background: rgba(192, 122, 48, 0.08);
 }
 
 [data-theme="dark"] .comparison-stats-card.only-friend {
