@@ -147,15 +147,6 @@ class Challenge(Base):
     description = Column(String, nullable=True)
     tracker_id = Column(String, nullable=False)  # e.g. 'world', 'ch', 'us'
     target_regions = Column(JSONB, nullable=False, default=list)  # list of region IDs or ['*']
-class Challenge(Base):
-    __tablename__ = "challenges"
-
-    id = Column(String, primary_key=True, default=generate_challenge_id)
-    creator_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    tracker_id = Column(String, nullable=False)  # e.g. 'world', 'ch', 'us'
-    target_regions = Column(JSONB, nullable=False, default=list)  # list of region IDs or ['*']
     challenge_type = Column(String, nullable=False, default="collaborative")  # 'collaborative' | 'race'
     difficulty = Column(String, nullable=True)  # 'easy' | 'medium' | 'hard' | null
     duration = Column(String, nullable=True)  # 'open-ended' | '48h' | '1w' | '1m' | null
