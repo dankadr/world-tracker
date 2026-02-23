@@ -1691,6 +1691,17 @@ body {
   flex-wrap: wrap;
 }
 
+
+/* Swipeable modal drag strip — appears above panel content on mobile */
+.swipeable-drag-strip {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0 2px;
+  cursor: grab;
+  touch-action: none;
+}
 .drag-handle {
   width: 36px;
   height: 4px;
