@@ -154,6 +154,14 @@ export default function App() {
   } = useWishlist();
   const [showBucketList, setShowBucketList] = useState(false);
   const [pendingBucketVisit, setPendingBucketVisit] = useState(null);
+  const worldWishlist = useMemo(
+    () => new Set(bucketListItems.filter((i) => i.tracker_id === 'world').map((i) => i.region_id)),
+    [bucketListItems]
+  );
+  const regionWishlist = useMemo(
+    () => new Set(bucketListItems.filter((i) => i.tracker_id === countryId).map((i) => i.region_id)),
+    [bucketListItems, countryId]
+  );
 
   // Track which trackers have been visited for first-visit XP
   const trackerFirstVisitRef = useRef(() => {
@@ -394,14 +402,6 @@ export default function App() {
   const count = displayVisited.size;
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   const wishlistCount = isShareMode ? 0 : regionWishlist.size;
-  const worldWishlist = useMemo(
-    () => new Set(bucketListItems.filter((i) => i.tracker_id === 'world').map((i) => i.region_id)),
-    [bucketListItems]
-  );
-  const regionWishlist = useMemo(
-    () => new Set(bucketListItems.filter((i) => i.tracker_id === countryId).map((i) => i.region_id)),
-    [bucketListItems, countryId]
-  );
 
   const prevPct = useRef(pct);
   const prevCountryRef = useRef(countryId);
