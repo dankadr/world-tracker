@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useFriends } from '../context/FriendsContext';
 import countries, { countryList } from '../data/countries';
 import './ChallengesPanel.css';
+import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 const TRACKER_OPTIONS = [
   { id: 'world', flag: '🌍', name: 'World (Countries)' },
@@ -9,6 +10,7 @@ const TRACKER_OPTIONS = [
 ];
 
 export default function ChallengeCreateModal({ onClose, onCreate }) {
+  const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
   const { friends } = useFriends();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -77,8 +79,8 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content ch-create-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ch-create-header">
+      <div className="modal-content ch-create-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+        <div className="ch-create-header" {...dragHandlers}>
           <h3>Create Challenge</h3>
           <button className="ch-close" onClick={onClose}>&times;</button>
         </div>
