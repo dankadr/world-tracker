@@ -1,5 +1,6 @@
 import './ChallengesPanel.css';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
+import countries from '../data/countries';
 
 const TRACKER_LABELS = {
   world: { flag: '🌍', name: 'World' },
@@ -53,6 +54,17 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
 
   const collabPct = progress.collaborative_pct || 0;
   const collabCount = progress.collaborative_count || 0;
+
+  // Build a lookup from region ID → display name for this tracker
+  const regionMap = {};
+  if (challenge.tracker_id && challenge.tracker_id !== 'world') {
+    const features = countries[challenge.tracker_id]?.data?.features || [];
+    features.forEach((f) => {
+      if (f.properties?.id && f.properties?.name) {
+        regionMap[f.properties.id] = f.properties.name;
+      }
+    });
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -112,20 +124,30 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
               </div>
 
               {/* Target regions info */}
-              {challenge.target_regions && challenge.target_regions[0] !== '*' && (
+              {challenge.target_regions && (
                 <div className="ch-targets-section">
-                  <h4 className="ch-section-label">Target Regions ({challenge.target_regions.length})</h4>
-                  <div className="ch-targets-list">
-                    {challenge.target_regions.map((r) => {
-                      // Check if this region is visited (in collab mode, by anyone)
-                      const visitedByAnyone = participants.some((p) => p.visited_regions?.includes(r));
-                      return (
-                        <span key={r} className={`ch-target-tag ${visitedByAnyone ? 'visited' : ''}`}>
-                          {r}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  {challenge.target_regions[0] === '*' ? (
+                    <>
+                      <h4 className="ch-section-label">Target Regions</h4>
+                      <div className="ch-targets-list">
+                        <span className="ch-target-tag ch-target-all">All regions</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h4 className="ch-section-label">Target Regions ({challenge.target_regions.length})</h4>
+                      <div className="ch-targets-list">
+                        {challenge.target_regions.map((r) => {
+                          const visitedByAnyone = participants.some((p) => p.visited_regions?.includes(r));
+                          return (
+                            <span key={r} className={`ch-target-tag ${visitedByAnyone ? 'visited' : ''}`}>
+                              {regionMap[r] || r}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

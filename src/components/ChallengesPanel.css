@@ -833,6 +833,13 @@
   transition: all 0.15s;
 }
 
+
+.ch-target-tag.ch-target-all {
+  background: rgba(52, 152, 219, 0.15);
+  border-color: rgba(52, 152, 219, 0.3);
+  color: #2980b9;
+  font-style: italic;
+}
 .ch-target-tag.visited {
   background: rgba(46, 204, 113, 0.12);
   border-color: rgba(46, 204, 113, 0.3);
