@@ -191,6 +191,8 @@ class ChallengeCreate(BaseModel):
     tracker_id: str  # 'world', 'ch', 'us', etc.
     target_regions: list[str]  # region IDs or ['*'] for all
     challenge_type: str = "collaborative"  # 'collaborative' | 'race'
+    difficulty: str | None = None  # 'easy' | 'medium' | 'hard'
+    duration: str | None = None  # 'open-ended' | '48h' | '1w' | '1m'
     invite_friend_ids: list[int] = []
 
 
@@ -963,13 +965,78 @@ async def _compute_challenge_progress(challenge, db: AsyncSession):
         total = len(target)
 
     collab_count = len(all_visited) if not is_all else len(all_visited)
+    collab_pct = round(collab_count / total * 100) if total > 0 else 0
+
+    # Check if challenge is completed
+    is_completed = collab_pct >= 100 and not challenge.completed_at
 
     return {
         "participants": participant_progress,
         "total": total,
         "collaborative_count": collab_count,
-        "collaborative_pct": round(collab_count / total * 100) if total > 0 else 0,
+        "collaborative_pct": collab_pct,
+        "is_completed": is_completed,
     }
+
+
+async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSession):
+    """Check if challenge is completed and award XP to participants."""
+    if challenge.completed_at:
+        return  # Already completed and rewarded
+
+    is_completed = progress.get("is_completed", False)
+    if not is_completed:
+        return
+
+    # Mark challenge as completed
+    challenge.completed_at = datetime.now(timezone.utc)
+
+    # Award XP to participants
+    participants_result = await db.execute(
+        select(ChallengeParticipant, User)
+        .join(User, ChallengeParticipant.user_id == User.id)
+        .where(ChallengeParticipant.challenge_id == challenge.id)
+    )
+    participants = participants_result.all()
+
+    # For collaborative: everyone gets 100 XP
+    # For race: top 3 get different amounts
+    if challenge.challenge_type == "collaborative":
+        for cp, u in participants:
+            if cp.xp_awarded == 0:  # Only award once
+                xp_amount = 100
+                u.xp += xp_amount
+                cp.xp_awarded = xp_amount
+                db.add(XpLog(
+                    user_id=u.id,
+                    amount=xp_amount,
+                    reason="complete_challenge",
+                    tracker_id=challenge.tracker_id,
+                ))
+    else:  # race
+        # Sort by visited count
+        sorted_participants = sorted(
+            [(cp, u, next((p for p in progress["participants"] if p["user_id"] == u.id), None))
+             for cp, u in participants],
+            key=lambda x: x[2]["visited_count"] if x[2] else 0,
+            reverse=True
+        )
+        
+        # Award XP based on rank
+        xp_awards = [250, 150, 100]  # 1st, 2nd, 3rd place
+        for i, (cp, u, prog) in enumerate(sorted_participants[:3]):
+            if cp.xp_awarded == 0 and prog:  # Only award once
+                xp_amount = xp_awards[i]
+                u.xp += xp_amount
+                cp.xp_awarded = xp_amount
+                db.add(XpLog(
+                    user_id=u.id,
+                    amount=xp_amount,
+                    reason=f"complete_challenge_rank{i+1}",
+                    tracker_id=challenge.tracker_id,
+                ))
+
+    await db.commit()
 
 
 @app.get("/api/challenges")
@@ -1002,7 +1069,11 @@ async def list_challenges(user: CurrentUser = Depends(get_current_user), db: Asy
             "tracker_id": c.tracker_id,
             "challenge_type": c.challenge_type,
             "target_regions": c.target_regions,
+            "difficulty": c.difficulty,
+            "duration": c.duration,
+            "end_at": c.end_at.isoformat() if c.end_at else None,
             "created_at": c.created_at.isoformat(),
+            "completed_at": c.completed_at.isoformat() if c.completed_at else None,
             "creator_id": c.creator_id,
             "participant_count": len(part_users),
             "participants": [{"id": u.id, "name": u.name, "picture": u.picture} for u in part_users[:5]],
@@ -1025,7 +1096,21 @@ async def create_challenge(body: ChallengeCreate, user: CurrentUser = Depends(ge
         .where(ChallengeParticipant.user_id == user.id)
     )).scalar()
     if count >= 10:
-        raise HTTPException(400, "Maximum 10 active challenges reached")
+        raise HTTPException(
+            409,
+            "Maximum 10 active challenges reached. Complete or leave a challenge to create a new one."
+        )
+
+    # Calculate end_at if duration is specified
+    end_at = None
+    if body.duration:
+        now = datetime.now(timezone.utc)
+        if body.duration == "48h":
+            end_at = now + timedelta(hours=48)
+        elif body.duration == "1w":
+            end_at = now + timedelta(weeks=1)
+        elif body.duration == "1m":
+            end_at = now + timedelta(days=30)
 
     challenge = Challenge(
         id=generate_challenge_id(),
@@ -1035,6 +1120,9 @@ async def create_challenge(body: ChallengeCreate, user: CurrentUser = Depends(ge
         tracker_id=body.tracker_id,
         target_regions=body.target_regions,
         challenge_type=body.challenge_type,
+        difficulty=body.difficulty,
+        duration=body.duration,
+        end_at=end_at,
     )
     db.add(challenge)
 
@@ -1064,6 +1152,9 @@ async def create_challenge(body: ChallengeCreate, user: CurrentUser = Depends(ge
         "tracker_id": challenge.tracker_id,
         "challenge_type": challenge.challenge_type,
         "target_regions": challenge.target_regions,
+        "difficulty": challenge.difficulty,
+        "duration": challenge.duration,
+        "end_at": challenge.end_at.isoformat() if challenge.end_at else None,
         "created_at": challenge.created_at.isoformat(),
         "creator_id": challenge.creator_id,
     }
@@ -1089,6 +1180,9 @@ async def get_challenge_detail(challenge_id: str, user: CurrentUser = Depends(ge
         raise HTTPException(403, "You are not a participant in this challenge")
 
     progress = await _compute_challenge_progress(challenge, db)
+    
+    # Check for completion and award XP
+    await _check_and_award_challenge_completion(challenge, progress, db)
 
     # Get all participants
     parts = await db.execute(
@@ -1104,7 +1198,11 @@ async def get_challenge_detail(challenge_id: str, user: CurrentUser = Depends(ge
         "tracker_id": challenge.tracker_id,
         "challenge_type": challenge.challenge_type,
         "target_regions": challenge.target_regions,
+        "difficulty": challenge.difficulty,
+        "duration": challenge.duration,
+        "end_at": challenge.end_at.isoformat() if challenge.end_at else None,
         "created_at": challenge.created_at.isoformat(),
+        "completed_at": challenge.completed_at.isoformat() if challenge.completed_at else None,
         "creator_id": challenge.creator_id,
         "participants": [
             {"id": u.id, "name": u.name, "picture": u.picture, "joined_at": cp.joined_at.isoformat()}
@@ -1133,13 +1231,13 @@ async def join_challenge(challenge_id: str, user: CurrentUser = Depends(get_curr
     if existing:
         raise HTTPException(400, "Already joined")
 
-    # Max 20 participants
+    # Max 50 participants
     part_count = (await db.execute(
         select(func.count()).select_from(ChallengeParticipant)
         .where(ChallengeParticipant.challenge_id == challenge_id)
     )).scalar()
-    if part_count >= 20:
-        raise HTTPException(400, "Challenge is full (max 20 participants)")
+    if part_count >= 50:
+        raise HTTPException(400, "Challenge is full (max 50 participants)")
 
     db.add(ChallengeParticipant(challenge_id=challenge_id, user_id=user.id))
     await db.commit()

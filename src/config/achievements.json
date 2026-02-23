@@ -138,5 +138,11 @@
   { "id": "unesco-all-regions", "icon": "🌏", "title": "Global Heritage", "desc": "Visit UNESCO sites on all continents", "category": "UNESCO", "rule": { "type": "unescoRegionsVisited", "min": 6 } },
   { "id": "unesco-historic", "icon": "📜", "title": "Time Traveler", "desc": "Visit a UNESCO site inscribed before 1980", "category": "UNESCO", "rule": { "type": "unescoOldSiteVisited", "year": 1980 } },
 
+  { "id": "challenge-first", "icon": "🎯", "title": "First Challenge", "desc": "Complete your first challenge", "category": "Challenges", "rule": { "type": "challengesCompleted", "min": 1 } },
+  { "id": "challenge-5", "icon": "🏆", "title": "Challenge Enthusiast", "desc": "Complete 5 challenges", "category": "Challenges", "rule": { "type": "challengesCompleted", "min": 5 } },
+  { "id": "challenge-winner", "icon": "🥇", "title": "Champion", "desc": "Win a race challenge", "category": "Challenges", "rule": { "type": "raceWon", "min": 1 } },
+  { "id": "challenge-team-player", "icon": "🤝", "title": "Team Player", "desc": "Complete a collaborative challenge with 5+ participants", "category": "Challenges", "rule": { "type": "largeTeamChallenge", "min": 1 } },
+  { "id": "challenge-creator", "icon": "✨", "title": "Challenge Creator", "desc": "Create a challenge", "category": "Challenges", "rule": { "type": "challengesCreated", "min": 1 } },
+
   { "id": "easter-greater-israel", "icon": "🕎", "title": "ארץ ישראל השלמה", "desc": "Discover the ancient vision", "category": "Secret", "rule": { "type": "easterEggToggled", "easterEgg": "greater-israel" } }
 ]

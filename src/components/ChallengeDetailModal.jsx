@@ -1,6 +1,7 @@
 import './ChallengesPanel.css';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 import countries from '../data/countries';
+import { useState } from 'react';
 
 const TRACKER_LABELS = {
   world: { flag: '🌍', name: 'World' },
@@ -40,6 +41,7 @@ function LeaderboardRow({ participant, rank, total, isMe }) {
 
 export default function ChallengeDetailModal({ challenge, loading, userId, onClose, onLeave, onDelete, onRefresh }) {
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
+  const [sharecopied, setShareCopied] = useState(false);
   const isRace = challenge.challenge_type === 'race';
   const isCreator = challenge.creator_id === userId;
   const tracker = TRACKER_LABELS[challenge.tracker_id] || { flag: '🗺️', name: challenge.tracker_id };
@@ -55,6 +57,16 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
   const collabPct = progress.collaborative_pct || 0;
   const collabCount = progress.collaborative_count || 0;
 
+  // Calculate leaderboard stats
+  const stats = {
+    mostActive: sorted.length > 0 ? sorted[0] : null,
+    totalVisits: participants.reduce((sum, p) => sum + (p.visited_count || 0), 0),
+    avgVisits: participants.length > 0 
+      ? Math.round(participants.reduce((sum, p) => sum + (p.visited_count || 0), 0) / participants.length) 
+      : 0,
+    participantCount: participants.length,
+  };
+
   // Build a lookup from region ID → display name for this tracker
   const regionMap = {};
   if (challenge.tracker_id && challenge.tracker_id !== 'world') {
@@ -63,13 +75,38 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
       if (f.properties?.id && f.properties?.name) {
         regionMap[f.properties.id] = f.properties.name;
       }
+   
+
+  const handleShareLink = () => {
+    const url = `${window.location.origin}/challenges/${challenge.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
     });
+  };
+
+  const handleShare = () => {
+    const text = `Join my travel challenge: "${challenge.title}" - Can you visit more regions than me? 🌍`;
+    const url = `${window.location.origin}/challenges/${challenge.id}`;
+    
+    if (navigator.share) {
+      navigator.share({ title: challenge.title, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      });
+    }
+  }; });
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay ch-detail-overlay" onClick={onClose}>
       <div className="modal-content ch-detail-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
         <div className="ch-detail-header" {...dragHandlers}>
+          <button className="ch-back-btn" onClick={onClose} aria-label="Go back">
+            ← Back
+          </button>
           <div className="ch-detail-title-row">
             <span className="ch-detail-tracker">{tracker.flag}</span>
             <div>
@@ -79,7 +116,6 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
               </span>
             </div>
           </div>
-          <button className="ch-close" onClick={onClose}>&times;</button>
         </div>
 
         <div className="ch-detail-body">
@@ -110,6 +146,30 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
               {/* Participants / Leaderboard */}
               <div className="ch-lb-section">
                 <h4 className="ch-section-label">{isRace ? 'Leaderboard' : 'Contributions'}</h4>
+                
+                {/* Stats Cards */}
+                {participants.length > 0 && (
+                  <div className="ch-stats-grid">
+                    <div className="ch-stat-card">
+                      <span className="ch-stat-icon">👥</span>
+                      <span className="ch-stat-value">{stats.participantCount}</span>
+                      <span className="ch-stat-label">Participants</span>
+                    </div>
+                    <div className="ch-stat-card">
+                      <span className="ch-stat-icon">📊</span>
+                      <span className="ch-stat-value">{stats.avgVisits}</span>
+                      <span className="ch-stat-label">Avg Visits</span>
+                    </div>
+                    {stats.mostActive && (
+                      <div className="ch-stat-card ch-stat-card-highlight">
+                        <span className="ch-stat-icon">🔥</span>
+                        <span className="ch-stat-value">{stats.mostActive.visited_count}</span>
+                        <span className="ch-stat-label">Top Score</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="ch-lb-list">
                   {sorted.map((p, i) => (
                     <LeaderboardRow
@@ -151,11 +211,26 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
                 </div>
               )}
 
+              {/* Share Section */}
+              <div className="ch-share-section">
+                <button className="ch-share-btn" onClick={handleShareLink} title="Copy invite link">
+                  {shareCopied ? '✓ Copied!' : '🔗 Copy Link'}
+                </button>
+                <button className="ch-share-btn" onClick={handleShare} title="Share challenge">
+                  📤 Share
+                </button>
+              </div>
+
               {/* Created info */}
               <div className="ch-detail-footer-info">
                 <span className="ch-detail-date">
                   Created {new Date(challenge.created_at).toLocaleDateString()}
                 </span>
+                {challenge.completed_at && (
+                  <span className="ch-detail-completed">
+                    ✓ Completed {new Date(challenge.completed_at).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </>
           )}

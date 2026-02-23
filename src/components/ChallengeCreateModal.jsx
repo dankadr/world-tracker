@@ -16,6 +16,8 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
   const [description, setDescription] = useState('');
   const [trackerId, setTrackerId] = useState('world');
   const [challengeType, setChallengeType] = useState('collaborative');
+  const [difficulty, setDifficulty] = useState(null);
+  const [duration, setDuration] = useState(null);
   const [useAllRegions, setUseAllRegions] = useState(true);
   const [selectedRegions, setSelectedRegions] = useState(new Set());
   const [selectedFriends, setSelectedFriends] = useState(new Set());
@@ -69,6 +71,8 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
         tracker_id: trackerId,
         target_regions: useAllRegions ? ['*'] : Array.from(selectedRegions),
         challenge_type: challengeType,
+        difficulty,
+        duration,
         invite_friend_ids: Array.from(selectedFriends),
       });
     } catch (err) {
@@ -157,6 +161,65 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
             </div>
           </div>
 
+          {/* Difficulty */}
+          <div className="ch-field">
+            <label className="ch-label">Difficulty (Optional)</label>
+            <div className="ch-difficulty-toggle">
+              <button
+                className={`ch-difficulty-btn ${difficulty === 'easy' ? 'active' : ''} ${!difficulty ? 'inactive' : ''}`}
+                onClick={() => setDifficulty(difficulty === 'easy' ? null : 'easy')}
+              >
+                <span>🟢</span>
+                <span>Easy</span>
+              </button>
+              <button
+                className={`ch-difficulty-btn ${difficulty === 'medium' ? 'active' : ''} ${!difficulty ? 'inactive' : ''}`}
+                onClick={() => setDifficulty(difficulty === 'medium' ? null : 'medium')}
+              >
+                <span>🟡</span>
+                <span>Medium</span>
+              </button>
+              <button
+                className={`ch-difficulty-btn ${difficulty === 'hard' ? 'active' : ''} ${!difficulty ? 'inactive' : ''}`}
+                onClick={() => setDifficulty(difficulty === 'hard' ? null : 'hard')}
+              >
+                <span>🔴</span>
+                <span>Hard</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div className="ch-field">
+            <label className="ch-label">Duration (Optional)</label>
+            <div className="ch-duration-toggle">
+              <button
+                className={`ch-duration-btn ${duration === '48h' ? 'active' : ''} ${!duration ? 'inactive' : ''}`}
+                onClick={() => setDuration(duration === '48h' ? null : '48h')}
+              >
+                48 hours
+              </button>
+              <button
+                className={`ch-duration-btn ${duration === '1w' ? 'active' : ''} ${!duration ? 'inactive' : ''}`}
+                onClick={() => setDuration(duration === '1w' ? null : '1w')}
+              >
+                1 week
+              </button>
+              <button
+                className={`ch-duration-btn ${duration === '1m' ? 'active' : ''} ${!duration ? 'inactive' : ''}`}
+                onClick={() => setDuration(duration === '1m' ? null : '1m')}
+              >
+                1 month
+              </button>
+              <button
+                className={`ch-duration-btn ${!duration || duration === 'open-ended' ? 'active' : ''}`}
+                onClick={() => setDuration(null)}
+              >
+                No deadline
+              </button>
+            </div>
+          </div>
+
           {/* Region Selection (non-world trackers) */}
           {trackerId !== 'world' && availableRegions.length > 0 && (
             <div className="ch-field">
@@ -182,13 +245,20 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
 
               {!useAllRegions && (
                 <div className="ch-region-picker">
-                  <input
-                    className="ch-input ch-region-search"
-                    type="text"
-                    placeholder="Search regions..."
-                    value={regionSearch}
-                    onChange={(e) => setRegionSearch(e.target.value)}
-                  />
+                  <div className="ch-region-picker-header">
+                    <input
+                      className="ch-input ch-region-search"
+                      type="text"
+                      placeholder="Search regions..."
+                      value={regionSearch}
+                      onChange={(e) => setRegionSearch(e.target.value)}
+                    />
+                    {selectedRegions.size > 0 && (
+                      <span className="ch-region-count-badge">
+                        {selectedRegions.size} of {availableRegions.length} selected
+                      </span>
+                    )}
+                  </div>
                   <div className="ch-region-list">
                     {filteredRegions.map((r) => (
                       <label key={r.id} className={`ch-region-item ${selectedRegions.has(r.id) ? 'selected' : ''}`}>
@@ -201,9 +271,6 @@ export default function ChallengeCreateModal({ onClose, onCreate }) {
                       </label>
                     ))}
                   </div>
-                  {selectedRegions.size > 0 && (
-                    <span className="ch-region-count">{selectedRegions.size} selected</span>
-                  )}
                 </div>
               )}
             </div>

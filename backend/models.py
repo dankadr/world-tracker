@@ -147,7 +147,20 @@ class Challenge(Base):
     description = Column(String, nullable=True)
     tracker_id = Column(String, nullable=False)  # e.g. 'world', 'ch', 'us'
     target_regions = Column(JSONB, nullable=False, default=list)  # list of region IDs or ['*']
+class Challenge(Base):
+    __tablename__ = "challenges"
+
+    id = Column(String, primary_key=True, default=generate_challenge_id)
+    creator_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    tracker_id = Column(String, nullable=False)  # e.g. 'world', 'ch', 'us'
+    target_regions = Column(JSONB, nullable=False, default=list)  # list of region IDs or ['*']
     challenge_type = Column(String, nullable=False, default="collaborative")  # 'collaborative' | 'race'
+    difficulty = Column(String, nullable=True)  # 'easy' | 'medium' | 'hard' | null
+    duration = Column(String, nullable=True)  # 'open-ended' | '48h' | '1w' | '1m' | null
+    end_at = Column(DateTime(timezone=True), nullable=True)  # deadline for timed challenges
+    completed_at = Column(DateTime(timezone=True), nullable=True)  # timestamp when challenge was completed
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     creator = relationship("User", foreign_keys=[creator_id])
@@ -161,6 +174,7 @@ class ChallengeParticipant(Base):
     challenge_id = Column(String, ForeignKey("challenges.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     joined_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    xp_awarded = Column(Integer, nullable=False, default=0)  # XP awarded for completion
 
     challenge = relationship("Challenge", back_populates="participants")
     user = relationship("User")
