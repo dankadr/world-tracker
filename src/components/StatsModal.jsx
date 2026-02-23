@@ -710,7 +710,7 @@ function FriendsCompare({ worldVisited }) {
                   className="stats-bar-fill"
                   style={{
                     width: `${pct}%`,
-                    background: entry.is_self ? '#3498db' : '#2ecc71',
+                    background: entry.is_self ? '#c07a30' : '#2ecc71',
                   }}
                 />
               </div>

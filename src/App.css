@@ -649,9 +649,9 @@ body {
 }
 
 .canton-label.visited {
-  background: var(--visit-bg, rgba(46, 204, 113, 0.15));
-  border: 1px solid rgba(46, 204, 113, 0.2);
-  border-left: 2px solid var(--visit-color, #27ae60);
+  background: var(--visit-bg, rgba(216, 150, 72, 0.15));
+  border: 1px solid rgba(216, 150, 72, 0.2);
+  border-left: 2px solid var(--visit-color, #d89648);
 }
 
 .canton-label.visited:hover {
@@ -680,7 +680,7 @@ body {
 }
 
 .canton-label.visited .canton-name {
-  color: var(--visit-color, #27ae60);
+  color: var(--visit-color, #d89648);
   font-weight: 500;
 }
 
@@ -799,7 +799,7 @@ body {
 
 .overall-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2ecc71, #c07a30);
+  background: linear-gradient(90deg, #c07a30, #e8a84a, #f4d47a);
   border-radius: 3px;
   transition: width 0.4s ease;
   position: relative;
@@ -823,7 +823,7 @@ body {
 .overall-pct {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #2ecc71;
+  color: #e8a84a;
   min-width: 30px;
   text-align: right;
 }
@@ -940,8 +940,8 @@ body {
 }
 
 .canton-label.visited .date-tag {
-  border-color: var(--visit-color, #27ae60);
-  color: var(--visit-color, #27ae60);
+  border-color: var(--visit-color, #d89648);
+  color: var(--visit-color, #d89648);
   border-style: solid;
   opacity: 0.7;
 }
@@ -1050,8 +1050,8 @@ body {
 }
 
 .achievement-badge.unlocked {
-  background: rgba(46, 204, 113, 0.18);
-  border-color: rgba(46, 204, 113, 0.35);
+  background: rgba(216, 150, 72, 0.18);
+  border-color: rgba(216, 150, 72, 0.35);
 }
 
 .achievement-badge.locked {
@@ -1101,7 +1101,7 @@ body {
 }
 
 .achievement-badge.unlocked .progress-bar-fill {
-  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  background: linear-gradient(90deg, #c07a30, #e8a84a);
 }
 
 .achievement-badge.in-progress {
@@ -1120,7 +1120,7 @@ body {
 }
 
 .progress-done {
-  color: #2ecc71;
+  color: #e8a84a;
   font-size: 0.7rem;
   margin-top: 4px;
 }

@@ -9,8 +9,8 @@ import UnescoLayer from './UnescoLayer';
 import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
 
-const VISITED_COLOR = '#2ecc71';
-const VISITED_HOVER = '#27ae60';
+const VISITED_COLOR = '#d89648';
+const VISITED_HOVER = '#c07a30';
 
 const TRACKED_COUNTRY_IDS = {
   ch: 'ch',
@@ -42,7 +42,7 @@ const VISITED_STYLE = {
 const TRACKED_STYLE = {
   fillColor: '#cfd8dc',
   fillOpacity: 0.4,
-  color: 'rgba(52, 152, 219, 0.6)',
+  color: 'rgba(192, 122, 48, 0.45)',
   weight: 2,
   dashArray: '4 3',
   lineJoin: 'round',
@@ -52,7 +52,7 @@ const TRACKED_STYLE = {
 const TRACKED_VISITED_STYLE = {
   fillColor: VISITED_COLOR,
   fillOpacity: 0.5,
-  color: 'rgba(52, 152, 219, 0.6)',
+  color: 'rgba(192, 122, 48, 0.45)',
   weight: 2,
   dashArray: '4 3',
   lineJoin: 'round',
@@ -144,7 +144,7 @@ function FriendsWorldOverlay({ worldData, friendOverlayData }) {
 
 const COMPARISON_COLORS = {
   both: '#2ecc71',
-  onlyMe: '#3498db',
+  onlyMe: '#c07a30',
   onlyFriend: '#e67e22',
 };
 

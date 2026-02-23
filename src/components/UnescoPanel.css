@@ -250,11 +250,11 @@
 }
 
 .site-item.visited {
-  background: rgba(40, 167, 69, 0.05);
+  background: rgba(216, 150, 72, 0.05);
 }
 
 .unesco-panel.dark .site-item.visited {
-  background: rgba(40, 167, 69, 0.1);
+  background: rgba(216, 150, 72, 0.1);
 }
 
 .site-checkbox {
@@ -272,8 +272,8 @@
 }
 
 .site-item.visited .site-checkbox {
-  background: #28a745;
-  border-color: #28a745;
+  background: #d89648;
+  border-color: #d89648;
   color: white;
   font-weight: bold;
 }

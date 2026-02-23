@@ -22,7 +22,7 @@ export default function ComparisonLegend({ friendName, friendPicture, onClose })
           <span>Both visited</span>
         </div>
         <div className="comparison-legend-item">
-          <span className="comparison-legend-dot" style={{ background: '#3498db' }} />
+          <span className="comparison-legend-dot" style={{ background: '#c07a30' }} />
           <span>Only you</span>
         </div>
         <div className="comparison-legend-item">

@@ -10,8 +10,8 @@
     "zoom": 8,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#2ecc71",
-    "visitedHover": "#27ae60"
+    "visitedColor": "#d89648",
+    "visitedHover": "#c07a30"
   },
   {
     "id": "us",
