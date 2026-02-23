@@ -1356,7 +1356,7 @@ body {
 }
 
 [data-theme="dark"] .modal-content {
-  background: rgba(22, 33, 62, 0.92);
+  background: var(--glass-bg-heavy);
 }
 
 [data-theme="dark"] .modal-header h2 {

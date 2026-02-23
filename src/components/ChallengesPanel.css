@@ -840,6 +840,11 @@
   color: #2980b9;
   font-style: italic;
 }
+[data-theme="dark"] .ch-target-tag.ch-target-all {
+  color: #5dade2;
+  background: rgba(52, 152, 219, 0.20);
+  border-color: rgba(52, 152, 219, 0.35);
+}
 .ch-target-tag.visited {
   background: rgba(46, 204, 113, 0.12);
   border-color: rgba(46, 204, 113, 0.3);
