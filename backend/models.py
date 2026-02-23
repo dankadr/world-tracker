@@ -33,6 +33,8 @@ class User(Base):
     visited_world = relationship("VisitedWorld", back_populates="user", cascade="all, delete-orphan", uselist=False)
     xp_logs = relationship("XpLog", back_populates="user", cascade="all, delete-orphan")
 
+    __table_args__ = {'extend_existing': True}
+
 
 class VisitedRegions(Base):
     __tablename__ = "visited_regions"
@@ -50,6 +52,7 @@ class VisitedRegions(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "country_id", name="uq_user_country"),
+        {'extend_existing': True},
     )
 
 
@@ -62,6 +65,8 @@ class VisitedWorld(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="visited_world")
+
+    __table_args__ = {'extend_existing': True}
 
 
 class FriendRequest(Base):
@@ -79,6 +84,7 @@ class FriendRequest(Base):
 
     __table_args__ = (
         UniqueConstraint("from_user_id", "to_user_id", name="uq_friend_request"),
+        {'extend_existing': True},
     )
 
 
@@ -100,6 +106,7 @@ class WishlistItem(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "tracker_id", "region_id", name="uq_wishlist_item"),
+        {'extend_existing': True},
     )
 
 
@@ -116,6 +123,7 @@ class Friendship(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "friend_id", name="uq_friendship"),
+        {'extend_existing': True},
     )
 
 
@@ -130,6 +138,8 @@ class XpLog(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="xp_logs")
+
+    __table_args__ = {'extend_existing': True}
 
 
 def generate_challenge_id():
@@ -157,6 +167,8 @@ class Challenge(Base):
     creator = relationship("User", foreign_keys=[creator_id])
     participants = relationship("ChallengeParticipant", back_populates="challenge", cascade="all, delete-orphan")
 
+    __table_args__ = {'extend_existing': True}
+
 
 class ChallengeParticipant(Base):
     __tablename__ = "challenge_participants"
@@ -172,4 +184,5 @@ class ChallengeParticipant(Base):
 
     __table_args__ = (
         UniqueConstraint("challenge_id", "user_id", name="uq_challenge_participant"),
+        {'extend_existing': True},
     )

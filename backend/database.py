@@ -164,10 +164,18 @@ async def get_db():
 
 def _get_column_default_sql(column) -> str:
     """Return the SQL DEFAULT clause for a column, e.g. DEFAULT '{}'."""
+    from sqlalchemy.sql.schema import ColumnDefault
+
     if column.server_default is not None:
         val = column.server_default.arg
         if isinstance(val, str):
             return f"DEFAULT '{val}'"
+    # Fallback: handle Python-side scalar defaults (e.g. default=0)
+    if column.default is not None and isinstance(column.default, ColumnDefault):
+        if isinstance(column.default.arg, (int, float)):
+            return f"DEFAULT {column.default.arg}"
+        if isinstance(column.default.arg, str):
+            return f"DEFAULT '{column.default.arg}'"
     return ""
 
 
