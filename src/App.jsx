@@ -315,6 +315,8 @@ export default function App() {
   const handleCloseFriends = useCallback(() => {
     setShowFriends(false);
   }, []);
+  const handleCloseBucketList = useCallback(() => setShowBucketList(false), []);
+  const handleCloseComparisonStats = useCallback(() => setShowComparisonStats(false), []);
 
   // Comparison handlers
   const handleCompare = useCallback(async (friend) => {
@@ -786,7 +788,7 @@ export default function App() {
       )}
       {showBucketList && (
         <SwipeableModal
-          onClose={() => setShowBucketList(false)}
+          onClose={handleCloseBucketList}
           className="bucket-panel-modal"
           maxWidth={620}
           height="80vh"
@@ -796,12 +798,12 @@ export default function App() {
             onUpdate={updateBucketItem}
             onDelete={handleDeleteBucketItem}
             onMarkVisited={handleMarkVisitedBucketList}
-            onClose={() => setShowBucketList(false)}
+            onClose={handleCloseBucketList}
           />
         </SwipeableModal>
       )}
       {showComparisonStats && comparisonFriend && (
-        <SwipeableModal onClose={() => setShowComparisonStats(false)} height="90vh">
+        <SwipeableModal onClose={handleCloseComparisonStats} height="90vh">
           <ComparisonStats
             myVisited={isWorldView ? worldVisited : visited}
             friendVisited={isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || [])}
@@ -809,7 +811,7 @@ export default function App() {
             friendName={comparisonFriend.name}
             friendPicture={comparisonFriend.picture}
             regionLabel={isWorldView ? 'Countries' : country.regionLabel}
-            onClose={() => setShowComparisonStats(false)}
+            onClose={handleCloseComparisonStats}
           />
         </SwipeableModal>
       )}
