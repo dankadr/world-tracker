@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useFriends } from '../context/FriendsContext';
 import { lookupFriendCode } from '../utils/api';
@@ -30,8 +30,15 @@ function Avatar({ user, size = 32 }) {
 
 export default function FriendsPanel({ onClose, onCompare, comparisonFriendId }) {
   const { user, token, isLoggedIn } = useAuth();
-  const { friends, requests, myProfile, loading, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend } = useFriends();
-  const [activeTab, setActiveTab] = useState('friends');  const [friendCode, setFriendCode] = useState('');
+  const { friends, requests, myProfile, loading, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, refresh } = useFriends();
+  const [activeTab, setActiveTab] = useState('friends');
+
+  // Ensure friends data is loaded when panel opens
+  useEffect(() => {
+    if (isLoggedIn && refresh) {
+      refresh();
+    }
+  }, [isLoggedIn, refresh]);  const [friendCode, setFriendCode] = useState('');
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [error, setError] = useState('');

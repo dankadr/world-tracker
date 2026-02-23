@@ -11,6 +11,8 @@
   display: flex;
   flex-direction: column;
   animation: slideInRight 0.3s ease-out;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .unesco-panel.dark {
