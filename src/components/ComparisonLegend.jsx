@@ -18,15 +18,15 @@ export default function ComparisonLegend({ friendName, friendPicture, onClose })
       </div>
       <div className="comparison-legend-items">
         <div className="comparison-legend-item">
-          <span className="comparison-legend-dot" style={{ background: '#e8a84a' }} />
+          <span className="comparison-legend-dot" style={{ background: '#27AE60' }} />
           <span>Both visited</span>
         </div>
         <div className="comparison-legend-item">
-          <span className="comparison-legend-dot" style={{ background: '#c07a30' }} />
+          <span className="comparison-legend-dot" style={{ background: '#3498DB' }} />
           <span>Only you</span>
         </div>
         <div className="comparison-legend-item">
-          <span className="comparison-legend-dot" style={{ background: '#e67e22' }} />
+          <span className="comparison-legend-dot" style={{ background: '#E74C3C' }} />
           <span>Only {friendName?.split(' ')[0] || 'friend'}</span>
         </div>
         <div className="comparison-legend-item">

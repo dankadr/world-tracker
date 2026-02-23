@@ -143,9 +143,9 @@ function FriendsWorldOverlay({ worldData, friendOverlayData }) {
 }
 
 const COMPARISON_COLORS = {
-  both: '#e8a84a',
-  onlyMe: '#c07a30',
-  onlyFriend: '#e67e22',
+  both: '#27AE60',
+  onlyMe: '#3498DB',
+  onlyFriend: '#E74C3C',
 };
 
 function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName }) {
