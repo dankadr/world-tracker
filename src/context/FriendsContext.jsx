@@ -39,7 +39,7 @@ export function FriendsProvider({ children }) {
     if (!token) return;
     try {
       const data = await fetchFriends(token);
-      setFriends(data);
+      setFriends(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load friends:', err);
     }
@@ -50,7 +50,7 @@ export function FriendsProvider({ children }) {
     if (!token) return;
     try {
       const data = await fetchFriendRequests(token);
-      setRequests(data);
+      setRequests(data && Array.isArray(data.incoming) && Array.isArray(data.outgoing) ? data : { incoming: [], outgoing: [] });
     } catch (err) {
       console.error('Failed to load requests:', err);
     }

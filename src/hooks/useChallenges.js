@@ -19,7 +19,7 @@ export default function useChallenges() {
     if (!token) return;
     try {
       const data = await apiFetchChallenges(token);
-      setChallenges(data);
+      setChallenges(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load challenges:', err);
     }

@@ -21,7 +21,7 @@ export function useFriendsData() {
     setLoading(true);
     try {
       const data = await fetchLeaderboard(token);
-      setLeaderboard(data);
+      setLeaderboard(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load leaderboard:', err);
     } finally {
@@ -33,7 +33,7 @@ export function useFriendsData() {
     if (!token) return;
     try {
       const data = await fetchActivity(token);
-      setActivity(data);
+      setActivity(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load activity:', err);
     }

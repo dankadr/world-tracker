@@ -130,7 +130,7 @@ function migrateKeys(userId, anonData) {
 // --------------- merge helpers ---------------
 
 function mergeArrays(local, remote) {
-  return [...new Set([...local, ...remote])];
+  return [...new Set([...(Array.isArray(local) ? local : []), ...(Array.isArray(remote) ? remote : [])])];
 }
 
 function mergeObjects(local, remote) {
