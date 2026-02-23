@@ -41,7 +41,7 @@ function LeaderboardRow({ participant, rank, total, isMe }) {
 
 export default function ChallengeDetailModal({ challenge, loading, userId, onClose, onLeave, onDelete, onRefresh }) {
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
-  const [sharecopied, setShareCopied] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const isRace = challenge.challenge_type === 'race';
   const isCreator = challenge.creator_id === userId;
   const tracker = TRACKER_LABELS[challenge.tracker_id] || { flag: '🗺️', name: challenge.tracker_id };
@@ -75,7 +75,8 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
       if (f.properties?.id && f.properties?.name) {
         regionMap[f.properties.id] = f.properties.name;
       }
-   
+    });
+  }
 
   const handleShareLink = () => {
     const url = `${window.location.origin}/challenges/${challenge.id}`;
@@ -88,7 +89,7 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
   const handleShare = () => {
     const text = `Join my travel challenge: "${challenge.title}" - Can you visit more regions than me? 🌍`;
     const url = `${window.location.origin}/challenges/${challenge.id}`;
-    
+
     if (navigator.share) {
       navigator.share({ title: challenge.title, text, url }).catch(() => {});
     } else {
@@ -97,8 +98,7 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
         setTimeout(() => setShareCopied(false), 2000);
       });
     }
-  }; });
-  }
+  };
 
   return (
     <div className="modal-overlay ch-detail-overlay" onClick={onClose}>
