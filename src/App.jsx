@@ -34,6 +34,7 @@ import countries from './data/countries';
 import { countryList } from './data/countries';
 import worldData from './data/world.json';
 import './xp-styles.css';
+import SwipeableModal from './components/SwipeableModal';
 
 function parseShareHash() {
   try {
@@ -775,43 +776,42 @@ export default function App() {
       )}
       {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
       {showFriends && (
-        isMobile ? (
-          <div className="modal-overlay" onClick={handleCloseFriends}>
-            <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '80vh' }}>
-              <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-            </div>
-          </div>
-        ) : (
-          <div className="modal-overlay" onClick={handleCloseFriends}>
-            <div className="modal-content friends-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, height: '70vh' }}>
-              <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-            </div>
-          </div>
-        )
+        <SwipeableModal
+          onClose={handleCloseFriends}
+          className="friends-modal"
+          height={isMobile ? '80vh' : '70vh'}
+        >
+          <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
+        </SwipeableModal>
       )}
       {showBucketList && (
-        <div className="modal-overlay" onClick={() => setShowBucketList(false)}>
-          <div className="modal-content bucket-panel-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 620, height: '80vh' }}>
-            <BucketListPanel
-              items={bucketListItems}
-              onUpdate={updateBucketItem}
-              onDelete={handleDeleteBucketItem}
-              onMarkVisited={handleMarkVisitedBucketList}
-              onClose={() => setShowBucketList(false)}
-            />
-          </div>
-        </div>
+        <SwipeableModal
+          onClose={() => setShowBucketList(false)}
+          className="bucket-panel-modal"
+          maxWidth={620}
+          height="80vh"
+        >
+          <BucketListPanel
+            items={bucketListItems}
+            onUpdate={updateBucketItem}
+            onDelete={handleDeleteBucketItem}
+            onMarkVisited={handleMarkVisitedBucketList}
+            onClose={() => setShowBucketList(false)}
+          />
+        </SwipeableModal>
       )}
       {showComparisonStats && comparisonFriend && (
-        <ComparisonStats
-          myVisited={isWorldView ? worldVisited : visited}
-          friendVisited={isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || [])}
-          total={isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length}
-          friendName={comparisonFriend.name}
-          friendPicture={comparisonFriend.picture}
-          regionLabel={isWorldView ? 'Countries' : country.regionLabel}
-          onClose={() => setShowComparisonStats(false)}
-        />
+        <SwipeableModal onClose={() => setShowComparisonStats(false)} height="90vh">
+          <ComparisonStats
+            myVisited={isWorldView ? worldVisited : visited}
+            friendVisited={isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || [])}
+            total={isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length}
+            friendName={comparisonFriend.name}
+            friendPicture={comparisonFriend.picture}
+            regionLabel={isWorldView ? 'Countries' : country.regionLabel}
+            onClose={() => setShowComparisonStats(false)}
+          />
+        </SwipeableModal>
       )}
       <Analytics />
       <SpeedInsights />
