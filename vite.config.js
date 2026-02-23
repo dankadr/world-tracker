@@ -21,19 +21,25 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-leaflet': ['leaflet', 'react-leaflet'],
-          'vendor-sentry': ['@sentry/react'],
-          'geo-world': ['./src/data/world.json'],
-          'geo-ch': ['./src/data/cantons.json'],
-          'geo-us': ['./src/data/usa.json'],
-          'geo-usparks': ['./src/data/us-parks.json'],
-          'geo-nyc': ['./src/data/nyc.json'],
-          'geo-no': ['./src/data/norway.json'],
-          'geo-ca': ['./src/data/canada.json'],
-          'geo-capitals': ['./src/data/capitals.json'],
-          'geo-jp': ['./src/data/japan.json'],
-          'geo-au': ['./src/data/australia.json'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'vendor-leaflet';
+            }
+            if (id.includes('@sentry/react')) {
+              return 'vendor-sentry';
+            }
+          }
+          if (id.includes('src/data/world.json')) return 'geo-world';
+          if (id.includes('src/data/cantons.json')) return 'geo-ch';
+          if (id.includes('src/data/usa.json')) return 'geo-us';
+          if (id.includes('src/data/us-parks.json')) return 'geo-usparks';
+          if (id.includes('src/data/nyc.json')) return 'geo-nyc';
+          if (id.includes('src/data/norway.json')) return 'geo-no';
+          if (id.includes('src/data/canada.json')) return 'geo-ca';
+          if (id.includes('src/data/capitals.json')) return 'geo-capitals';
+          if (id.includes('src/data/japan.json')) return 'geo-jp';
+          if (id.includes('src/data/australia.json')) return 'geo-au';
         },
       },
     },
