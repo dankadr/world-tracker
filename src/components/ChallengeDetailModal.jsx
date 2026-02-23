@@ -1,4 +1,5 @@
 import './ChallengesPanel.css';
+import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 const TRACKER_LABELS = {
   world: { flag: '🌍', name: 'World' },
@@ -37,6 +38,7 @@ function LeaderboardRow({ participant, rank, total, isMe }) {
 }
 
 export default function ChallengeDetailModal({ challenge, loading, userId, onClose, onLeave, onDelete, onRefresh }) {
+  const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
   const isRace = challenge.challenge_type === 'race';
   const isCreator = challenge.creator_id === userId;
   const tracker = TRACKER_LABELS[challenge.tracker_id] || { flag: '🗺️', name: challenge.tracker_id };
@@ -54,8 +56,8 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content ch-detail-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ch-detail-header">
+      <div className="modal-content ch-detail-modal" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+        <div className="ch-detail-header" {...dragHandlers}>
           <div className="ch-detail-title-row">
             <span className="ch-detail-tracker">{tracker.flag}</span>
             <div>
