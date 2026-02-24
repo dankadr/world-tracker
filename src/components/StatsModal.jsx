@@ -318,7 +318,7 @@ export default function StatsModal({ onClose }) {
   const availableYears = useMemo(() => getAvailableYears(userId), [userId]);
 
   const stats = countryList.map((c) => {
-    const total = c.data.features.filter(f => !f.properties?.isBorough).length;
+    const total = c.regionCount ?? 0;
     const visited = getVisitedIds(c.id, userId).length;
     return { ...c, total, visited, pct: total > 0 ? Math.round((visited / total) * 100) : 0 };
   });

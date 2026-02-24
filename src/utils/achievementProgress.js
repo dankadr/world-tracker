@@ -38,7 +38,7 @@ function getVisited(countryId, userId) {
 
 function getTotalRegions(countryId) {
   const c = countryList.find((x) => x.id === countryId);
-  return c ? c.data.features.filter((f) => !f.properties?.isBorough).length : 0;
+  return c ? (c.regionCount ?? 0) : 0;
 }
 
 function getAllVisited(userId) {

@@ -42,7 +42,7 @@ function getVisitedCount(countryId, userId) {
 }
 
 function getTotalRegions(country) {
-  return country.data.features.filter((f) => !f.properties?.isBorough).length;
+  return country.regionCount ?? 0;
 }
 
 export default function WorldSidebar({

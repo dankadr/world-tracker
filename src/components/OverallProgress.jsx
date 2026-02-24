@@ -24,7 +24,7 @@ export default function OverallProgress() {
   const userId = user?.id || null;
 
   const stats = countryList.map((c) => {
-    const total = c.data.features.filter((f) => !f.properties?.isBorough).length;
+    const total = c.regionCount ?? 0;
     const visited = getVisitedCount(c.id, userId);
     return { ...c, total, visited, pct: total > 0 ? Math.round((visited / total) * 100) : 0 };
   });
