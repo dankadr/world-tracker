@@ -25,13 +25,13 @@ const geoLoaders = {
  * @param {string} geoFile  e.g. 'cantons.json'
  * @returns {Promise<GeoJSON.FeatureCollection>}
  */
-export async function loadCountryGeoData(geoFile) {
+export function loadCountryGeoData(geoFile) {
   if (geoCache.has(geoFile)) return geoCache.get(geoFile);
   const loader = geoLoaders[geoFile];
-  if (!loader) throw new Error(`No loader registered for ${geoFile}`);
-  const mod = await loader();
-  geoCache.set(geoFile, mod.default);
-  return mod.default;
+  if (!loader) return Promise.reject(new Error(`No loader registered for ${geoFile}`));
+  const promise = loader().then((mod) => mod.default);
+  geoCache.set(geoFile, promise);
+  return promise;
 }
 
 // ── Countries config ───────────────────────────────────────────────────────
