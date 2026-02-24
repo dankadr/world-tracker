@@ -186,7 +186,7 @@ function ComparisonRegionOverlay({ country, visited, friendVisited, friendName }
   );
 }
 
-export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison }) {
+export default function RegionMap({ country, visited, onToggle, wishlist, dates, notes, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, comparisonMode }) {
   const geoJsonRef = useRef(null);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
@@ -329,6 +329,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
           }
         },
         click: (e) => {
+          if (comparisonMode) return;
           const isVisited = visited.has(id);
           if (isVisited && (dates?.[id] || notes?.[id])) {
             const dateStr = dates?.[id] ? `<div style="font-size:0.75rem;color:#95a5a6;margin-top:4px">${dates[id]}</div>` : '';
@@ -355,7 +356,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
         },
       });
     },
-    [visited, wishlist, onToggle, country.visitedColor, isPointMode, dates, notes, wishlistActive]
+    [visited, wishlist, onToggle, country.visitedColor, isPointMode, dates, notes, wishlistActive, comparisonMode]
   );
 
   useEffect(() => {

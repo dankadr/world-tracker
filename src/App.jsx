@@ -173,13 +173,29 @@ export default function App() {
   });
   const firstVisitTrackers = useRef(trackerFirstVisitRef.current());
 
+  // Track which regions/countries have ever received XP to prevent farming
+  const xpAwardedRef = useRef(() => {
+    try {
+      const raw = localStorage.getItem('swiss-tracker-xp-awarded');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch { return new Set(); }
+  });
+  const xpAwarded = useRef(xpAwardedRef.current());
+
+  const grantXpOnce = useCallback((key, amount, reason, trackerId) => {
+    if (xpAwarded.current.has(key)) return;
+    xpAwarded.current.add(key);
+    localStorage.setItem('swiss-tracker-xp-awarded', JSON.stringify([...xpAwarded.current]));
+    addXp(amount, reason, trackerId);
+  }, [addXp]);
+
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
     toggle(regionId);
     if (!wasVisited) {
-      // Grant region visit XP
-      addXp(xpRules.VISIT_REGION, 'visit_region', countryId);
+      // Grant region visit XP (once per region, ever)
+      grantXpOnce(`${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
       // Check first tracker visit
       if (!firstVisitTrackers.current.has(countryId)) {
         firstVisitTrackers.current.add(countryId);
@@ -187,7 +203,7 @@ export default function App() {
         addXp(xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
       }
     }
-  }, [toggle, visited, addXp, xpRules, countryId]);
+  }, [toggle, visited, grantXpOnce, addXp, xpRules, countryId]);
 
   const handleToggleWishlist = useCallback((regionId) => {
     const wasWishlisted = regionWishlist.has(regionId);
@@ -279,9 +295,9 @@ export default function App() {
     const wasVisited = worldVisited.has(countryCode);
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
-      addXp(xpRules.VISIT_COUNTRY, 'visit_country', 'world');
+      grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
     }
-  }, [toggleWorldCountry, worldVisited, addXp, xpRules]);
+  }, [toggleWorldCountry, worldVisited, grantXpOnce, xpRules]);
 
   // Friends state
   const { friends, pendingCount } = useFriends();
@@ -580,6 +596,7 @@ export default function App() {
               comparisonFriend={comparisonFriend}
               onExitComparison={handleExitComparison}
               wishlist={worldWishlist}
+              comparisonMode={!!comparisonFriend}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#e8a84a' }}>
@@ -719,6 +736,7 @@ export default function App() {
               friendOverlayData={friendOverlayData}
               comparisonFriend={comparisonFriend}
               onExitComparison={handleExitComparison}
+              comparisonMode={!!comparisonFriend}
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {isMobile && !isShareMode && (
