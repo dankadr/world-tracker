@@ -6,6 +6,15 @@
  * network call per page load.
  */
 
+import { cacheGet, cacheSet, cacheInvalidate } from './cache';
+
+const VISITED_TTL = 5 * 60 * 1000; // 5 minutes
+
+function visitedCacheKey(token) {
+  // Use last 16 chars of token as scope — tokens are user-specific
+  return `visited-all:${token.slice(-16)}`;
+}
+
 let _bulkCache = null;
 let _bulkPromise = null;
 let _bulkToken = null;
@@ -19,6 +28,19 @@ let _bulkToken = null;
  * @returns {Promise<{regions: Object, world: string[]}|null>}
  */
 export async function fetchAllVisited(token, force = false) {
+  const cKey = visitedCacheKey(token);
+
+  // Check persistent cache first (survives page refresh)
+  if (!force) {
+    const persisted = cacheGet(cKey, VISITED_TTL);
+    if (persisted) {
+      _bulkCache = persisted;
+      _bulkToken = token;
+      return persisted;
+    }
+  }
+
+  // Fall back to in-memory deduplication
   if (!force && _bulkCache && _bulkToken === token) return _bulkCache;
   if (!force && _bulkPromise && _bulkToken === token) return _bulkPromise;
 
@@ -30,6 +52,7 @@ export async function fetchAllVisited(token, force = false) {
     .then((data) => {
       _bulkCache = data;
       _bulkPromise = null;
+      if (data) cacheSet(cKey, data);
       return data;
     })
     .catch(() => {
@@ -43,9 +66,10 @@ export async function fetchAllVisited(token, force = false) {
 /**
  * Invalidate the bulk cache so the next fetchAllVisited() re-fetches.
  */
-export function invalidateBulkCache() {
+export function invalidateBulkCache(token) {
   _bulkCache = null;
   _bulkPromise = null;
+  if (token) cacheInvalidate(visitedCacheKey(token));
 }
 
 /**

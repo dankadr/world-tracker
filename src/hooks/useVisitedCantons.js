@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils/api';
+import { cacheGet } from '../utils/cache';
+
+const VISITED_TTL = 5 * 60 * 1000;
 
 // --------------- localStorage helpers ---------------
 // Keys are scoped per-user so different Google accounts don't share data.
@@ -181,7 +184,7 @@ export default function useVisitedRegions(countryId) {
       debounceTimerRef.current = setTimeout(() => {
         saveVisitedRemote(cId, set, tok, d, n, w);
         pendingSaveRef.current = null;
-        invalidateBulkCache();
+        invalidateBulkCache(tok);
       }, DEBOUNCE_MS);
     },
     []
@@ -272,7 +275,11 @@ export default function useVisitedRegions(countryId) {
     if (!isLoggedIn || !token) return;
 
     const refetch = () => {
-      invalidateBulkCache();
+      // Only refetch if cache has expired — avoids a DB read on every tab switch
+      const cKey = `visited-all:${token.slice(-16)}`;
+      if (cacheGet(cKey, VISITED_TTL)) return;
+
+      invalidateBulkCache(token);
       fetchAllVisited(token, true).then((bulk) => {
         if (!bulk) return;
         const countryData = bulk.regions[countryId];
@@ -426,7 +433,7 @@ export default function useVisitedRegions(countryId) {
     }
     if (isLoggedIn && token) {
       deleteAllVisited(token);
-      invalidateBulkCache();
+      invalidateBulkCache(token);
     }
     setVisited(empty);
     setDatesState({});

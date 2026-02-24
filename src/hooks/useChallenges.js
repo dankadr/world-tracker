@@ -8,6 +8,10 @@ import {
   leaveChallenge as apiLeave,
   deleteChallenge as apiDelete,
 } from '../utils/api';
+import { cacheGet, cacheSet, cacheInvalidate } from '../utils/cache';
+
+const CHALLENGES_TTL = 5 * 60 * 1000;
+function challengesKey(token) { return `challenges:${token.slice(-16)}`; }
 
 export default function useChallenges() {
   const { token, isLoggedIn } = useAuth();
@@ -15,11 +19,17 @@ export default function useChallenges() {
   const [loading, setLoading] = useState(false);
   const pollRef = useRef(null);
 
-  const loadChallenges = useCallback(async () => {
+  const loadChallenges = useCallback(async (force = false) => {
     if (!token) return;
+    if (!force) {
+      const cached = cacheGet(challengesKey(token), CHALLENGES_TTL);
+      if (cached) { setChallenges(cached); return; }
+    }
     try {
       const data = await apiFetchChallenges(token);
-      setChallenges(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setChallenges(list);
+      cacheSet(challengesKey(token), list);
     } catch (err) {
       console.error('Failed to load challenges:', err);
     }
@@ -27,13 +37,14 @@ export default function useChallenges() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    await loadChallenges();
+    await loadChallenges(true);
     setLoading(false);
   }, [loadChallenges]);
 
   const create = useCallback(async (data) => {
     const result = await apiCreateChallenge(token, data);
-    await loadChallenges();
+    cacheInvalidate(challengesKey(token));
+    await loadChallenges(true);
     return result;
   }, [token, loadChallenges]);
 
@@ -43,19 +54,22 @@ export default function useChallenges() {
 
   const join = useCallback(async (challengeId) => {
     const result = await apiJoin(token, challengeId);
-    await loadChallenges();
+    cacheInvalidate(challengesKey(token));
+    await loadChallenges(true);
     return result;
   }, [token, loadChallenges]);
 
   const leave = useCallback(async (challengeId) => {
     const result = await apiLeave(token, challengeId);
-    await loadChallenges();
+    cacheInvalidate(challengesKey(token));
+    await loadChallenges(true);
     return result;
   }, [token, loadChallenges]);
 
   const remove = useCallback(async (challengeId) => {
     const result = await apiDelete(token, challengeId);
-    await loadChallenges();
+    cacheInvalidate(challengesKey(token));
+    await loadChallenges(true);
     return result;
   }, [token, loadChallenges]);
 

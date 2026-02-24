@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
+import { cacheGet } from '../utils/cache';
+
+const VISITED_TTL = 5 * 60 * 1000;
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -125,7 +128,11 @@ export default function useVisitedCountries() {
     if (!isLoggedIn || !token) return;
 
     const refetch = () => {
-      invalidateBulkCache();
+      // Only refetch if cache has expired — avoids a DB read on every tab switch
+      const cKey = `visited-all:${token.slice(-16)}`;
+      if (cacheGet(cKey, VISITED_TTL)) return;
+
+      invalidateBulkCache(token);
       fetchAllVisited(token, true).then((bulk) => {
         if (!bulk) return;
         const remote = new Set(bulk.world || []);
@@ -182,7 +189,7 @@ export default function useVisitedCountries() {
           debounceTimerRef.current = setTimeout(() => {
             saveWorldRemote(next, token);
             pendingSaveRef.current = null;
-            invalidateBulkCache();
+            invalidateBulkCache(token);
           }, DEBOUNCE_MS);
         }
         return next;
