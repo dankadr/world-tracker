@@ -126,5 +126,19 @@
     "maxZoom": 18,
     "visitedColor": "#f4a020",
     "visitedHover": "#d48b1a"
+  },
+  {
+    "id": "ph",
+    "name": "Philippines",
+    "flag": "🇵🇭",
+    "regionLabel": "Regions",
+    "regionLabelSingular": "region",
+    "geoFile": "philippines.json",
+    "center": [12.5, 122.0],
+    "zoom": 5,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#d89648",
+    "visitedHover": "#c07a30"
   }
 ]

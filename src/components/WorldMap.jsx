@@ -19,6 +19,7 @@ const TRACKED_COUNTRY_IDS = {
   ca: 'ca',
   jp: 'jp',
   au: 'au',
+  ph: 'ph',
 };
 
 const UNVISITED_STYLE = {

@@ -10,6 +10,7 @@ import canadaData from './canada.json';
 import capitalsData from './capitals.json';
 import japanData from './japan.json';
 import australiaData from './australia.json';
+import philippinesData from './philippines.json';
 
 // Map geoFile names to imported data
 const geoMap = {
@@ -22,6 +23,7 @@ const geoMap = {
   'capitals.json': capitalsData,
   'japan.json': japanData,
   'australia.json': australiaData,
+  'philippines.json': philippinesData,
 };
 
 // Build countries object from config
