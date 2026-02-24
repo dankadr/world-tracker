@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { syncLocalDataToServer } from '../utils/syncLocalData';
+import { cacheInvalidatePrefix } from '../utils/cache';
 
 const AuthContext = createContext(null);
 
@@ -66,9 +67,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Clear all cache entries before wiping auth (token still needed for key)
+    const currentToken = auth?.jwt_token;
+    if (currentToken) {
+      cacheInvalidatePrefix(`visited-all:${currentToken.slice(-16)}`);
+      cacheInvalidatePrefix(`leaderboard:${currentToken.slice(-16)}`);
+      cacheInvalidatePrefix(`activity:${currentToken.slice(-16)}`);
+      cacheInvalidatePrefix(`friend-visited:${currentToken.slice(-16)}`);
+      cacheInvalidatePrefix(`challenges:${currentToken.slice(-16)}`);
+    }
     setAuth(null);
     saveAuth(null);
-  }, []);
+  }, [auth]);
 
   const value = {
     user: auth?.user || null,
