@@ -5,6 +5,7 @@ import { getAvailableYears } from '../utils/yearStats';
 import YearInReview from './YearInReview';
 import UnescoStatsCard from './UnescoStatsCard';
 import { countryList } from '../data/countries';
+import { loadCountryGeoData } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
 import countryMeta from '../config/countryMeta.json';
@@ -60,12 +61,13 @@ function centroid(geom) {
 }
 
 // Get all visited region centroids across all countries
-function getVisitedCoords(userId) {
+async function getVisitedCoords(userId) {
   const points = [];
   for (const c of countryList) {
     const visitedIds = new Set(getVisitedIds(c.id, userId));
     if (visitedIds.size === 0) continue;
-    for (const f of c.data.features) {
+    const geoData = await loadCountryGeoData(c.geoFile);
+    for (const f of geoData.features) {
       if (f.properties.isBorough) continue;
       if (visitedIds.has(f.properties.id)) {
         const pt = centroid(f.geometry);
@@ -315,6 +317,8 @@ export default function StatsModal({ onClose }) {
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
   const [yirYear, setYirYear] = useState(null);
+  const [geo, setGeo] = useState(null);
+  const [geoInsightsLoading, setGeoInsightsLoading] = useState(false);
   const availableYears = useMemo(() => getAvailableYears(userId), [userId]);
 
   const stats = countryList.map((c) => {
@@ -328,8 +332,13 @@ export default function StatsModal({ onClose }) {
   const mostExplored = [...stats].sort((a, b) => b.pct - a.pct)[0];
   const timeline = getAllDates(userId).slice(0, 20);
 
-  const coords = getVisitedCoords(userId);
-  const geo = computeGeoInsights(coords);
+  useEffect(() => {
+    setGeoInsightsLoading(true);
+    getVisitedCoords(userId).then((coords) => {
+      setGeo(computeGeoInsights(coords));
+      setGeoInsightsLoading(false);
+    });
+  }, [userId]);
 
   const worldStats = computeWorldStats(userId);
   const areaPopStats = computeAreaPopStats(userId);
@@ -449,7 +458,11 @@ export default function StatsModal({ onClose }) {
           </div>
         )}
 
-        {geo && geo.totalPoints >= 2 ? (
+        {geoInsightsLoading ? (
+          <div className="stats-section">
+            <p style={{ textAlign: 'center', color: '#aaa' }}>Loading geographic insights…</p>
+          </div>
+        ) : geo && geo.totalPoints >= 2 ? (
           <div className="stats-section">
             <h3>Geographic Insights</h3>
             <div className="geo-insights">
