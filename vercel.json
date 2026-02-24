@@ -30,5 +30,15 @@
       "maxDuration": 10,
       "excludeFiles": "node_modules/**"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/leaderboard/recompute",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/stats/recompute",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }

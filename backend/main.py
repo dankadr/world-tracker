@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Depends, HTTPException, Header, Request, Response
+from backend.cache import get_cache
+from backend.batch import router as batch_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
@@ -70,7 +72,9 @@ async def lifespan(app: FastAPI):
     logger.info("Shutdown")
 
 
+
 app = FastAPI(title="Travel Tracker API", lifespan=lifespan)
+app.include_router(batch_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -289,7 +293,7 @@ async def get_all_visited(
     db: AsyncSession = Depends(get_db),
 ):
     """Return all visited regions and world data in a single response."""
-    response.headers["Cache-Control"] = "private, max-age=5"
+    response.headers["Cache-Control"] = "private, max-age=60, stale-while-revalidate=300"
     result = await db.execute(
         select(VisitedRegions).where(VisitedRegions.user_id == user.id)
     )
@@ -334,7 +338,7 @@ async def get_visited(
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    response.headers["Cache-Control"] = "private, max-age=5"
+    response.headers["Cache-Control"] = "private, max-age=60, stale-while-revalidate=300"
     if country_id not in VALID_COUNTRIES:
         raise HTTPException(status_code=400, detail="Invalid country")
 
@@ -554,7 +558,7 @@ async def get_visited_world(
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    response.headers["Cache-Control"] = "private, max-age=5"
+    response.headers["Cache-Control"] = "private, max-age=60, stale-while-revalidate=300"
     result = await db.execute(
         select(VisitedWorld).where(VisitedWorld.user_id == user.id)
     )

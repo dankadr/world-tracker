@@ -1,3 +1,32 @@
+// --- App-specific helpers ---
+export function getAchievements(userId) {
+  return cacheGet(`u${userId}:achievements`, 60 * 60 * 1000); // 1h TTL
+}
+export function setAchievements(userId, data) {
+  cacheSet(`u${userId}:achievements`, data);
+}
+export function getVisitedRegions(userId) {
+  return cacheGet(`u${userId}:visited`, 60 * 60 * 1000); // 1h TTL
+}
+export function setVisitedRegions(userId, data) {
+  cacheSet(`u${userId}:visited`, data);
+}
+
+// Stale-while-revalidate fetch utility
+export async function swrFetch(key, url, ttlMs, setter) {
+  const cached = cacheGet(key, ttlMs);
+  if (cached) {
+    // Revalidate in background
+    setTimeout(() => fetch(url)
+      .then(r => r.json())
+      .then(data => setter && setter(data)), 0);
+    return cached;
+  } else {
+    const data = await fetch(url).then(r => r.json());
+    setter && setter(data);
+    return data;
+  }
+}
 // src/utils/cache.js
 
 const PREFIX = 'cache:';
