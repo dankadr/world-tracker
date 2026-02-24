@@ -1,38 +1,46 @@
 import countriesConfig from '../config/countries.json';
 
-// Static GeoJSON imports (Vite requires static import paths for bundling)
-import cantonsData from './cantons.json';
-import usaData from './usa.json';
-import usParksData from './us-parks.json';
-import nycData from './nyc.json';
-import norwayData from './norway.json';
-import canadaData from './canada.json';
-import capitalsData from './capitals.json';
-import japanData from './japan.json';
-import australiaData from './australia.json';
-import philippinesData from './philippines.json';
+// ── Dynamic GeoJSON loaders ────────────────────────────────────────────────
+// Vite splits each import() into a separate browser-cached chunk.
+// Keys must be static strings so Vite can statically analyse them.
 
-// Map geoFile names to imported data
-const geoMap = {
-  'cantons.json': cantonsData,
-  'usa.json': usaData,
-  'us-parks.json': usParksData,
-  'nyc.json': nycData,
-  'norway.json': norwayData,
-  'canada.json': canadaData,
-  'capitals.json': capitalsData,
-  'japan.json': japanData,
-  'australia.json': australiaData,
-  'philippines.json': philippinesData,
+const geoCache = new Map();
+
+const geoLoaders = {
+  'cantons.json':     () => import('./cantons.json'),
+  'usa.json':         () => import('./usa.json'),
+  'us-parks.json':    () => import('./us-parks.json'),
+  'nyc.json':         () => import('./nyc.json'),
+  'norway.json':      () => import('./norway.json'),
+  'canada.json':      () => import('./canada.json'),
+  'capitals.json':    () => import('./capitals.json'),
+  'japan.json':       () => import('./japan.json'),
+  'australia.json':   () => import('./australia.json'),
+  'philippines.json': () => import('./philippines.json'),
 };
 
-// Build countries object from config
+/**
+ * Load GeoJSON for a country on demand.
+ * Results are cached in-memory after the first load.
+ * @param {string} geoFile  e.g. 'cantons.json'
+ * @returns {Promise<GeoJSON.FeatureCollection>}
+ */
+export async function loadCountryGeoData(geoFile) {
+  if (geoCache.has(geoFile)) return geoCache.get(geoFile);
+  const loader = geoLoaders[geoFile];
+  if (!loader) throw new Error(`No loader registered for ${geoFile}`);
+  const mod = await loader();
+  geoCache.set(geoFile, mod.default);
+  return mod.default;
+}
+
+// ── Countries config ───────────────────────────────────────────────────────
+// countryList entries contain only config metadata (no .data field).
+// Use loadCountryGeoData(country.geoFile) to get the GeoJSON when needed.
+
 const countries = {};
 for (const entry of countriesConfig) {
-  countries[entry.id] = {
-    ...entry,
-    data: geoMap[entry.geoFile],
-  };
+  countries[entry.id] = { ...entry };
 }
 
 export const countryList = Object.values(countries);
