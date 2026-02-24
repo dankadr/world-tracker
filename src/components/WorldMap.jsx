@@ -201,6 +201,9 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
 
 export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode }) {
   const geoJsonRef = useRef(null);
+  // Use a ref so the click handler always reads the current value even with stale closures
+  const comparisonModeRef = useRef(comparisonMode);
+  useEffect(() => { comparisonModeRef.current = comparisonMode; }, [comparisonMode]);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
     dark ? LAYERS[0].dark : LAYERS[0].light
@@ -329,7 +332,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.setStyle(style);
         },
         click: (e) => {
-          if (comparisonMode) return;
+          if (comparisonModeRef.current) return;
           if (isTracked) {
             const isVisited = visited.has(id);
             const trackerId = TRACKED_COUNTRY_IDS[id];
@@ -365,7 +368,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
       });
     },
-    [visited, wishlist, wishlistActive, onToggle, greaterIsraelEnabled, comparisonMode]
+    [visited, wishlist, wishlistActive, onToggle, greaterIsraelEnabled]
   );
 
   useEffect(() => {
