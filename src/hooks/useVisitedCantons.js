@@ -181,7 +181,7 @@ export default function useVisitedRegions(countryId) {
       debounceTimerRef.current = setTimeout(() => {
         saveVisitedRemote(cId, set, tok, d, n, w);
         pendingSaveRef.current = null;
-        invalidateBulkCache();
+        invalidateBulkCache(tok);
       }, DEBOUNCE_MS);
     },
     []
@@ -426,7 +426,7 @@ export default function useVisitedRegions(countryId) {
     }
     if (isLoggedIn && token) {
       deleteAllVisited(token);
-      invalidateBulkCache();
+      invalidateBulkCache(token);
     }
     setVisited(empty);
     setDatesState({});

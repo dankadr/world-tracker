@@ -182,7 +182,7 @@ export default function useVisitedCountries() {
           debounceTimerRef.current = setTimeout(() => {
             saveWorldRemote(next, token);
             pendingSaveRef.current = null;
-            invalidateBulkCache();
+            invalidateBulkCache(token);
           }, DEBOUNCE_MS);
         }
         return next;
