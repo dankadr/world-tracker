@@ -422,7 +422,7 @@
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .comparison-legend {
-    bottom: 80px;
+    bottom: calc(var(--sheet-height, 20vh) + 12px);
     left: 8px;
     padding: 8px 12px;
     min-width: 150px;
@@ -435,7 +435,7 @@
   }
 
   .comparison-stats-trigger {
-    bottom: 80px;
+    bottom: calc(var(--sheet-height, 20vh) + 12px);
     right: 8px;
   }
 

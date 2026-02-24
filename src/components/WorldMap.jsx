@@ -199,7 +199,7 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
   );
 }
 
-export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist }) {
+export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode }) {
   const geoJsonRef = useRef(null);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
@@ -329,6 +329,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.setStyle(style);
         },
         click: (e) => {
+          if (comparisonMode) return;
           if (isTracked) {
             const isVisited = visited.has(id);
             const trackerId = TRACKED_COUNTRY_IDS[id];
@@ -364,7 +365,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
       });
     },
-    [visited, wishlist, wishlistActive, onToggle, greaterIsraelEnabled]
+    [visited, wishlist, wishlistActive, onToggle, greaterIsraelEnabled, comparisonMode]
   );
 
   useEffect(() => {
