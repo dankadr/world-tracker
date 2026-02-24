@@ -41,7 +41,7 @@ function FriendsRegionOverlay({ country, friendOverlayData }) {
   // Build map: regionId -> [{ name, color }]
   const friendsByRegion = useMemo(() => {
     const map = {};
-    Object.entries(friendOverlayData).forEach(([, data]) => {
+    Object.entries(friendOverlayData || {}).forEach(([, data]) => {
       const regions = data.regions || [];
       // Filter to current country's regions
       const countryRegions = regions
@@ -57,10 +57,10 @@ function FriendsRegionOverlay({ country, friendOverlayData }) {
 
   const overlayData = useMemo(() => ({
     type: 'FeatureCollection',
-    features: country.data.features.filter(
+    features: (country.data?.features || []).filter(
       (f) => !f.properties.isBorough && friendsByRegion[f.properties.id]
     ),
-  }), [country.data.features, friendsByRegion]);
+  }), [country.data, friendsByRegion]);
 
   const getStyle = useCallback((feature) => {
     const friends = friendsByRegion[feature.properties.id];
@@ -100,7 +100,7 @@ function FriendsRegionOverlay({ country, friendOverlayData }) {
     layer.on('click', (e) => { L.DomEvent.stopPropagation(e); });
   }, [friendsByRegion]);
 
-  if (overlayData.features.length === 0) return null;
+  if (!overlayData.features || overlayData.features.length === 0) return null;
 
   return (
     <GeoJSON
@@ -372,13 +372,13 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
 
   const regionData = {
     type: 'FeatureCollection',
-    features: country.data.features.filter((f) => !f.properties.isBorough),
+    features: (country.data?.features || []).filter((f) => !f.properties.isBorough),
   };
   const boroughData = {
     type: 'FeatureCollection',
-    features: country.data.features.filter((f) => f.properties.isBorough),
+    features: (country.data?.features || []).filter((f) => f.properties.isBorough),
   };
-  const hasBoroughs = boroughData.features.length > 0;
+  const hasBoroughs = (boroughData.features?.length || 0) > 0;
 
   const boroughStyle = {
     fillColor: 'transparent',
@@ -415,7 +415,7 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
         url={tileUrl}
       />
       <GeoJSON
-        key={country.id + '-' + JSON.stringify([...visited]) + '-' + JSON.stringify([...(wishlist || [])]) + '-' + wishlistActive}
+        key={country.id + '-' + JSON.stringify([...visited]) + '-' + JSON.stringify([...(wishlist && (typeof wishlist[Symbol.iterator] === 'function') ? wishlist : [])]) + '-' + wishlistActive}
         ref={geoJsonRef}
         data={regionData}
         style={style}

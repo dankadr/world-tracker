@@ -416,7 +416,7 @@ export default function App() {
     window.location.hash = '';
   };
 
-  const regionList = country.data.features.filter((f) => !f.properties.isBorough);
+  const regionList = country.data?.features?.filter((f) => !f.properties.isBorough) || [];
   const total = regionList.length;
   const count = displayVisited.size;
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -825,7 +825,7 @@ export default function App() {
           <ComparisonStats
             myVisited={isWorldView ? worldVisited : visited}
             friendVisited={isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || [])}
-            total={isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length}
+            total={isWorldView ? (worldData?.features?.length || 0) : (country.data?.features?.filter((f) => !f.properties.isBorough).length || 0)}
             friendName={comparisonFriend.name}
             friendPicture={comparisonFriend.picture}
             regionLabel={isWorldView ? 'Countries' : country.regionLabel}

@@ -65,7 +65,7 @@ export default function WorldSidebar({
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const allCountries = useMemo(() => {
-    return worldData.features.map((f) => ({
+    return (worldData?.features || []).map((f) => ({
       id: f.properties.id,
       name: f.properties.name,
       continent: continentMap[f.properties.id] || 'Other',
