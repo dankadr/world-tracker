@@ -333,11 +333,22 @@ export default function StatsModal({ onClose }) {
   const timeline = getAllDates(userId).slice(0, 20);
 
   useEffect(() => {
+    let cancelled = false;
     setGeoInsightsLoading(true);
-    getVisitedCoords(userId).then((coords) => {
-      setGeo(computeGeoInsights(coords));
-      setGeoInsightsLoading(false);
-    });
+    getVisitedCoords(userId)
+      .then((coords) => {
+        if (!cancelled) setGeo(computeGeoInsights(coords));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error('Failed to load geographic insights', err);
+          setGeo(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setGeoInsightsLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [userId]);
 
   const worldStats = computeWorldStats(userId);

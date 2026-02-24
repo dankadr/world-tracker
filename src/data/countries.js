@@ -29,7 +29,10 @@ export function loadCountryGeoData(geoFile) {
   if (geoCache.has(geoFile)) return geoCache.get(geoFile);
   const loader = geoLoaders[geoFile];
   if (!loader) return Promise.reject(new Error(`No loader registered for ${geoFile}`));
-  const promise = loader().then((mod) => mod.default);
+  const promise = loader().then((mod) => mod.default).catch((err) => {
+    geoCache.delete(geoFile);
+    return Promise.reject(err);
+  });
   geoCache.set(geoFile, promise);
   return promise;
 }
