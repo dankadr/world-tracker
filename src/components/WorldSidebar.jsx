@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
 import { countryList } from '../data/countries';
 import { useAuth } from '../context/AuthContext';
@@ -345,7 +346,10 @@ export default function WorldSidebar({
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
-      {showUnesco && <UnescoPanel onClose={() => setShowUnesco(false)} />}
+      {showUnesco && createPortal(
+        <UnescoPanel onClose={() => setShowUnesco(false)} />,
+        document.body
+      )}
       {showAvatar && (
         <AvatarEditor
           config={avatarConfig}
