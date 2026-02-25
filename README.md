@@ -1,6 +1,6 @@
 # Travel Tracker
 
-An interactive web app to track your travels across the world. Mark countries on the world map, explore detailed region trackers, visit world capitals, and unlock achievements along the way. Supports optional Google login for cross-device sync.
+An interactive web app to track your travels across the world. Mark countries on the world map, explore detailed region trackers, track capitals and UNESCO sites, set travel goals, and unlock achievements along the way. Supports optional Google login for cross-device sync.
 
 ## Supported Trackers
 
@@ -11,27 +11,30 @@ An interactive web app to track your travels across the world. Mark countries on
 | 🇨🇭 Switzerland | 26 cantons | Polygon |
 | 🇺🇸 United States | 50 states + DC + PR | Polygon |
 | 🏞️ US National Parks | 63 parks | Point |
-| 🗽 NYC | 188 neighborhoods | Polygon |
+| 🗽 NYC | 197 neighborhoods | Polygon |
 | 🇳🇴 Norway | 15 counties + Svalbard | Polygon |
 | 🇨🇦 Canada | 13 provinces & territories | Polygon |
+| 🇯🇵 Japan | 47 prefectures | Polygon |
+| 🇦🇺 Australia | 8 states & territories | Polygon |
+| 🇵🇭 Philippines | 17 regions | Polygon |
 
-## Features
+## Feature Highlights
 
-- **World Map** — interactive choropleth with 238 countries (Natural Earth 50m)
-- **Region Trackers** — drill into 8 sub-trackers with detailed maps
-- **World Capitals** — track 192 capital cities as points on a global map
-- **Achievements** — 80+ unlockable badges across General, World, Capitals, and per-tracker categories
-- **Stats Dashboard** — detailed statistics with continent breakdown, travel timeline, and distance metrics
-- **Avatar Editor** — customizable travel avatar
-- **Trip Notes & Dates** — add visit dates and notes to each region
-- **Wishlist / Planned** — mark regions you want to visit next
-- **Export** — export your map as an image
-- **Share** — generate a shareable link of your progress
-- **Dark Mode** — toggle between light and dark themes
-- **Keyboard Shortcuts** — quick navigation between trackers
-- **Google Sign-In** — optional cross-device sync via Google OAuth
-- **Guest Mode** — uses browser localStorage, no account needed
-- **Responsive** — works on desktop and mobile
+- **World + Regional Maps** — 11 tracker views with polygon and point datasets.
+- **UNESCO Overlay** — optional UNESCO World Heritage layer with **270 sites**.
+- **Bucket List Planner** — add planned trips, target dates, and mark destinations complete.
+- **Travel Challenges** — create personal or friend challenges with streak-friendly progress.
+- **XP + Levels** — gain XP for visits, achievements, and milestones.
+- **Achievements** — **131** unlockable badges spanning global and tracker-specific goals.
+- **Friends + Comparison** — share progress, compare maps, and use friend overlays.
+- **Stats Dashboard** — timeline, continent stats, totals, and progress summaries.
+- **Year in Review** — generate annual travel summaries and sharing cards.
+- **Trip Notes & Dates** — attach notes and dates to any visited destination.
+- **Wishlist / Planned** — mark places to visit next and manage a global wish list.
+- **Map Layer Controls** — switch base maps (clean, labels, satellite, terrain).
+- **Export + Share** — export map visuals and generate share links.
+- **Dark Mode + Mobile UX** — optimized for desktop and touch devices.
+- **Google Sign-In or Guest Mode** — local-only mode or account sync.
 
 ## Architecture
 
@@ -176,8 +179,9 @@ Verify `DATABASE_URL` is set correctly in Vercel env vars and that your Neon pro
 - USA & Canada: publicly available GeoJSON boundary data
 - US National Parks: NPS boundary data
 - NYC Neighborhoods: NYC Planning / Pediacities
+- Japan, Australia, Philippines: public administrative boundary datasets
+- UNESCO points: [UNESCO World Heritage List](https://whc.unesco.org/)
 
 ## License
 
 MIT
-
