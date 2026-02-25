@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
 import { cacheGet, cacheGetStale } from '../utils/cache';
+import { addToBatch } from '../utils/batchQueue';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -25,17 +26,6 @@ function saveVisitedWorld(set, userId) {
 }
 
 // --------------- API helpers ---------------
-async function fetchWorldRemote(token) {
-  try {
-    const res = await fetch('/api/visited-world', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return new Set(data.countries || []);
-  } catch { return null; }
-}
-
 async function saveWorldRemote(set, token) {
   try {
     const res = await fetch('/api/visited-world', {
@@ -48,20 +38,6 @@ async function saveWorldRemote(set, token) {
     });
     if (!res.ok) console.error(`saveWorldRemote PUT failed: ${res.status}`);
   } catch (err) { console.error('saveWorldRemote network error:', err); }
-}
-
-async function toggleWorldRemote(countryCode, action, token) {
-  try {
-    const res = await fetch('/api/visited-world', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ country: countryCode, action }),
-    });
-    if (!res.ok) console.error(`toggleWorldRemote PATCH failed: ${res.status}`);
-  } catch (err) { console.error('toggleWorldRemote network error:', err); }
 }
 
 /**
@@ -88,12 +64,6 @@ export default function useVisitedCountries() {
   const prevLoggedIn = useRef(isLoggedIn);
   const visitedRef = useRef(visited);
   visitedRef.current = visited;
-
-  // Debounce state for world PUT
-  const debounceTimerRef = useRef(null);
-  const pendingSaveRef = useRef(null);
-
-  const DEBOUNCE_MS = 800;
 
   // When user changes, reload from correct localStorage keys
   if (userId !== currentUserId) {
@@ -176,44 +146,19 @@ export default function useVisitedCountries() {
     };
   }, [isLoggedIn, token, userId]);
 
-  // Flush pending debounced save on page close
-  useEffect(() => {
-    const flush = () => {
-      if (pendingSaveRef.current) {
-        const { set, tok } = pendingSaveRef.current;
-        fetch('/api/visited-world', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
-          body: JSON.stringify({ countries: [...set] }),
-          keepalive: true,
-        });
-        pendingSaveRef.current = null;
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      }
-    };
-    window.addEventListener('beforeunload', flush);
-    return () => window.removeEventListener('beforeunload', flush);
-  }, []);
-
   const toggleCountry = useCallback(
     (countryCode) => {
       setVisited((prev) => {
         const next = new Set(prev);
-        if (next.has(countryCode)) {
+        const action = next.has(countryCode) ? 'remove' : 'add';
+        if (action === 'remove') {
           next.delete(countryCode);
         } else {
           next.add(countryCode);
         }
         saveVisitedWorld(next, userId);
         if (isLoggedIn && token) {
-          // Debounce: batch rapid toggles into a single PUT
-          if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-          pendingSaveRef.current = { set: next, tok: token };
-          debounceTimerRef.current = setTimeout(() => {
-            saveWorldRemote(next, token);
-            pendingSaveRef.current = null;
-            invalidateBulkCache(token);
-          }, DEBOUNCE_MS);
+          addToBatch('world_toggle', { country: countryCode, action }, token);
         }
         return next;
       });

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils/api';
 import { cacheGet, cacheGetStale } from '../utils/cache';
+import { addToBatch } from '../utils/batchQueue';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -102,19 +103,6 @@ async function saveVisitedRemote(countryId, set, token, dates, notes, wishlist) 
   } catch (err) { console.error('saveVisitedRemote network error:', err); }
 }
 
-async function toggleRegionRemote(countryId, regionId, action, token) {
-  try {
-    const res = await fetch(`/api/visited/${countryId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ region: regionId, action }),
-    });
-    if (!res.ok) console.error(`toggleRegionRemote PATCH failed: ${res.status}`);
-  } catch (err) { console.error('toggleRegionRemote network error:', err); }
-}
 
 async function toggleWishlistRemote(countryId, regionId, action, token) {
   try {
@@ -384,7 +372,7 @@ export default function useVisitedRegions(countryId) {
         }
         saveLocal(countryId, next, userId);
         if (isLoggedIn && token) {
-          toggleRegionRemote(countryId, regionId, action, token);
+          addToBatch('region_toggle', { country_id: countryId, region: regionId, action }, token);
         }
         return next;
       });
