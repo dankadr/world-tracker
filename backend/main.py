@@ -185,6 +185,15 @@ class WishlistItemResponse(BaseModel):
     created_at: str
 
 
+class BatchAction(BaseModel):
+    action: str  # region_toggle | world_toggle | wishlist_upsert | wishlist_delete
+    payload: dict
+
+
+class BatchRequest(BaseModel):
+    actions: list[BatchAction]
+
+
 class ChallengeCreate(BaseModel):
     title: str
     description: str | None = None
@@ -545,6 +554,128 @@ async def patch_visited_world(
 
     await db.commit()
     return WorldVisitedResponse(countries=record.countries)
+
+
+# --------------- Batch endpoint ---------------
+@app.post("/api/batch")
+async def batch_actions(
+    body: BatchRequest,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Execute multiple actions in a single request (single DB transaction)."""
+    results = []
+    for item in body.actions:
+        action = item.action
+        p = item.payload
+
+        if action == "region_toggle":
+            country_id = p.get("country_id", "")
+            region = p.get("region", "")
+            act = p.get("action", "")
+            if country_id not in VALID_COUNTRIES or act not in ("add", "remove"):
+                results.append({"action": action, "ok": False, "error": "invalid params"})
+                continue
+            result = await db.execute(
+                select(VisitedRegions).where(
+                    VisitedRegions.user_id == user.id,
+                    VisitedRegions.country_id == country_id,
+                )
+            )
+            record = result.scalar_one_or_none()
+            if not record:
+                record = VisitedRegions(
+                    user_id=user.id, country_id=country_id,
+                    regions=[], dates={}, notes={}, wishlist=[],
+                )
+                db.add(record)
+            regions = list(record.regions or [])
+            dates = dict(record.dates or {})
+            notes = dict(record.notes or {})
+            if act == "add":
+                if region not in regions:
+                    regions.append(region)
+            else:
+                if region in regions:
+                    regions.remove(region)
+                dates.pop(region, None)
+                notes.pop(region, None)
+            record.regions = regions
+            record.dates = dates
+            record.notes = notes
+            record.updated_at = datetime.now(timezone.utc)
+            results.append({"action": action, "ok": True})
+
+        elif action == "world_toggle":
+            country_code = p.get("country", "")
+            act = p.get("action", "")
+            if act not in ("add", "remove"):
+                results.append({"action": action, "ok": False, "error": "invalid params"})
+                continue
+            result = await db.execute(
+                select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+            )
+            record = result.scalar_one_or_none()
+            if not record:
+                record = VisitedWorld(user_id=user.id, countries=[])
+                db.add(record)
+            countries_list = list(record.countries or [])
+            if act == "add":
+                if country_code not in countries_list:
+                    countries_list.append(country_code)
+            else:
+                if country_code in countries_list:
+                    countries_list.remove(country_code)
+            record.countries = countries_list
+            record.updated_at = datetime.now(timezone.utc)
+            results.append({"action": action, "ok": True})
+
+        elif action == "wishlist_upsert":
+            tracker_id = p.get("tracker_id", "")
+            region_id = p.get("region_id", "")
+            priority = p.get("priority", "medium")
+            target_date = p.get("target_date")
+            notes_val = p.get("notes")
+            category = p.get("category", "solo")
+            result = await db.execute(
+                select(WishlistItem).where(
+                    WishlistItem.user_id == user.id,
+                    WishlistItem.tracker_id == tracker_id,
+                    WishlistItem.region_id == region_id,
+                )
+            )
+            wi = result.scalar_one_or_none()
+            if wi:
+                wi.priority = priority
+                wi.target_date = target_date
+                wi.notes = notes_val
+                wi.category = category
+                wi.updated_at = datetime.now(timezone.utc)
+            else:
+                wi = WishlistItem(
+                    user_id=user.id, tracker_id=tracker_id, region_id=region_id,
+                    priority=priority, target_date=target_date, notes=notes_val, category=category,
+                )
+                db.add(wi)
+            results.append({"action": action, "ok": True})
+
+        elif action == "wishlist_delete":
+            tracker_id = p.get("tracker_id", "")
+            region_id = p.get("region_id", "")
+            del_result = await db.execute(
+                delete(WishlistItem).where(
+                    WishlistItem.user_id == user.id,
+                    WishlistItem.tracker_id == tracker_id,
+                    WishlistItem.region_id == region_id,
+                )
+            )
+            results.append({"action": action, "ok": del_result.rowcount > 0})
+
+        else:
+            results.append({"action": action, "ok": False, "error": "unknown action"})
+
+    await db.commit()
+    return {"results": results}
 
 
 # --------------- World visited endpoints ---------------
