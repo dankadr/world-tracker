@@ -202,9 +202,15 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
 
 export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode }) {
   const geoJsonRef = useRef(null);
-  // Use a ref so the click handler always reads the current value even with stale closures
+  // Use refs so event handlers always read current values even with stale closures
   const comparisonModeRef = useRef(comparisonMode);
   useEffect(() => { comparisonModeRef.current = comparisonMode; }, [comparisonMode]);
+  const visitedRef = useRef(visited);
+  useEffect(() => { visitedRef.current = visited; }, [visited]);
+  const wishlistRef = useRef(wishlist);
+  useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
+  const wishlistActiveRef = useRef(wishlistActive);
+  useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
     dark ? LAYERS[0].dark : LAYERS[0].light
@@ -307,8 +313,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
         mouseover: (e) => {
           const target = e.target;
-          const isVisited = visited.has(id);
-          const isWishlisted = wishlistActive && wishlist?.has(id);
+          const isVisited = visitedRef.current.has(id);
+          const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
           target.setStyle({
             fillColor: isVisited ? VISITED_HOVER : isWishlisted ? '#f1c40f' : '#b0bec5',
             fillOpacity: isVisited ? 0.7 : isWishlisted ? 0.35 : 0.55,
@@ -319,8 +325,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
         mouseout: (e) => {
           const target = e.target;
-          const isVisited = visited.has(id);
-          const isWishlisted = wishlistActive && wishlist?.has(id);
+          const isVisited = visitedRef.current.has(id);
+          const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
           let style;
           if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
           else if (isVisited) style = VISITED_STYLE;
@@ -335,7 +341,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         click: (e) => {
           if (comparisonModeRef.current) return;
           if (isTracked) {
-            const isVisited = visited.has(id);
+            const isVisited = visitedRef.current.has(id);
             const trackerId = TRACKED_COUNTRY_IDS[id];
             const statusHtml = isVisited
               ? '<span class="world-popup-status visited">Visited</span>'
@@ -355,7 +361,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           } else {
             onToggle(id);
             const target = e.target;
-            const willBeVisited = !visited.has(id);
+            const willBeVisited = !visitedRef.current.has(id);
             const finalStyle = willBeVisited ? VISITED_STYLE : UNVISITED_STYLE;
             target.setStyle({
               fillOpacity: 0.85,
@@ -369,7 +375,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
       });
     },
-    [visited, wishlist, wishlistActive, onToggle, greaterIsraelEnabled]
+    [onToggle, greaterIsraelEnabled]
   );
 
   useEffect(() => {
