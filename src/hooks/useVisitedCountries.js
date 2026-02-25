@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
-import { cacheGet } from '../utils/cache';
+import { cacheGet, cacheGetStale } from '../utils/cache';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -64,12 +64,30 @@ async function toggleWorldRemote(countryCode, action, token) {
   } catch (err) { console.error('toggleWorldRemote network error:', err); }
 }
 
+/**
+ * Try to extract world data from the stale bulk cache for instant rendering.
+ * Falls back to per-user localStorage if no bulk cache exists.
+ */
+function initWorldFromCache(token, userId) {
+  if (token) {
+    const cKey = `visited-all:${token.slice(-16)}`;
+    const bulk = cacheGetStale(cKey);
+    if (bulk) {
+      return new Set(bulk.world || []);
+    }
+  }
+  return loadVisitedWorld(userId);
+}
+
 export default function useVisitedCountries() {
   const { token, isLoggedIn, user } = useAuth();
   const userId = user?.id || null;
-  const [visited, setVisited] = useState(() => loadVisitedWorld(userId));
+  const [visited, setVisited] = useState(() => initWorldFromCache(token, userId));
+  const [isLoading, setIsLoading] = useState(() => initWorldFromCache(token, userId).size === 0 && isLoggedIn);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+  const visitedRef = useRef(visited);
+  visitedRef.current = visited;
 
   // Debounce state for world PUT
   const debounceTimerRef = useRef(null);
@@ -87,7 +105,7 @@ export default function useVisitedCountries() {
     }
   }
 
-  // Sync from server when logged in (bulk endpoint)
+  // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
@@ -102,11 +120,16 @@ export default function useVisitedCountries() {
         saveVisitedWorld(local, userId);
         saveWorldRemote(local, token);
       } else {
-        // Server is source of truth
-        setVisited(remote);
+        // Update state only if data actually changed (prevents flash)
+        const remoteArr = [...remote].sort();
+        const localArr = [...visitedRef.current].sort();
+        if (JSON.stringify(remoteArr) !== JSON.stringify(localArr)) {
+          setVisited(remote);
+        }
         saveVisitedWorld(remote, userId);
       }
       prevLoggedIn.current = true;
+      setIsLoading(false);
     });
 
     return () => { cancelled = true; };
@@ -203,5 +226,5 @@ export default function useVisitedCountries() {
     [visited]
   );
 
-  return { visited, toggleCountry, isVisited };
+  return { visited, toggleCountry, isVisited, isLoading };
 }

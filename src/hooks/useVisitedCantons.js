@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
 import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils/api';
-import { cacheGet } from '../utils/cache';
+import { cacheGet, cacheGetStale } from '../utils/cache';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -134,13 +134,45 @@ async function toggleWishlistRemote(countryId, regionId, action, token) {
 const DEBOUNCE_MS = 800;
 
 // --------------- Hook ---------------
+/**
+ * Try to extract region data from the stale bulk cache for instant rendering.
+ * Falls back to per-country localStorage if no bulk cache exists.
+ */
+function initFromCache(countryId, token, userId) {
+  if (token) {
+    const cKey = `visited-all:${token.slice(-16)}`;
+    const bulk = cacheGetStale(cKey);
+    if (bulk) {
+      const cd = bulk.regions?.[countryId];
+      return {
+        visited: new Set(cd?.regions || []),
+        dates: cd?.dates || {},
+        notes: cd?.notes || {},
+        wishlist: new Set(cd?.wishlist || []),
+      };
+    }
+  }
+  // Fall back to per-country localStorage
+  if (userId) {
+    return {
+      visited: loadLocal(countryId, userId),
+      dates: loadDates(countryId, userId),
+      notes: loadNotes(countryId, userId),
+      wishlist: loadWishlist(countryId, userId),
+    };
+  }
+  return { visited: new Set(), dates: {}, notes: {}, wishlist: new Set() };
+}
+
 export default function useVisitedRegions(countryId) {
   const { token, isLoggedIn, user } = useAuth();
   const userId = user?.id || null;
-  const [visited, setVisited] = useState(() => userId ? loadLocal(countryId, userId) : new Set());
-  const [dates, setDatesState] = useState(() => userId ? loadDates(countryId, userId) : {});
-  const [notes, setNotesState] = useState(() => userId ? loadNotes(countryId, userId) : {});
-  const [wishlist, setWishlist] = useState(() => userId ? loadWishlist(countryId, userId) : new Set());
+  const initial = initFromCache(countryId, token, userId);
+  const [visited, setVisited] = useState(() => initial.visited);
+  const [dates, setDatesState] = useState(() => initial.dates);
+  const [notes, setNotesState] = useState(() => initial.notes);
+  const [wishlist, setWishlist] = useState(() => initial.wishlist);
+  const [isLoading, setIsLoading] = useState(() => initial.visited.size === 0 && isLoggedIn);
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
@@ -214,7 +246,7 @@ export default function useVisitedRegions(countryId) {
     return () => window.removeEventListener('beforeunload', flush);
   }, []);
 
-  // Sync from server when logged in (bulk endpoint)
+  // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
@@ -243,17 +275,31 @@ export default function useVisitedRegions(countryId) {
         setWishlist(localWishlist);
         saveVisitedRemote(countryId, local, token, localDates, localNotes, localWishlist);
       } else {
-        // Server is source of truth
-        setVisited(remote.regions);
-        setDatesState(remote.dates);
-        setNotesState(remote.notes);
-        setWishlist(remote.wishlist);
+        // Update state only if data actually changed (prevents flash)
+        const prevRegions = visitedRef.current;
+        const remoteArr = [...remote.regions].sort();
+        const localArr = [...prevRegions].sort();
+        if (JSON.stringify(remoteArr) !== JSON.stringify(localArr)) {
+          setVisited(remote.regions);
+        }
+        if (JSON.stringify(remote.dates) !== JSON.stringify(datesRef.current)) {
+          setDatesState(remote.dates);
+        }
+        if (JSON.stringify(remote.notes) !== JSON.stringify(notesRef.current)) {
+          setNotesState(remote.notes);
+        }
+        const remoteWL = [...remote.wishlist].sort();
+        const localWL = [...wishlistRef.current].sort();
+        if (JSON.stringify(remoteWL) !== JSON.stringify(localWL)) {
+          setWishlist(remote.wishlist);
+        }
         saveLocal(countryId, remote.regions, userId);
         saveDates(countryId, remote.dates, userId);
         saveNotes(countryId, remote.notes, userId);
         saveWishlist(countryId, remote.wishlist, userId);
       }
       prevLoggedIn.current = true;
+      setIsLoading(false);
     });
 
     return () => { cancelled = true; };
@@ -441,5 +487,5 @@ export default function useVisitedRegions(countryId) {
     setWishlist(emptyWishlist);
   }, [isLoggedIn, token, userId]);
 
-  return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist };
+  return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading };
 }
