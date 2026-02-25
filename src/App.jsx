@@ -18,6 +18,7 @@ import ComparisonStats from './components/ComparisonStats';
 import './components/ComparisonView.css';
 import XpNotification from './components/XpNotification';
 import BucketListPanel from './components/BucketListPanel';
+import MapSkeleton from './components/MapSkeleton';
 import { useFriends } from './context/FriendsContext';
 import { useFriendsData } from './hooks/useFriendsData';
 import useVisitedRegions from './hooks/useVisitedCantons';
@@ -94,7 +95,7 @@ function AchievementToasts() {
 
   useEffect(() => {
     checkAchievements();
-    const interval = setInterval(checkAchievements, 1000);
+    const interval = setInterval(checkAchievements, 10000);
     return () => clearInterval(interval);
   }, [checkAchievements]);
 
@@ -143,8 +144,9 @@ export default function App() {
 
   const rawCountry = countries[countryId];
   const country = applyColors(rawCountry);
-  const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist } = useVisitedRegions(countryId);
-  const { visited: worldVisited, toggleCountry: toggleWorldCountry } = useVisitedCountries();
+  const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading: regionsLoading } = useVisitedRegions(countryId);
+  const { visited: worldVisited, toggleCountry: toggleWorldCountry, isLoading: worldLoading } = useVisitedCountries();
+  const isDataLoading = regionsLoading || worldLoading;
   const { addXp, XP_RULES: xpRules } = useXp();
   const {
     items: bucketListItems,
@@ -520,7 +522,11 @@ export default function App() {
         </div>
       )}
 
-      {isWorldView ? (
+      {isDataLoading ? (
+        <main className="map-container">
+          <MapSkeleton />
+        </main>
+      ) : isWorldView ? (
         <>
           {isMobile ? (
             <MobileBottomSheet

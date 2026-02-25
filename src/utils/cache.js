@@ -37,6 +37,23 @@ export function cacheSet(key, value) {
 }
 
 /**
+ * Get a cached value regardless of TTL (stale-while-revalidate).
+ * Returns the stored value even if expired, or null if nothing cached.
+ * @param {string} key
+ * @returns {*} cached value, or null if missing
+ */
+export function cacheGetStale(key) {
+  try {
+    const raw = localStorage.getItem(PREFIX + key);
+    if (!raw) return null;
+    const { value } = JSON.parse(raw);
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Remove one cache entry.
  * @param {string} key
  */
