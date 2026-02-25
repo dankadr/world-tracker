@@ -209,13 +209,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   useEffect(() => { visitedRef.current = visited; }, [visited]);
   const wishlistRef = useRef(wishlist);
   useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
-  const wishlistActiveRef = useRef(wishlistActive);
-  useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
     dark ? LAYERS[0].dark : LAYERS[0].light
   );
   const [wishlistActive, setWishlistActive] = useState(true);
+  const wishlistActiveRef = useRef(wishlistActive);
+  useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);
   const [unescoActive, setUnescoActive] = useState(false);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
 
