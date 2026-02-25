@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import unescoData from '../data/unesco-sites.json';
 import useUnescoVisited from '../hooks/useUnescoVisited';
 import { useTheme } from '../context/ThemeContext';
@@ -16,6 +16,21 @@ export default function UnescoPanel({ onClose }) {
   const [regionFilter, setRegionFilter] = useState('all');
   const [countryFilter, setCountryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [showFilters, setShowFilters] = useState(() => window.innerWidth > 768);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setShowFilters(true);
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const filteredSites = useMemo(() => {
     return unescoData.filter(site => {
@@ -72,9 +87,9 @@ export default function UnescoPanel({ onClose }) {
   }, [filteredSites]);
 
   return (
-    <div className={`unesco-panel ${dark ? 'dark' : ''}`}>
+    <div className={`unesco-panel ${dark ? 'dark' : ''} ${isMobile ? 'mobile' : ''}`}>
       <div className="unesco-panel-header">
-        <h2>🏛️ UNESCO World Heritage Sites</h2>
+        <h2>🏛️ UNESCO Sites</h2>
         <button className="close-btn" onClick={onClose}>✕</button>
       </div>
 
@@ -92,39 +107,74 @@ export default function UnescoPanel({ onClose }) {
       </div>
 
       <div className="unesco-filters">
-        <input
-          type="text"
-          placeholder="🔍 Search sites..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
+        <div className="unesco-search-row">
+          <input
+            type="text"
+            placeholder="🔍 Search sites..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
 
-        <div className="filter-row">
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="all">All Types</option>
-            <option value="cultural">Cultural</option>
-            <option value="natural">Natural</option>
-            <option value="mixed">Mixed</option>
-          </select>
-
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All Status</option>
-            <option value="visited">Visited</option>
-            <option value="unvisited">Not Yet Visited</option>
-          </select>
+          {isMobile && (
+            <button
+              className={`filters-toggle-btn ${showFilters ? 'active' : ''}`}
+              onClick={() => setShowFilters((prev) => !prev)}
+              type="button"
+            >
+              ⚙️ Filters
+            </button>
+          )}
         </div>
 
-        <div className="filter-row">
-          <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-            <option value="all">All Regions</option>
-            {regions.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
+        {showFilters && (
+          <>
+            <div className="filter-row">
+              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                <option value="all">All Types</option>
+                <option value="cultural">Cultural</option>
+                <option value="natural">Natural</option>
+                <option value="mixed">Mixed</option>
+              </select>
 
-          <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}>
-            <option value="all">All Countries</option>
-            {countries.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="all">All Status</option>
+                <option value="visited">Visited</option>
+                <option value="unvisited">Not Yet Visited</option>
+              </select>
+            </div>
+
+            <div className="filter-row">
+              <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
+                <option value="all">All Regions</option>
+                {regions.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+
+              <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}>
+                <option value="all">All Countries</option>
+                {countries.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </>
+        )}
+
+        <div className="results-summary">
+          <span>{filteredSites.length} site{filteredSites.length === 1 ? '' : 's'} shown</span>
+          {(searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || regionFilter !== 'all' || countryFilter !== 'all') && (
+            <button
+              type="button"
+              className="clear-filters-btn"
+              onClick={() => {
+                setSearchTerm('');
+                setTypeFilter('all');
+                setRegionFilter('all');
+                setCountryFilter('all');
+                setStatusFilter('all');
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
