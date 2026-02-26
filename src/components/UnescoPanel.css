@@ -84,6 +84,10 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
+.unesco-top-section {
+  overflow: hidden;
+}
+
 .unesco-panel.dark .unesco-stats {
   background: #252525;
   border-bottom-color: #333;
@@ -383,6 +387,17 @@
 
   .unesco-stats {
     padding: 12px 16px;
+  }
+
+  .unesco-top-section {
+    max-height: 360px;
+    opacity: 1;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+  }
+
+  .unesco-top-section.collapsed {
+    max-height: 0;
+    opacity: 0;
   }
 
   .stat-main {

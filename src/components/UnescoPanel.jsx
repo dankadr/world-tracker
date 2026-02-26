@@ -18,6 +18,7 @@ export default function UnescoPanel({ onClose }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   const [showFilters, setShowFilters] = useState(() => window.innerWidth > 768);
+  const [collapseTopSection, setCollapseTopSection] = useState(false);
 
   useEffect(() => {
     const onResize = () => {
@@ -25,6 +26,7 @@ export default function UnescoPanel({ onClose }) {
       setIsMobile(mobile);
       if (!mobile) {
         setShowFilters(true);
+        setCollapseTopSection(false);
       }
     };
 
@@ -86,6 +88,13 @@ export default function UnescoPanel({ onClose }) {
     return grouped;
   }, [filteredSites]);
 
+  const handleListScroll = (event) => {
+    if (!isMobile) return;
+
+    const shouldCollapse = event.currentTarget.scrollTop > 24;
+    setCollapseTopSection((prev) => (prev === shouldCollapse ? prev : shouldCollapse));
+  };
+
   return (
     <div className={`unesco-panel ${dark ? 'dark' : ''} ${isMobile ? 'mobile' : ''}`}>
       <div className="unesco-panel-header">
@@ -93,92 +102,94 @@ export default function UnescoPanel({ onClose }) {
         <button className="close-btn" onClick={onClose}>✕</button>
       </div>
 
-      <div className="unesco-stats">
-        <div className="stat-main">
-          <span className="stat-value">{stats.visited}</span>
-          <span className="stat-total"> / {stats.total}</span>
-          <span className="stat-label"> sites visited ({stats.percentage}%)</span>
+      <div className={`unesco-top-section ${collapseTopSection ? 'collapsed' : ''}`}>
+        <div className="unesco-stats">
+          <div className="stat-main">
+            <span className="stat-value">{stats.visited}</span>
+            <span className="stat-total"> / {stats.total}</span>
+            <span className="stat-label"> sites visited ({stats.percentage}%)</span>
+          </div>
+          <div className="stat-types">
+            <span>🟤 Cultural: {stats.byType.cultural}</span>
+            <span>🟢 Natural: {stats.byType.natural}</span>
+            <span>🔵 Mixed: {stats.byType.mixed}</span>
+          </div>
         </div>
-        <div className="stat-types">
-          <span>🟤 Cultural: {stats.byType.cultural}</span>
-          <span>🟢 Natural: {stats.byType.natural}</span>
-          <span>🔵 Mixed: {stats.byType.mixed}</span>
+
+        <div className="unesco-filters">
+          <div className="unesco-search-row">
+            <input
+              type="text"
+              placeholder="🔍 Search sites..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+
+            {isMobile && (
+              <button
+                className={`filters-toggle-btn ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters((prev) => !prev)}
+                type="button"
+              >
+                ⚙️ Filters
+              </button>
+            )}
+          </div>
+
+          {showFilters && (
+            <>
+              <div className="filter-row">
+                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="cultural">Cultural</option>
+                  <option value="natural">Natural</option>
+                  <option value="mixed">Mixed</option>
+                </select>
+
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="all">All Status</option>
+                  <option value="visited">Visited</option>
+                  <option value="unvisited">Not Yet Visited</option>
+                </select>
+              </div>
+
+              <div className="filter-row">
+                <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
+                  <option value="all">All Regions</option>
+                  {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+
+                <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}>
+                  <option value="all">All Countries</option>
+                  {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
+          <div className="results-summary">
+            <span>{filteredSites.length} site{filteredSites.length === 1 ? '' : 's'} shown</span>
+            {(searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || regionFilter !== 'all' || countryFilter !== 'all') && (
+              <button
+                type="button"
+                className="clear-filters-btn"
+                onClick={() => {
+                  setSearchTerm('');
+                  setTypeFilter('all');
+                  setRegionFilter('all');
+                  setCountryFilter('all');
+                  setStatusFilter('all');
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="unesco-filters">
-        <div className="unesco-search-row">
-          <input
-            type="text"
-            placeholder="🔍 Search sites..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-
-          {isMobile && (
-            <button
-              className={`filters-toggle-btn ${showFilters ? 'active' : ''}`}
-              onClick={() => setShowFilters((prev) => !prev)}
-              type="button"
-            >
-              ⚙️ Filters
-            </button>
-          )}
-        </div>
-
-        {showFilters && (
-          <>
-            <div className="filter-row">
-              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                <option value="all">All Types</option>
-                <option value="cultural">Cultural</option>
-                <option value="natural">Natural</option>
-                <option value="mixed">Mixed</option>
-              </select>
-
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="all">All Status</option>
-                <option value="visited">Visited</option>
-                <option value="unvisited">Not Yet Visited</option>
-              </select>
-            </div>
-
-            <div className="filter-row">
-              <select value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-                <option value="all">All Regions</option>
-                {regions.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-
-              <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)}>
-                <option value="all">All Countries</option>
-                {countries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </>
-        )}
-
-        <div className="results-summary">
-          <span>{filteredSites.length} site{filteredSites.length === 1 ? '' : 's'} shown</span>
-          {(searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || regionFilter !== 'all' || countryFilter !== 'all') && (
-            <button
-              type="button"
-              className="clear-filters-btn"
-              onClick={() => {
-                setSearchTerm('');
-                setTypeFilter('all');
-                setRegionFilter('all');
-                setCountryFilter('all');
-                setStatusFilter('all');
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="unesco-list">
+      <div className="unesco-list" onScroll={handleListScroll}>
         {filteredSites.length === 0 ? (
           <div className="no-results">No sites found matching your filters.</div>
         ) : (
