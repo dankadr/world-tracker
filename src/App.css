@@ -4572,7 +4572,7 @@ body {
   position: absolute;
   bottom: 24px;
   left: 12px;
-  z-index: 999;
+  z-index: 2100;
   background: var(--glass-bg-heavy);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
