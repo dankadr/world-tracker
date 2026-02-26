@@ -72,17 +72,19 @@ export function useFriendsData() {
   }, [token]);
 
   // Load overlay data for multiple friends at once
-  const loadOverlayData = useCallback(async (friendIds) => {
-    if (!token || !friendIds.length) return;
+  const loadOverlayData = useCallback(async (friendsToLoad) => {
+    if (!token || !friendsToLoad.length) return;
     setLoading(true);
 
     const overlay = {};
-    for (let i = 0; i < friendIds.length; i++) {
-      const id = friendIds[i];
+    for (let i = 0; i < friendsToLoad.length; i++) {
+      const friend = friendsToLoad[i];
+      const id = typeof friend === 'object' ? friend.id : friend;
       const data = await loadFriendVisited(id);
       if (data) {
         overlay[id] = {
           ...data,
+          name: data.name || (typeof friend === 'object' ? friend.name : null),
           color: FRIEND_COLORS[i % FRIEND_COLORS.length],
         };
       }

@@ -316,7 +316,7 @@ export default function App() {
   // Load/clear friend overlay data when toggled
   useEffect(() => {
     if (friendsActive && friends.length > 0) {
-      loadOverlayData(friends.map((f) => f.id));
+      loadOverlayData(friends);
     } else if (!friendsActive) {
       clearCache();
     }
