@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
-import { MapContainer, GeoJSON, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, GeoJSON, TileLayer, Pane, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 import MapLayerControl, { LAYERS } from './MapLayerControl';
@@ -68,6 +68,11 @@ const WISHLIST_STYLE = {
   dashArray: '5 4',
   lineJoin: 'round',
   lineCap: 'round',
+};
+
+const FRIEND_LABEL_LAYERS = {
+  light: 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+  dark: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
 };
 
 function MapController({ center, zoom }) {
@@ -409,6 +414,15 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
         url={tileUrl}
       />
+      {friendsActive && !comparisonFriend && (
+        <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
+          <TileLayer
+            key={`friend-labels-${dark ? 'dark' : 'light'}`}
+            url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
+            opacity={0.95}
+          />
+        </Pane>
+      )}
       <GeoJSON
         key={`world-geojson-${greaterIsraelEnabled}`}
         ref={geoJsonRef}

@@ -1627,7 +1627,8 @@ body {
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   box-shadow: var(--glass-specular), var(--glass-shadow-elevated);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   min-width: 90px;
@@ -2201,6 +2202,12 @@ body {
   .layer-control-btn {
     width: 40px;
     height: 40px;
+  }
+
+  .layer-options {
+    top: auto;
+    bottom: 0;
+    max-height: min(44vh, 320px);
   }
 
   /* Leaflet zoom controls — reposition to bottom right */
