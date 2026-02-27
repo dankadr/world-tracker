@@ -140,5 +140,20 @@
     "maxZoom": 18,
     "visitedColor": "#d89648",
     "visitedHover": "#c07a30"
+  },
+  {
+    "id": "br",
+    "name": "Brazil",
+    "flag": "🇧🇷",
+    "regionLabel": "States & Federal District",
+    "regionLabelSingular": "state",
+    "geoFile": "brazil.json",
+    "center": [-14.2, -52.9],
+    "zoom": 4,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#27ae60",
+    "visitedHover": "#1e8a4c",
+    "pointMode": true
   }
 ]
