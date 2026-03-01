@@ -33,6 +33,18 @@ function saveXpLog(userId, log) {
   localStorage.setItem(storagePrefix(userId) + 'xp-log', JSON.stringify(trimmed));
 }
 
+function loadGrantedKeys(userId) {
+  try {
+    const raw = localStorage.getItem(storagePrefix(userId) + 'xp-granted-keys');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch { /* ignore */ }
+  return new Set();
+}
+
+function saveGrantedKeys(userId, keys) {
+  localStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
+}
+
 // --------------- API helpers ---------------
 async function fetchXpRemote(token) {
   try {
@@ -71,11 +83,13 @@ export function XpProvider({ children }) {
   const [currentUserId, setCurrentUserId] = useState(userId);
   const [notifications, setNotifications] = useState([]);
   const prevLevelRef = useRef(null);
+  const grantedKeysRef = useRef(loadGrantedKeys(userId));
 
-  // When user changes, reload XP
+  // When user changes, reload XP and granted-keys for the new user
   if (userId !== currentUserId) {
     setCurrentUserId(userId);
     setTotalXp(loadXp(userId));
+    grantedKeysRef.current = loadGrantedKeys(userId);
   }
 
   // Sync from server when logged in
@@ -157,6 +171,14 @@ export function XpProvider({ children }) {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
+  // Grant XP exactly once per unique key (per user). Safe to call on every toggle.
+  const grantXpOnce = useCallback((key, amount, reason, trackerId = null) => {
+    if (grantedKeysRef.current.has(key)) return;
+    grantedKeysRef.current.add(key);
+    saveGrantedKeys(userId, grantedKeysRef.current);
+    addXp(amount, reason, trackerId);
+  }, [userId, addXp]);
+
   const levelInfo = levelFromXp(totalXp);
 
   const value = {
@@ -165,6 +187,7 @@ export function XpProvider({ children }) {
     currentXp: levelInfo.currentXp,
     nextLevelXp: levelInfo.nextLevelXp,
     addXp,
+    grantXpOnce,
     notifications,
     dismissNotification,
     XP_RULES,
@@ -187,6 +210,7 @@ export default function useXp() {
       currentXp: 0,
       nextLevelXp: 50,
       addXp: () => {},
+      grantXpOnce: () => {},
       notifications: [],
       dismissNotification: () => {},
       XP_RULES,
