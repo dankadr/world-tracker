@@ -95,8 +95,8 @@ function AchievementToasts() {
 
   useEffect(() => {
     checkAchievements();
-    const interval = setInterval(checkAchievements, 10000);
-    return () => clearInterval(interval);
+    window.addEventListener('visitedchange', checkAchievements);
+    return () => window.removeEventListener('visitedchange', checkAchievements);
   }, [checkAchievements]);
 
   useEffect(() => {
@@ -174,6 +174,7 @@ export default function App() {
       grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
       grantXpOnce(`first_tracker:${countryId}`, xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
     }
+    window.dispatchEvent(new CustomEvent('visitedchange'));
   }, [toggle, visited, grantXpOnce, xpRules, countryId]);
 
   const handleToggleWishlist = useCallback((regionId) => {
@@ -268,6 +269,7 @@ export default function App() {
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
     }
+    window.dispatchEvent(new CustomEvent('visitedchange'));
   }, [toggleWorldCountry, worldVisited, grantXpOnce, xpRules]);
 
   // Friends state
