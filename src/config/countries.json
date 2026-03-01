@@ -6,7 +6,10 @@
     "regionLabel": "Cantons",
     "regionLabelSingular": "canton",
     "geoFile": "cantons.json",
-    "center": [46.8, 8.22],
+    "center": [
+      46.8,
+      8.22
+    ],
     "zoom": 8,
     "minZoom": 2,
     "maxZoom": 18,
@@ -20,7 +23,10 @@
     "regionLabel": "States",
     "regionLabelSingular": "state",
     "geoFile": "usa.json",
-    "center": [39.5, -98.35],
+    "center": [
+      39.5,
+      -98.35
+    ],
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 18,
@@ -34,7 +40,10 @@
     "regionLabel": "National Parks",
     "regionLabelSingular": "national park",
     "geoFile": "us-parks.json",
-    "center": [39.5, -98.35],
+    "center": [
+      39.5,
+      -98.35
+    ],
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 15,
@@ -49,7 +58,10 @@
     "regionLabel": "Neighborhoods",
     "regionLabelSingular": "neighborhood",
     "geoFile": "nyc.json",
-    "center": [40.7128, -74.006],
+    "center": [
+      40.7128,
+      -74.006
+    ],
     "zoom": 11,
     "minZoom": 2,
     "maxZoom": 18,
@@ -63,7 +75,10 @@
     "regionLabel": "Counties & Territories",
     "regionLabelSingular": "county/territory",
     "geoFile": "norway.json",
-    "center": [68.0, 16.0],
+    "center": [
+      68.0,
+      16.0
+    ],
     "zoom": 3,
     "minZoom": 2,
     "maxZoom": 18,
@@ -77,7 +92,10 @@
     "regionLabel": "Provinces & Territories",
     "regionLabelSingular": "province/territory",
     "geoFile": "canada.json",
-    "center": [60.0, -96.0],
+    "center": [
+      60.0,
+      -96.0
+    ],
     "zoom": 3,
     "minZoom": 2,
     "maxZoom": 18,
@@ -91,7 +109,10 @@
     "regionLabel": "Capitals",
     "regionLabelSingular": "capital",
     "geoFile": "capitals.json",
-    "center": [20, 0],
+    "center": [
+      20,
+      0
+    ],
     "zoom": 2,
     "minZoom": 2,
     "maxZoom": 18,
@@ -106,7 +127,10 @@
     "regionLabel": "Prefectures",
     "regionLabelSingular": "prefecture",
     "geoFile": "japan.json",
-    "center": [36.5, 138.0],
+    "center": [
+      36.5,
+      138.0
+    ],
     "zoom": 5,
     "minZoom": 2,
     "maxZoom": 18,
@@ -120,7 +144,10 @@
     "regionLabel": "States & Territories",
     "regionLabelSingular": "state/territory",
     "geoFile": "australia.json",
-    "center": [-25.0, 134.0],
+    "center": [
+      -25.0,
+      134.0
+    ],
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 18,
@@ -134,11 +161,31 @@
     "regionLabel": "Regions",
     "regionLabelSingular": "region",
     "geoFile": "philippines.json",
-    "center": [12.5, 122.0],
+    "center": [
+      12.5,
+      122.0
+    ],
     "zoom": 5,
     "minZoom": 2,
     "maxZoom": 18,
     "visitedColor": "#d89648",
     "visitedHover": "#c07a30"
+  },
+  {
+    "id": "br",
+    "name": "Brazil",
+    "flag": "🇧🇷",
+    "regionLabel": "States",
+    "regionLabelSingular": "state",
+    "geoFile": "brazil.json",
+    "center": [
+      -14.2,
+      -52.9
+    ],
+    "zoom": 4,
+    "minZoom": 2,
+    "maxZoom": 18,
+    "visitedColor": "#27ae60",
+    "visitedHover": "#1e8a4c"
   }
 ]
