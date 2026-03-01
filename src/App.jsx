@@ -434,11 +434,25 @@ export default function App() {
     if (countryChanged || prev === pct) return;
     for (const m of MILESTONES) {
       if (prev < m && pct >= m) {
-        setShowConfetti(true);
+        const confettiKey = userId
+          ? `swiss-tracker-u${userId}-confetti-milestones`
+          : 'swiss-tracker-confetti-milestones';
+        let shown;
+        try {
+          shown = new Set(JSON.parse(localStorage.getItem(confettiKey) || '[]'));
+        } catch {
+          shown = new Set();
+        }
+        const milestoneId = `${countryId}-${m}`;
+        if (!shown.has(milestoneId)) {
+          shown.add(milestoneId);
+          localStorage.setItem(confettiKey, JSON.stringify([...shown]));
+          setShowConfetti(true);
+        }
         break;
       }
     }
-  }, [pct, countryId]);
+  }, [pct, countryId, userId]);
 
   const closeModals = useCallback(() => {}, []);
 
