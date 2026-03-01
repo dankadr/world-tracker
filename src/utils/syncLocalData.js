@@ -224,7 +224,7 @@ export async function syncLocalDataToServer(token, userId) {
     migrateKeys(userId, anonData);
 
     // Bust the bulk cache so hooks re-fetch the fresh merged data
-    invalidateBulkCache();
+    invalidateBulkCache(token);
 
     console.log('[sync] Anonymous local data synced successfully');
     return true;

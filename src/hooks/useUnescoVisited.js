@@ -159,7 +159,7 @@ export default function useUnescoVisited() {
           debounceTimerRef.current = setTimeout(() => {
             saveVisitedRemote(next, token);
             pendingSaveRef.current = null;
-            invalidateBulkCache();
+            invalidateBulkCache(token);
           }, DEBOUNCE_MS);
         }
         return next;
