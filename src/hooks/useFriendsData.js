@@ -76,22 +76,26 @@ export function useFriendsData() {
     if (!token || !friendsToLoad.length) return;
     setLoading(true);
 
-    const overlay = {};
-    for (let i = 0; i < friendsToLoad.length; i++) {
-      const friend = friendsToLoad[i];
-      const id = typeof friend === 'object' ? friend.id : friend;
-      const data = await loadFriendVisited(id);
-      if (data) {
-        overlay[id] = {
-          ...data,
-          name: data.name || (typeof friend === 'object' ? friend.name : null),
-          color: FRIEND_COLORS[i % FRIEND_COLORS.length],
-        };
+    try {
+      const overlay = {};
+      for (let i = 0; i < friendsToLoad.length; i++) {
+        const friend = friendsToLoad[i];
+        const id = typeof friend === 'object' ? friend.id : friend;
+        const data = await loadFriendVisited(id);
+        if (data) {
+          overlay[id] = {
+            ...data,
+            name: data.name || (typeof friend === 'object' ? friend.name : null),
+            color: FRIEND_COLORS[i % FRIEND_COLORS.length],
+          };
+        }
       }
+      setFriendOverlayData(overlay);
+    } catch (err) {
+      console.error('Failed to load friend overlay data:', err);
+    } finally {
+      setLoading(false);
     }
-
-    setFriendOverlayData(overlay);
-    setLoading(false);
   }, [token, loadFriendVisited]);
 
   const clearCache = useCallback(() => {
