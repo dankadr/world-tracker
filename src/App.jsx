@@ -316,8 +316,15 @@ export default function App() {
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
+    } else {
+      const countryKey = `world:${countryCode}`;
+      if (xpAwarded.current.has(countryKey)) {
+        removeXp(xpRules.VISIT_COUNTRY, 'unvisit_country', 'world');
+        xpAwarded.current.delete(countryKey);
+        localStorage.setItem('swiss-tracker-xp-awarded', JSON.stringify([...xpAwarded.current]));
+      }
     }
-  }, [toggleWorldCountry, worldVisited, grantXpOnce, xpRules]);
+  }, [toggleWorldCountry, worldVisited, grantXpOnce, removeXp, xpRules, xpAwarded]);
 
   // Friends state
   const { friends, pendingCount } = useFriends();
