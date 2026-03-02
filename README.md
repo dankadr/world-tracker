@@ -94,6 +94,24 @@ docker compose up --build
 
 Open [http://localhost:8088](http://localhost:8088) in your browser.
 
+## Running Tests
+
+### Frontend (Vitest)
+
+```bash
+npm test
+```
+
+### Backend (pytest)
+
+```bash
+# Install test dependencies (once)
+pip install -r backend/requirements-dev.txt
+
+# Run the test suite
+cd backend && pytest -v
+```
+
 ## Deploy to Vercel
 
 ### 1. Set up Neon PostgreSQL
