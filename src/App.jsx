@@ -88,9 +88,7 @@ function AchievementToasts() {
 
     // Revoke XP for lost achievements
     const lostIds = [...prevUnlocked.current].filter((id) => !currentUnlocked.includes(id));
-    for (const _id of lostIds) {
-      removeXp(xpRules.UNLOCK_ACHIEVEMENT, 'lose_achievement');
-    }
+    lostIds.forEach(() => removeXp(xpRules.UNLOCK_ACHIEVEMENT, 'lose_achievement'));
 
     // Always sync prevUnlocked & seen with the current state so that
     // achievements lost after unmarking a region/country are removed.
