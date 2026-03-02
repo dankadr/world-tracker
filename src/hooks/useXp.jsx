@@ -153,6 +153,27 @@ export function XpProvider({ children }) {
     }
   }, [totalXp, userId, isLoggedIn, token]);
 
+  const removeXp = useCallback((amount, reason, trackerId = null) => {
+    if (amount <= 0) return;
+
+    setTotalXp((prev) => {
+      const next = Math.max(0, prev - amount);
+      saveXp(userId, next);
+
+      // Log locally with negative amount for audit
+      const log = loadXpLog(userId);
+      log.push({ amount: -amount, reason, trackerId, ts: Date.now() });
+      saveXpLog(userId, log);
+
+      return next;
+    });
+
+    // Sync to server (negative amount)
+    if (isLoggedIn && token) {
+      addXpRemote(token, -amount, reason, trackerId);
+    }
+  }, [userId, isLoggedIn, token]);
+
   const dismissNotification = useCallback((id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
@@ -165,6 +186,7 @@ export function XpProvider({ children }) {
     currentXp: levelInfo.currentXp,
     nextLevelXp: levelInfo.nextLevelXp,
     addXp,
+    removeXp,
     notifications,
     dismissNotification,
     XP_RULES,
@@ -187,6 +209,7 @@ export default function useXp() {
       currentXp: 0,
       nextLevelXp: 50,
       addXp: () => {},
+      removeXp: () => {},
       notifications: [],
       dismissNotification: () => {},
       XP_RULES,

@@ -1667,10 +1667,10 @@ async def add_user_xp(
     db: AsyncSession = Depends(get_db),
 ):
     """Add XP for the current user and log the transaction."""
-    if body.amount <= 0:
-        raise HTTPException(400, "Amount must be positive")
-    if body.amount > 500:
-        raise HTTPException(400, "Amount too large")
+    if body.amount == 0:
+        raise HTTPException(400, "Amount must be non-zero")
+    if body.amount < -500 or body.amount > 500:
+        raise HTTPException(400, "Amount out of range")
 
     result = await db.execute(select(User).where(User.id == user.id))
     db_user = result.scalar_one_or_none()
@@ -1678,7 +1678,7 @@ async def add_user_xp(
         raise HTTPException(404, "User not found")
 
     old_xp = db_user.xp or 0
-    new_xp = old_xp + body.amount
+    new_xp = max(0, old_xp + body.amount)
     new_level_info = _level_from_xp(new_xp)
 
     db_user.xp = new_xp

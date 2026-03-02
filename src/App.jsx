@@ -54,7 +54,7 @@ function AchievementToasts() {
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
-  const { addXp, XP_RULES: xpRules } = useXp();
+  const { addXp, removeXp, XP_RULES: xpRules } = useXp();
 
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
@@ -86,12 +86,18 @@ function AchievementToasts() {
       setToasts((prev) => [...prev, ...newToasts]);
     }
 
+    // Revoke XP for lost achievements
+    const lostIds = [...prevUnlocked.current].filter((id) => !currentUnlocked.includes(id));
+    for (const _id of lostIds) {
+      removeXp(xpRules.UNLOCK_ACHIEVEMENT, 'lose_achievement');
+    }
+
     // Always sync prevUnlocked & seen with the current state so that
     // achievements lost after unmarking a region/country are removed.
     // This lets them re-trigger a toast if re-earned later.
     prevUnlocked.current = new Set(currentUnlocked);
     localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
-  }, [seenKey, userId, addXp, xpRules]);
+  }, [seenKey, userId, addXp, removeXp, xpRules]);
 
   useEffect(() => {
     checkAchievements();
@@ -147,7 +153,7 @@ export default function App() {
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading: regionsLoading } = useVisitedRegions(countryId);
   const { visited: worldVisited, toggleCountry: toggleWorldCountry, isLoading: worldLoading } = useVisitedCountries();
   const isDataLoading = regionsLoading || worldLoading;
-  const { addXp, XP_RULES: xpRules } = useXp();
+  const { addXp, removeXp, XP_RULES: xpRules } = useXp();
   const {
     items: bucketListItems,
     addToWishlist,
@@ -204,8 +210,22 @@ export default function App() {
         localStorage.setItem('swiss-tracker-first-visit-trackers', JSON.stringify([...firstVisitTrackers.current]));
         addXp(xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
       }
+    } else {
+      // Reverse region visit XP
+      const regionKey = `${countryId}:${regionId}`;
+      if (xpAwarded.current.has(regionKey)) {
+        removeXp(xpRules.VISIT_REGION, 'unvisit_region', countryId);
+        xpAwarded.current.delete(regionKey);
+        localStorage.setItem('swiss-tracker-xp-awarded', JSON.stringify([...xpAwarded.current]));
+      }
+      // Reverse first-tracker-visit XP if this was the last visited region
+      if (visited.size === 1 && firstVisitTrackers.current.has(countryId)) {
+        removeXp(xpRules.FIRST_TRACKER_VISIT, 'unvisit_first_tracker', countryId);
+        firstVisitTrackers.current.delete(countryId);
+        localStorage.setItem('swiss-tracker-first-visit-trackers', JSON.stringify([...firstVisitTrackers.current]));
+      }
     }
-  }, [toggle, visited, grantXpOnce, addXp, xpRules, countryId]);
+  }, [toggle, visited, grantXpOnce, addXp, removeXp, xpRules, countryId, xpAwarded]);
 
   const handleToggleWishlist = useCallback((regionId) => {
     const wasWishlisted = regionWishlist.has(regionId);
