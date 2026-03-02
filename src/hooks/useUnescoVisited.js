@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { invalidateBulkCache } from '../utils/api';
+import { emitVisitedChange } from '../utils/events';
 
 const TRACKER_ID = 'unesco';
 
@@ -162,6 +163,7 @@ export default function useUnescoVisited() {
             invalidateBulkCache(token);
           }, DEBOUNCE_MS);
         }
+        emitVisitedChange();
         return next;
       });
     },

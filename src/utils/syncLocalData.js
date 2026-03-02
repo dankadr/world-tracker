@@ -15,6 +15,7 @@
  */
 
 import { invalidateBulkCache } from './api';
+import { emitVisitedChange } from './events';
 
 const ANON_PREFIX = 'swiss-tracker-';
 const USER_PREFIX_RE = /^swiss-tracker-u\d+-/;
@@ -225,6 +226,7 @@ export async function syncLocalDataToServer(token, userId) {
 
     // Bust the bulk cache so hooks re-fetch the fresh merged data
     invalidateBulkCache(token);
+    emitVisitedChange();
 
     console.log('[sync] Anonymous local data synced successfully');
     return true;

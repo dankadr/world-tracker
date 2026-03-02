@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef, createContext, useContext } f
 import { useAuth } from '../context/AuthContext';
 import { XP_RULES, levelFromXp } from '../utils/xpSystem';
 
+const LEGACY_AWARDED_KEY = 'swiss-tracker-xp-awarded';
+
 // --------------- localStorage helpers ---------------
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -34,11 +36,40 @@ function saveXpLog(userId, log) {
 }
 
 function loadGrantedKeys(userId) {
+  const keys = new Set();
+
   try {
     const raw = localStorage.getItem(storagePrefix(userId) + 'xp-granted-keys');
-    if (raw) return new Set(JSON.parse(raw));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((k) => keys.add(k));
+      }
+    }
   } catch { /* ignore */ }
-  return new Set();
+
+  let hadLegacy = false;
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_AWARDED_KEY);
+    if (legacyRaw) {
+      hadLegacy = true;
+      const parsed = JSON.parse(legacyRaw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((k) => keys.add(k));
+      }
+    }
+  } catch { /* ignore */ }
+
+  if (hadLegacy) {
+    try {
+      localStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
+    } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(LEGACY_AWARDED_KEY);
+    } catch { /* ignore */ }
+  }
+
+  return keys;
 }
 
 function saveGrantedKeys(userId, keys) {
@@ -85,12 +116,13 @@ export function XpProvider({ children }) {
   const prevLevelRef = useRef(null);
   const grantedKeysRef = useRef(loadGrantedKeys(userId));
 
-  // When user changes, reload XP and granted-keys for the new user
-  if (userId !== currentUserId) {
+  // When user changes, reload XP and granted-keys for the new user.
+  useEffect(() => {
+    if (userId === currentUserId) return;
     setCurrentUserId(userId);
     setTotalXp(loadXp(userId));
     grantedKeysRef.current = loadGrantedKeys(userId);
-  }
+  }, [userId, currentUserId]);
 
   // Sync from server when logged in
   useEffect(() => {

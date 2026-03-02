@@ -4,6 +4,7 @@ import { countryList } from '../data/countries';
 import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils/api';
 import { cacheGet, cacheGetStale } from '../utils/cache';
 import { addToBatch } from '../utils/batchQueue';
+import { emitVisitedChange } from '../utils/events';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -374,6 +375,7 @@ export default function useVisitedRegions(countryId) {
         if (isLoggedIn && token) {
           addToBatch('region_toggle', { country_id: countryId, region: regionId, action }, token);
         }
+        emitVisitedChange();
         return next;
       });
     },
@@ -432,6 +434,7 @@ export default function useVisitedRegions(countryId) {
     setDatesState({});
     setNotesState({});
     setWishlist(emptyWishlist);
+    emitVisitedChange();
   }, [countryId, isLoggedIn, token, userId]);
 
   const toggleWishlist = useCallback(
@@ -473,6 +476,7 @@ export default function useVisitedRegions(countryId) {
     setDatesState({});
     setNotesState({});
     setWishlist(emptyWishlist);
+    emitVisitedChange();
   }, [isLoggedIn, token, userId]);
 
   return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading };
