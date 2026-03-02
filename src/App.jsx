@@ -54,7 +54,7 @@ function AchievementToasts() {
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
-  const { addXp, XP_RULES: xpRules } = useXp();
+  const { grantXpOnce, XP_RULES: xpRules } = useXp();
 
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
@@ -79,8 +79,8 @@ function AchievementToasts() {
     if (newlyUnlocked.length > 0) {
       const newToasts = newlyUnlocked.map((id) => {
         const a = achievements.find((x) => x.id === id);
-        // Grant XP for achievement unlock
-        addXp(xpRules.UNLOCK_ACHIEVEMENT, 'unlock_achievement');
+        // Grant XP once per achievement (keyed by achievement id — never double-awarded)
+        grantXpOnce(`achievement:${id}`, xpRules.UNLOCK_ACHIEVEMENT, 'unlock_achievement');
         return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
       });
       setToasts((prev) => [...prev, ...newToasts]);
@@ -91,12 +91,12 @@ function AchievementToasts() {
     // This lets them re-trigger a toast if re-earned later.
     prevUnlocked.current = new Set(currentUnlocked);
     localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
-  }, [seenKey, userId, addXp, xpRules]);
+  }, [seenKey, userId, grantXpOnce, xpRules]);
 
   useEffect(() => {
     checkAchievements();
-    const interval = setInterval(checkAchievements, 10000);
-    return () => clearInterval(interval);
+    window.addEventListener('visitedchange', checkAchievements);
+    return () => window.removeEventListener('visitedchange', checkAchievements);
   }, [checkAchievements]);
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function App() {
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading: regionsLoading } = useVisitedRegions(countryId);
   const { visited: worldVisited, toggleCountry: toggleWorldCountry, isLoading: worldLoading } = useVisitedCountries();
   const isDataLoading = regionsLoading || worldLoading;
-  const { addXp, XP_RULES: xpRules } = useXp();
+  const { grantXpOnce, XP_RULES: xpRules } = useXp();
   const {
     items: bucketListItems,
     addToWishlist,
@@ -166,46 +166,16 @@ export default function App() {
     [bucketListItems, countryId]
   );
 
-  // Track which trackers have been visited for first-visit XP
-  const trackerFirstVisitRef = useRef(() => {
-    try {
-      const raw = localStorage.getItem('swiss-tracker-first-visit-trackers');
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch { return new Set(); }
-  });
-  const firstVisitTrackers = useRef(trackerFirstVisitRef.current());
-
-  // Track which regions/countries have ever received XP to prevent farming
-  const xpAwardedRef = useRef(() => {
-    try {
-      const raw = localStorage.getItem('swiss-tracker-xp-awarded');
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch { return new Set(); }
-  });
-  const xpAwarded = useRef(xpAwardedRef.current());
-
-  const grantXpOnce = useCallback((key, amount, reason, trackerId) => {
-    if (xpAwarded.current.has(key)) return;
-    xpAwarded.current.add(key);
-    localStorage.setItem('swiss-tracker-xp-awarded', JSON.stringify([...xpAwarded.current]));
-    addXp(amount, reason, trackerId);
-  }, [addXp]);
-
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
     toggle(regionId);
     if (!wasVisited) {
-      // Grant region visit XP (once per region, ever)
-      grantXpOnce(`${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
-      // Check first tracker visit
-      if (!firstVisitTrackers.current.has(countryId)) {
-        firstVisitTrackers.current.add(countryId);
-        localStorage.setItem('swiss-tracker-first-visit-trackers', JSON.stringify([...firstVisitTrackers.current]));
-        addXp(xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
-      }
+      grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
+      grantXpOnce(`first_tracker:${countryId}`, xpRules.FIRST_TRACKER_VISIT, 'first_tracker_visit', countryId);
     }
-  }, [toggle, visited, grantXpOnce, addXp, xpRules, countryId]);
+    window.dispatchEvent(new CustomEvent('visitedchange'));
+  }, [toggle, visited, grantXpOnce, xpRules, countryId]);
 
   const handleToggleWishlist = useCallback((regionId) => {
     const wasWishlisted = regionWishlist.has(regionId);
@@ -299,6 +269,7 @@ export default function App() {
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
     }
+    window.dispatchEvent(new CustomEvent('visitedchange'));
   }, [toggleWorldCountry, worldVisited, grantXpOnce, xpRules]);
 
   // Friends state
