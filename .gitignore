@@ -56,7 +56,6 @@ htmlcov/
 
 # Claude / GitHub prompts
 .claude/
-.github/
 .vercel
 
 # Git worktrees
