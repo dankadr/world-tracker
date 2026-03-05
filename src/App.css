@@ -4708,3 +4708,94 @@ body {
   flex: 1;
   overflow-y: auto;
 }
+
+/* ======== Bottom Tab Bar layout adjustments ======== */
+
+/* CSS custom property for tab bar height (used by map controls) */
+:root {
+  --tab-bar-height: 56px;
+  --tab-bar-safe-height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Bottom sheet sits above the tab bar */
+.app.is-mobile .mobile-bottom-sheet {
+  bottom: var(--tab-bar-safe-height);
+}
+
+/* Map controls shift up to stay above the tab bar on mobile */
+@media (max-width: 768px) {
+  .app.is-mobile .export-btn:not(.map-controls-cluster .export-btn),
+  .app.is-mobile .map-controls-cluster {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 12px);
+  }
+
+  .app.is-mobile .layer-control {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 60px);
+  }
+
+  .app.is-mobile .swiss-map .leaflet-control-zoom {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 108px) !important;
+  }
+
+  .app.is-mobile .friend-overlay-legend {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 12px);
+  }
+
+  /* World floating stats — shift up for tab bar (desktop shows this, mobile hides it) */
+  .app.is-mobile .world-floating-stats {
+    display: none;
+  }
+}
+
+/* ======== Tab Screen Panels ======== */
+
+.tab-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--tab-bar-safe-height);
+  z-index: 300;
+  background: var(--body-bg, #faf6f0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Status bar safe area at top */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.dark .tab-screen {
+  background: var(--body-bg, #1e1612);
+}
+
+.tab-screen-placeholder {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary, #9a8070);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.tab-screen-placeholder-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+/* Map container — add bottom padding on mobile to avoid tab bar overlap */
+@media (max-width: 768px) {
+  .app.is-mobile .map-container {
+    padding-bottom: var(--tab-bar-safe-height);
+  }
+}
+
+/* Toast container — shift up above tab bar on mobile */
+@media (max-width: 768px) {
+  .toast-container {
+    bottom: calc(var(--tab-bar-safe-height) + 16px);
+  }
+}

@@ -36,6 +36,8 @@ import { countryList } from './data/countries';
 import worldData from './data/world.json';
 import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
+import BottomTabBar from './components/BottomTabBar';
+import { useNavigation } from './context/NavigationContext';
 
 function parseShareHash() {
   try {
@@ -327,12 +329,20 @@ export default function App() {
   }, []);
 
   const handleOpenFriends = useCallback(() => {
-    setShowFriends(true);
-  }, []);
+    if (isMobile) {
+      switchTab('social');
+    } else {
+      setShowFriends(true);
+    }
+  }, [isMobile, switchTab]);
 
   const handleCloseFriends = useCallback(() => {
-    setShowFriends(false);
-  }, []);
+    if (isMobile) {
+      switchTab('map');
+    } else {
+      setShowFriends(false);
+    }
+  }, [isMobile, switchTab]);
   const handleCloseBucketList = useCallback(() => setShowBucketList(false), []);
   const handleCloseComparisonStats = useCallback(() => setShowComparisonStats(false), []);
 
@@ -362,7 +372,11 @@ export default function App() {
           visited: friendWorldCountries,
           visitedRegions: countryRegions,
         });
-        setShowFriends(false);
+        if (isMobile) {
+          switchTab('map');
+        } else {
+          setShowFriends(false);
+        }
       }
     } catch (err) {
       console.error('Failed to load comparison data:', err);
@@ -470,6 +484,7 @@ export default function App() {
   });
 
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
+  const { activeTab, switchTab } = useNavigation();
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
   const isWorldView = view === 'world' && !isShareMode;
   const longPressTimerRef = useRef(null);
@@ -543,43 +558,45 @@ export default function App() {
       ) : isWorldView ? (
         <>
           {isMobile ? (
-            <MobileBottomSheet
-              expandTo={sheetExpandTo}
-              onSnapChange={handleSheetSnap}
-              peekContent={
-                <div className="sheet-peek-header">
-                  <div className="sheet-peek-info">
-                    <span className="sheet-peek-icon">🌍</span>
-                    <div className="sheet-peek-text">
-                      <span className="sheet-peek-title">{worldVisited.size} / {worldData.features.length} countries</span>
-                      <span className="sheet-peek-subtitle">{Math.round((worldVisited.size / worldData.features.length) * 100)}% of the world</span>
+            activeTab === 'map' && (
+              <MobileBottomSheet
+                expandTo={sheetExpandTo}
+                onSnapChange={handleSheetSnap}
+                peekContent={
+                  <div className="sheet-peek-header">
+                    <div className="sheet-peek-info">
+                      <span className="sheet-peek-icon">🌍</span>
+                      <div className="sheet-peek-text">
+                        <span className="sheet-peek-title">{worldVisited.size} / {worldData.features.length} countries</span>
+                        <span className="sheet-peek-subtitle">{Math.round((worldVisited.size / worldData.features.length) * 100)}% of the world</span>
+                      </div>
+                    </div>
+                    <div className="sheet-peek-progress">
+                      <div
+                        className="sheet-peek-progress-fill"
+                        style={{
+                          width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
+                          background: 'linear-gradient(90deg, #c07a30, #e8a84a)',
+                        }}
+                      />
+                    </div>
+                    <div className="sheet-peek-pills">
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
                     </div>
                   </div>
-                  <div className="sheet-peek-progress">
-                    <div
-                      className="sheet-peek-progress-fill"
-                      style={{
-                        width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
-                        background: 'linear-gradient(90deg, #c07a30, #e8a84a)',
-                      }}
-                    />
-                  </div>
-                  <div className="sheet-peek-pills">
-                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
-                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
-                  </div>
-                </div>
-              }
-            >
-              <WorldSidebar
-                visited={worldVisited}
-                onToggle={handleToggleWorldCountry}
-                onExploreCountry={handleExploreCountry}
-                collapsed={false}
-                onOpenFriends={handleOpenFriends}
-                friendsPendingCount={pendingCount}
-              />
-            </MobileBottomSheet>
+                }
+              >
+                <WorldSidebar
+                  visited={worldVisited}
+                  onToggle={handleToggleWorldCountry}
+                  onExploreCountry={handleExploreCountry}
+                  collapsed={false}
+                  onOpenFriends={handleOpenFriends}
+                  friendsPendingCount={pendingCount}
+                />
+              </MobileBottomSheet>
+            )
           ) : (
             <WorldSidebar
               visited={worldVisited}
@@ -652,6 +669,7 @@ export default function App() {
       ) : (
         <>
           {isMobile ? (
+            activeTab === 'map' && (
             <MobileBottomSheet
               expandTo={sheetExpandTo}
               onSnapChange={handleSheetSnap}
@@ -707,6 +725,7 @@ export default function App() {
                 friendsPendingCount={pendingCount}
               />
             </MobileBottomSheet>
+            )
           ) : (
             <Sidebar
               country={country}
@@ -815,15 +834,42 @@ export default function App() {
         </>
       )}
       {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
-      {showFriends && (
+
+      {/* Mobile tab screens — full-screen overlays over the map */}
+      {isMobile && !isShareMode && activeTab === 'social' && (
+        <div className="tab-screen">
+          <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
+        </div>
+      )}
+      {isMobile && !isShareMode && activeTab === 'explore' && (
+        <div className="tab-screen tab-screen-placeholder">
+          <span className="tab-screen-placeholder-icon">🗺️</span>
+          <p>Explore — coming in Phase 2</p>
+        </div>
+      )}
+      {isMobile && !isShareMode && activeTab === 'profile' && (
+        <div className="tab-screen tab-screen-placeholder">
+          <span className="tab-screen-placeholder-icon">👤</span>
+          <p>Profile — coming in Phase 2</p>
+        </div>
+      )}
+
+      {/* Desktop-only Friends modal (mobile uses Social tab) */}
+      {!isMobile && showFriends && (
         <SwipeableModal
           onClose={handleCloseFriends}
           className="friends-modal"
-          height={isMobile ? '80vh' : '70vh'}
+          height="70vh"
         >
           <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
         </SwipeableModal>
       )}
+
+      {/* Bottom tab bar (mobile only, not in share mode) */}
+      {isMobile && !isShareMode && (
+        <BottomTabBar activeTab={activeTab} onTabChange={switchTab} socialBadge={pendingCount} />
+      )}
+
       {showBucketList && (
         <SwipeableModal
           onClose={handleCloseBucketList}
