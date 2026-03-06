@@ -36,7 +36,40 @@ Add a "Games" section to the app where users can play geography quiz games using
 - User guesses canton names
 - Useful for Swiss-focused power users
 
-### 4. Custom Region Quiz *(stretch goal)*
+### 4. Capital City Quiz
+- Show a country name (or highlight a country) — user types its capital city
+- Reverse mode: show the capital name — user guesses the country
+- Variants: all capitals, only visited countries' capitals, hardest capitals only
+
+### 5. Flag Quiz
+- Display a country flag, user types or selects the matching country name
+- Reverse mode: show a country name, user picks the correct flag from 4 options
+- Difficulty affects flag similarity (easy = very distinct flags, hard = similar-looking flags)
+
+### 6. Place the Pin
+- A country or city name is shown as text (no map highlight)
+- User clicks anywhere on the map to place a pin where they think it is
+- Score based on distance from correct location: closer = more points
+- Fun for cities too (e.g., "Where is Ulaanbaatar?")
+- Shows the correct location and distance after each guess
+
+### 7. Neighbor Challenge
+- A country is highlighted — user must name ALL of its neighboring countries
+- Points per correct neighbor; penalty for wrong guesses
+- Variants: easy (border count shown as hint), hard (no hints)
+
+### 8. Daily Challenge
+- A fixed 10-question quiz that resets every 24 hours (same questions for all users, Wordle-style)
+- Leaderboard shows how friends scored on the same daily set
+- Streak counter: play every day to build a daily streak
+- Questions mix multiple game types (one flag, one capital, one blank map, etc.)
+
+### 9. Streak Mode (Survival)
+- Answer correctly to keep going; first wrong answer ends the game
+- Increasing difficulty as streak grows (easy countries first, obscure ones later)
+- Global leaderboard for longest streaks
+
+### 10. Custom Region Quiz *(stretch goal)*
 - User selects a continent or custom region (e.g., "Europe only", "South America only")
 - Only regions within that scope appear in the quiz
 
@@ -132,7 +165,13 @@ Add a "Games" section to the app where users can play geography quiz games using
 | Swiss Expert | 100% on Swiss Cantons quiz |
 | Home Turf | 100% on US States quiz |
 | No Peeking | Complete Hard mode with no skips |
-| Globetrotter Quiz | Complete all 4 game modes at least once |
+| Globetrotter Quiz | Complete all game modes at least once |
+| Capital Expert | 100% on Capital City quiz |
+| Flag Master | 100% on Flag quiz |
+| Dead On | Place a pin within 50km of the correct location |
+| Good Neighbor | Name all neighbors of any country correctly |
+| Daily Devotion | Complete the Daily Challenge 7 days in a row |
+| Survivor | Reach a streak of 30 in Streak Mode |
 
 ---
 
@@ -143,8 +182,12 @@ Add a "Games" section to the app where users can play geography quiz games using
 | `src/components/GamesPanel.jsx` | Game mode selection hub |
 | `src/components/GameScreen.jsx` | Active quiz UI (map + input + score bar) |
 | `src/components/GameResultScreen.jsx` | End-of-game summary and actions |
-| `src/components/GameMapOverlay.jsx` | Blank map rendering with highlight logic |
-| `src/hooks/useGeographyGame.js` | Game state, scoring, round management |
+| `src/components/GameMapOverlay.jsx` | Blank map rendering with highlight + pin-drop logic |
+| `src/components/FlagQuizCard.jsx` | Flag image display + multiple choice or text input |
+| `src/components/PlacePinGame.jsx` | Click-to-place-pin mechanic with distance scoring |
+| `src/components/DailyChallenge.jsx` | Daily quiz card with streak counter and results |
+| `src/hooks/useGeographyGame.js` | Game state, scoring, round management (all modes) |
+| `src/hooks/useDailyChallenge.js` | Daily question generation (seeded by date), streak tracking |
 
 ---
 
@@ -197,10 +240,44 @@ GET  /api/games/leaderboard/{mode}  # Top scores for a mode (future)
 ---
 
 ## Testing Checklist
+
+**Blank Map Quiz (Countries / States / Cantons)**
 - [ ] All 3 map types render correctly in game mode (labels hidden, regions clickable)
 - [ ] Correct answer triggers green highlight and advances to next region
 - [ ] Wrong answer triggers red highlight and shows correct name
 - [ ] Timer counts down correctly in Medium and Hard modes
+- [ ] Fuzzy name matching accepts common variations (e.g., "USA" → "United States")
+
+**Capital City Quiz**
+- [ ] Country → capital and capital → country modes both work
+- [ ] Correct capital accepted regardless of diacritic variations (e.g., "Bogota" = "Bogotá")
+
+**Flag Quiz**
+- [ ] Flags render clearly at all screen sizes
+- [ ] Multiple-choice options are plausible (no obviously wrong choices)
+- [ ] Reverse mode (country → flag) works correctly
+
+**Place the Pin**
+- [ ] Pin placement registers correctly on click/tap
+- [ ] Distance calculation is accurate
+- [ ] Score scales correctly with distance (0km = 1000pts, >2000km = 0pts)
+- [ ] Correct location marker shown after guess
+
+**Neighbor Challenge**
+- [ ] All neighbors of landlocked/island countries handled correctly
+- [ ] Disputed territories / edge cases don't crash the game
+
+**Daily Challenge**
+- [ ] Same questions generated for all users on the same date
+- [ ] Daily streak increments and resets correctly
+- [ ] Completing today's challenge disables the play button until tomorrow
+
+**Streak Mode**
+- [ ] First wrong answer ends the game immediately
+- [ ] Difficulty ramps up as streak grows
+- [ ] Streak count persists in localStorage between sessions
+
+**General**
 - [ ] Score tallied correctly at end of game
 - [ ] Result screen shows missed regions on map
 - [ ] "Add to Bucket List" bulk action works from result screen
@@ -208,7 +285,6 @@ GET  /api/games/leaderboard/{mode}  # Top scores for a mode (future)
 - [ ] High scores persist between sessions (localStorage)
 - [ ] Works in guest mode
 - [ ] Keyboard navigation (Enter to submit, Tab to skip) works
-- [ ] Fuzzy name matching accepts common variations (e.g., "USA" → "United States")
 - [ ] Mobile touch interactions work correctly on map
 
 ---
@@ -218,6 +294,12 @@ GET  /api/games/leaderboard/{mode}  # Top scores for a mode (future)
 - Map game mode (blank map, highlight, click): ~4-5 hours
 - Games panel + UI: ~3-4 hours
 - Game result screen + bucket list integration: ~2-3 hours
+- Capital City quiz: ~2-3 hours
+- Flag quiz: ~3-4 hours
+- Place the Pin (distance scoring + pin UI): ~4-5 hours
+- Neighbor Challenge: ~2-3 hours
+- Daily Challenge + streak tracking: ~3-4 hours
+- Streak / Survival mode: ~2-3 hours
 - Achievements integration: ~1-2 hours
-- Backend high scores (stretch): ~3-4 hours
-- **Total: ~16-22 hours (core), +3-4 hours for backend**
+- Backend high scores + daily leaderboard (stretch): ~4-5 hours
+- **Total: ~33-45 hours (all modes), ~16-22 hours (core map quiz only)**
