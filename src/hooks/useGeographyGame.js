@@ -13,18 +13,32 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
   const [questions] = useState(() => shuffle(pool));
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState({ correct: 0, incorrect: 0, skipped: 0 });
-  const [status, setStatus] = useState('playing');
+  // Fix 2: start as 'finished' immediately when pool is empty
+  const [status, setStatus] = useState(() => pool.length === 0 ? 'finished' : 'playing');
   const [isCorrect, setIsCorrect] = useState(null);
   const [lastCorrectAnswer, setLastCorrectAnswer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const onFinishRef = useRef(onFinish);
   useEffect(() => { onFinishRef.current = onFinish; }, [onFinish]);
 
+  // Fix 2: call onFinish once on mount when pool is empty
+  useEffect(() => {
+    if (pool.length === 0) {
+      onFinishRef.current?.({ correct: 0, incorrect: 0, skipped: 0 });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keep refs to mutable values the timer needs without causing re-registration
   const scoreRef = useRef(score);
   useEffect(() => { scoreRef.current = score; }, [score]);
   const statusRef = useRef(status);
   useEffect(() => { statusRef.current = status; }, [status]);
+
+  // Fix 1: ref to track the reviewing setTimeout so we can clear it on unmount
+  const reviewTimeoutRef = useRef(null);
+  useEffect(() => () => {
+    if (reviewTimeoutRef.current) clearTimeout(reviewTimeoutRef.current);
+  }, []);
 
   // Global countdown timer — use setInterval so it keeps ticking within a single act() call
   useEffect(() => {
@@ -34,6 +48,8 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
         clearInterval(id);
         return;
       }
+      // Fix 3: pause decrement while reviewing
+      if (statusRef.current === 'reviewing') return;
       setTimeLeft(prev => {
         const next = prev - 1;
         if (next <= 0) {
@@ -76,7 +92,8 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
     setIsCorrect(correct);
     setLastCorrectAnswer(correct ? null : question);
     setStatus('reviewing');
-    setTimeout(() => advance(nextScore), 1200);
+    // Fix 1: store timeout ref so it can be cleared on unmount
+    reviewTimeoutRef.current = setTimeout(() => advance(nextScore), 1200);
   }, [status, questions, questionIndex, score, advance]);
 
   const skip = useCallback(() => {
@@ -86,7 +103,8 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
     setIsCorrect(null);
     setLastCorrectAnswer(null);
     setStatus('reviewing');
-    setTimeout(() => advance(nextScore), 1200);
+    // Fix 1: store timeout ref so it can be cleared on unmount
+    reviewTimeoutRef.current = setTimeout(() => advance(nextScore), 1200);
   }, [status, score, advance]);
 
   const finish = useCallback(() => {

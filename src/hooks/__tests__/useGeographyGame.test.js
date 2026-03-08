@@ -96,4 +96,53 @@ describe('useGeographyGame', () => {
     const { result } = renderHook(() => useGeographyGame(POOL, {}));
     expect(result.current.timeLeft).toBeNull();
   });
+
+  // Fix 4a: empty pool → immediately finished
+  it('empty pool starts with status finished', () => {
+    const onFinish = vi.fn();
+    const { result } = renderHook(() => useGeographyGame([], { onFinish }));
+    expect(result.current.status).toBe('finished');
+    expect(result.current.question).toBeNull();
+  });
+
+  it('empty pool calls onFinish on mount with zeroed score', () => {
+    const onFinish = vi.fn();
+    renderHook(() => useGeographyGame([], { onFinish }));
+    expect(onFinish).toHaveBeenCalledWith({ correct: 0, incorrect: 0, skipped: 0 });
+  });
+
+  // Fix 4b: double-submit guard — second call in same tick is ignored
+  it('double submit in same tick only counts one incorrect', () => {
+    const { result } = renderHook(() => useGeographyGame(POOL, {}));
+    act(() => {
+      result.current.submit('xx');
+      result.current.submit('xx'); // second call should be a no-op (status is 'reviewing')
+    });
+    expect(result.current.score.incorrect).toBe(1);
+  });
+
+  // Fix 4c: onFinish receives full { correct, incorrect, skipped } shape
+  it('onFinish receives complete score with correct, incorrect, and skipped counts', () => {
+    const onFinish = vi.fn();
+    const { result } = renderHook(() => useGeographyGame(POOL, { onFinish }));
+
+    // skip first question
+    act(() => { result.current.skip(); });
+    act(() => { vi.advanceTimersByTime(1200); });
+
+    // answer second question incorrectly
+    act(() => { result.current.submit('xx'); });
+    act(() => { vi.advanceTimersByTime(1200); });
+
+    // answer third question correctly
+    act(() => { result.current.submit(result.current.question.id); });
+    act(() => { vi.advanceTimersByTime(1200); });
+
+    expect(result.current.status).toBe('finished');
+    expect(onFinish).toHaveBeenCalledWith({
+      correct: 1,
+      incorrect: 1,
+      skipped: 1,
+    });
+  });
 });
