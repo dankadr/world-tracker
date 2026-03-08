@@ -310,6 +310,9 @@ export default function App() {
     }
   }, [friendsActive, friends]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
+  const { activeTab, switchTab } = useNavigation();
+
   const handleFriendsToggle = useCallback((active) => {
     setFriendsActive(active);
   }, []);
@@ -469,8 +472,6 @@ export default function App() {
     onOpenEasterEggPrompt: handleOpenEasterEggPrompt,
   });
 
-  const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
-  const { activeTab, switchTab } = useNavigation();
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
   const isWorldView = view === 'world' && !isShareMode;
   const longPressTimerRef = useRef(null);
