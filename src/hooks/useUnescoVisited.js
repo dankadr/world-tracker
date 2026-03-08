@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { invalidateBulkCache } from '../utils/api';
+import { emitVisitedChange } from '../utils/events';
 
 const TRACKER_ID = 'unesco';
 
@@ -159,9 +160,10 @@ export default function useUnescoVisited() {
           debounceTimerRef.current = setTimeout(() => {
             saveVisitedRemote(next, token);
             pendingSaveRef.current = null;
-            invalidateBulkCache();
+            invalidateBulkCache(token);
           }, DEBOUNCE_MS);
         }
+        emitVisitedChange();
         return next;
       });
     },

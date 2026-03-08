@@ -1610,11 +1610,13 @@ async def delete_wishlist_item(
 # --------------- XP / Leveling endpoints ---------------
 import math
 
+
 def _xp_for_level(level: int) -> int:
     """XP needed to advance from `level` to level+1."""
     if level <= 1:
         return 0
     return round(50 * math.pow(level, 1.5))
+
 
 def _level_from_xp(total_xp: int) -> dict:
     level = 1
@@ -1638,7 +1640,15 @@ class AddXpRequest(BaseModel):
     tracker_id: str | None = None
 
 
-@app.get("/api/user/xp")
+class XpResponse(BaseModel):
+    total_xp: int
+    level: int
+    current_xp: int
+    next_level_xp: int
+    xp_gained: int | None = None
+
+
+@app.get("/api/user/xp", response_model=XpResponse)
 async def get_user_xp(
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -1652,102 +1662,11 @@ async def get_user_xp(
     total_xp = db_user.xp or 0
     info = _level_from_xp(total_xp)
 
-    return {
-        "total_xp": total_xp,
-        "level": info["level"],
-        "current_xp": info["current_xp"],
-        "next_level_xp": info["next_level_xp"],
-    }
-
-
-@app.post("/api/user/xp")
-async def add_user_xp(
-    body: AddXpRequest,
-    user: CurrentUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Add XP for the current user and log the transaction."""
-    if body.amount <= 0:
-        raise HTTPException(400, "Amount must be positive")
-    if body.amount > 500:
-        raise HTTPException(400, "Amount too large")
-
-    result = await db.execute(select(User).where(User.id == user.id))
-    db_user = result.scalar_one_or_none()
-    if not db_user:
-        raise HTTPException(404, "User not found")
-
-    old_xp = db_user.xp or 0
-    new_xp = old_xp + body.amount
-    new_level_info = _level_from_xp(new_xp)
-
-    db_user.xp = new_xp
-    db_user.level = new_level_info["level"]
-
-    # Log the XP transaction
-    log_entry = XpLog(
-        user_id=user.id,
-        amount=body.amount,
-        reason=body.reason,
-        tracker_id=body.tracker_id,
-    )
-    db.add(log_entry)
-
-    await db.commit()
-
-    return {
-        "total_xp": new_xp,
-        "level": new_level_info["level"],
-        "current_xp": new_level_info["current_xp"],
-        "next_level_xp": new_level_info["next_level_xp"],
-        "xp_gained": body.amount,
-    }
-
-
-class XpResponse(BaseModel):
-    total_xp: int
-    level: int
-    current_xp: int
-    next_level_xp: int
-
-
-class AddXpRequest(BaseModel):
-    amount: int
-    reason: str
-    tracker_id: str | None = None
-
-
-# --------------- XP endpoints ---------------
-@app.get("/api/user/xp", response_model=XpResponse)
-async def get_user_xp(
-    user: CurrentUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get user's current XP, level, and progress."""
-    result = await db.execute(select(User).where(User.id == user.id))
-    db_user = result.scalar_one_or_none()
-    if not db_user:
-        raise HTTPException(404, "User not found")
-
-    total_xp = db_user.xp or 0
-    # Calculate level from XP (xpForLevel(N) = 50 * N^1.5)
-    level = 1
-    cumulative = 0
-    while True:
-        next_xp = round(50 * pow(level + 1, 1.5))
-        if cumulative + next_xp > total_xp:
-            break
-        cumulative += next_xp
-        level += 1
-
-    current_xp = total_xp - cumulative
-    next_level_xp = round(50 * pow(level + 1, 1.5))
-
     return XpResponse(
         total_xp=total_xp,
-        level=level,
-        current_xp=current_xp,
-        next_level_xp=next_level_xp,
+        level=info["level"],
+        current_xp=info["current_xp"],
+        next_level_xp=info["next_level_xp"],
     )
 
 
@@ -1757,49 +1676,42 @@ async def add_user_xp(
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Add XP to user account."""
-    if body.amount <= 0:
-        raise HTTPException(400, "Amount must be positive")
+    """Apply a signed XP delta for the current user and log the effective change."""
+    if body.amount == 0:
+        raise HTTPException(400, "Amount must be non-zero")
+    if body.amount < -500 or body.amount > 500:
+        raise HTTPException(400, "Amount out of range")
 
     result = await db.execute(select(User).where(User.id == user.id))
     db_user = result.scalar_one_or_none()
     if not db_user:
         raise HTTPException(404, "User not found")
 
-    # Update user XP
-    db_user.xp = (db_user.xp or 0) + body.amount
+    old_xp = db_user.xp or 0
+    new_xp = max(0, old_xp + body.amount)
+    applied_delta = new_xp - old_xp
+    new_level_info = _level_from_xp(new_xp)
 
-    # Calculate new level
-    total_xp = db_user.xp
-    level = 1
-    cumulative = 0
-    while True:
-        next_xp = round(50 * pow(level + 1, 1.5))
-        if cumulative + next_xp > total_xp:
-            break
-        cumulative += next_xp
-        level += 1
+    db_user.xp = new_xp
+    db_user.level = new_level_info["level"]
 
-    db_user.level = level
-
-    # Log the XP entry
-    xp_log = XpLog(
+    # Log the effective XP transaction (can be 0 when negative delta is clamped at 0 total XP).
+    log_entry = XpLog(
         user_id=user.id,
-        amount=body.amount,
+        amount=applied_delta,
         reason=body.reason,
         tracker_id=body.tracker_id,
     )
-    db.add(xp_log)
+    db.add(log_entry)
+
     await db.commit()
 
-    current_xp = total_xp - cumulative
-    next_level_xp = round(50 * pow(level + 1, 1.5))
-
     return XpResponse(
-        total_xp=total_xp,
-        level=level,
-        current_xp=current_xp,
-        next_level_xp=next_level_xp,
+        total_xp=new_xp,
+        level=new_level_info["level"],
+        current_xp=new_level_info["current_xp"],
+        next_level_xp=new_level_info["next_level_xp"],
+        xp_gained=applied_delta,
     )
 
 
