@@ -15,7 +15,9 @@ export default function GameResultScreen({ title, score, timeTaken, isNewBest, o
       <p className="game-result-title">{title} — Results</p>
 
       <div className="game-result-score">{score.correct}/{total}</div>
-      <p className="game-result-pct">{pct}% correct · {formatTime(timeTaken ?? 0)}</p>
+      <p className="game-result-pct">
+        {pct}% correct{timeTaken !== null ? ` · ${formatTime(timeTaken)}` : ''}
+      </p>
 
       <div className="game-result-breakdown">
         <div className="game-result-stat">
