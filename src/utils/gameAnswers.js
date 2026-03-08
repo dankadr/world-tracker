@@ -36,18 +36,10 @@ export function checkTextAnswer(userInput, correctAnswer) {
   return false;
 }
 
-function isSubsequence(query, str) {
-  let qi = 0;
-  for (let i = 0; i < str.length && qi < query.length; i++) {
-    if (str[i] === query[qi]) qi++;
-  }
-  return qi === query.length;
-}
-
 export function fuzzyMatches(input, candidates, key = 'name', limit = 5) {
   if (!input.trim()) return [];
   const q = normalizeAnswer(input);
   return candidates
-    .filter(c => isSubsequence(q, normalizeAnswer(c[key])))
+    .filter(c => normalizeAnswer(c[key]).includes(q))
     .slice(0, limit);
 }

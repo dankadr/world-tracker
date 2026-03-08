@@ -25,8 +25,13 @@ describe('fuzzyMatches', () => {
     { id: 'es', name: 'Spain' },
     { id: 'gf', name: 'French Guiana' },
   ];
-  it('returns matches containing input', () => {
+  it('returns matches containing input as substring', () => {
     const results = fuzzyMatches('fran', countries);
+    expect(results.map(c => c.id)).toContain('fr');
+    expect(results.map(c => c.id)).not.toContain('gf');
+  });
+  it('matches both France and French Guiana for "fr"', () => {
+    const results = fuzzyMatches('fr', countries);
     expect(results.map(c => c.id)).toContain('fr');
     expect(results.map(c => c.id)).toContain('gf');
   });
