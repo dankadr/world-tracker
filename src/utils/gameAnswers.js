@@ -18,7 +18,8 @@ const ALIASES = {
 };
 
 export function normalizeAnswer(str) {
-  return str
+  if (str == null) return '';
+  return String(str)
     .trim()
     .toLowerCase()
     .normalize('NFD')
@@ -31,8 +32,6 @@ export function checkTextAnswer(userInput, correctAnswer) {
   if (normalized === correct) return true;
   const aliasTarget = ALIASES[normalized];
   if (aliasTarget && aliasTarget === correct) return true;
-  const reversedAlias = ALIASES[correct];
-  if (reversedAlias && reversedAlias === normalized) return true;
   return false;
 }
 

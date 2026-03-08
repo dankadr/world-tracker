@@ -18,6 +18,12 @@ describe('checkTextAnswer', () => {
   it('accepts alias Czech Republic for Czechia', () => expect(checkTextAnswer('Czech Republic', 'Czechia')).toBe(true));
 });
 
+describe('normalizeAnswer edge cases', () => {
+  it('returns empty string for null', () => expect(normalizeAnswer(null)).toBe(''));
+  it('returns empty string for undefined', () => expect(normalizeAnswer(undefined)).toBe(''));
+  it('converts numbers to string', () => expect(normalizeAnswer(42)).toBe('42'));
+});
+
 describe('fuzzyMatches', () => {
   const countries = [
     { id: 'fr', name: 'France' },
@@ -34,6 +40,10 @@ describe('fuzzyMatches', () => {
     const results = fuzzyMatches('fr', countries);
     expect(results.map(c => c.id)).toContain('fr');
     expect(results.map(c => c.id)).toContain('gf');
+  });
+  it('returns empty for candidates missing the key', () => {
+    const badCandidates = [{ id: 'fr' }]; // no 'name' property
+    expect(fuzzyMatches('france', badCandidates)).toHaveLength(0);
   });
   it('returns empty for no matches', () => expect(fuzzyMatches('xyz', countries)).toHaveLength(0));
   it('returns empty for empty input', () => expect(fuzzyMatches('', countries)).toHaveLength(0));
