@@ -4677,7 +4677,7 @@ body {
   left: 0;
   right: 0;
   bottom: var(--tab-bar-safe-height);
-  z-index: 300;
+  z-index: 1100; /* above Leaflet controls (1000) and all Leaflet panes */
   background: var(--body-bg, #faf6f0);
   display: flex;
   flex-direction: column;
