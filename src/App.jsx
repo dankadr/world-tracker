@@ -626,7 +626,6 @@ export default function App() {
             <WorldMap
               visited={worldVisited}
               onToggle={handleToggleWorldCountry}
-              onExploreCountry={handleExploreCountry}
               friendsActive={friendsActive}
               onFriendsToggle={handleFriendsToggle}
               friendOverlayData={friendOverlayData}

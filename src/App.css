@@ -2603,17 +2603,6 @@ body {
     height: 18px;
   }
 
-  /* Map popup */
-  .world-popup-toggle,
-  .world-popup-explore {
-    padding: 10px 16px;
-    min-height: 44px;
-    font-size: 0.8rem;
-  }
-
-  .world-popup-name {
-    font-size: 1rem;
-  }
 }
 
 /* ---- Small Mobile (≤ 380px) ---- */
@@ -2881,11 +2870,6 @@ body {
     padding: 10px 24px;
   }
 
-  .world-popup-toggle,
-  .world-popup-explore {
-    min-height: 44px;
-    padding: 10px 16px;
-  }
 }
 
 /* ---- Landscape mobile ---- */
@@ -4312,7 +4296,13 @@ body {
 }
 
 .world-quick-links .list-heading {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.world-tracker-hint {
+  font-size: 0.72rem;
+  color: #8e99a4;
+  margin: 0 0 10px;
 }
 
 .world-tracker-grid {
@@ -4451,79 +4441,6 @@ body {
   padding: 4px 0 4px 16px;
 }
 
-/* World Map Country Popup */
-.world-country-popup .leaflet-popup-content-wrapper {
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-}
-
-.world-popup-content {
-  min-width: 160px;
-  padding: 4px 0;
-}
-
-.world-popup-name {
-  display: block;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-}
-
-.world-popup-status {
-  display: inline-block;
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #7f8c8d;
-  margin-bottom: 8px;
-}
-
-.world-popup-status.visited {
-  background: rgba(216, 150, 72, 0.12);
-  color: #d89648;
-}
-
-.world-popup-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.world-popup-toggle {
-  padding: 5px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.03);
-  color: #2c3e50;
-  font-size: 0.75rem;
-  font-family: inherit;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.world-popup-toggle:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.world-popup-explore {
-  padding: 6px 10px;
-  border: none;
-  background: linear-gradient(135deg, #c07a30, #a06020);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.world-popup-explore:hover {
-  background: linear-gradient(135deg, #a06020, #8a5018);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(192, 122, 48, 0.3);
-}
 
 /* World Floating Stats */
 .world-floating-stats .stats-label {
