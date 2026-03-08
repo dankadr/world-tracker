@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
 import { cacheGet, cacheGetStale } from '../utils/cache';
 import { addToBatch } from '../utils/batchQueue';
+import { emitVisitedChange } from '../utils/events';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -160,6 +161,7 @@ export default function useVisitedCountries() {
         if (isLoggedIn && token) {
           addToBatch('world_toggle', { country: countryCode, action }, token);
         }
+        emitVisitedChange();
         return next;
       });
     },

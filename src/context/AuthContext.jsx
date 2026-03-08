@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { syncLocalDataToServer } from '../utils/syncLocalData';
 import { cacheInvalidatePrefix } from '../utils/cache';
+import { clearBatch } from '../utils/batchQueue';
 
 const AuthContext = createContext(null);
 
@@ -67,6 +68,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Drop any queued writes so they don't fire with a stale token after logout
+    clearBatch();
     // Clear all cache entries before wiping auth (token still needed for key)
     const currentToken = auth?.jwt_token;
     if (currentToken) {
