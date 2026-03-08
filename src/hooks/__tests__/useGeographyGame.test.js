@@ -111,14 +111,18 @@ describe('useGeographyGame', () => {
     expect(onFinish).toHaveBeenCalledWith({ correct: 0, incorrect: 0, skipped: 0 });
   });
 
-  // Fix 4b: double-submit guard — second call in same tick is ignored
-  it('double submit in same tick only counts one incorrect', () => {
+  // Fix 4b: double-submit guard — second call in same tick is ignored.
+  // Uses two DIFFERENT answers (wrong then correct) so the test is sensitive:
+  // if the guard fails, the second call would flip score to {correct:1, incorrect:0}.
+  it('double submit in same tick only counts the first submission', () => {
     const { result } = renderHook(() => useGeographyGame(POOL, {}));
+    const correctId = result.current.question.id;
     act(() => {
-      result.current.submit('xx');
-      result.current.submit('xx'); // second call should be a no-op (status is 'reviewing')
+      result.current.submit('wrong-answer'); // first call: incorrect
+      result.current.submit(correctId);      // second call: must be ignored
     });
     expect(result.current.score.incorrect).toBe(1);
+    expect(result.current.score.correct).toBe(0);
   });
 
   // Fix 4c: onFinish receives full { correct, incorrect, skipped } shape

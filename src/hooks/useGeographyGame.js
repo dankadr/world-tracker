@@ -40,6 +40,10 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
     if (reviewTimeoutRef.current) clearTimeout(reviewTimeoutRef.current);
   }, []);
 
+  // Synchronous flag to prevent double-submit within the same render tick.
+  // statusRef alone can't block this because useEffect syncs it after render.
+  const isSubmittingRef = useRef(false);
+
   // Global countdown timer — use setInterval so it keeps ticking within a single act() call
   useEffect(() => {
     if (timeLimit === null) return;
@@ -80,7 +84,8 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
   }, [questions.length]);
 
   const submit = useCallback((answer) => {
-    if (status !== 'playing') return;
+    if (statusRef.current !== 'playing' || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     const question = questions[questionIndex];
     const correct = String(answer).trim().toLowerCase() === String(question.id).toLowerCase();
     const nextScore = {
@@ -93,19 +98,26 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
     setLastCorrectAnswer(correct ? null : question);
     setStatus('reviewing');
     // Fix 1: store timeout ref so it can be cleared on unmount
-    reviewTimeoutRef.current = setTimeout(() => advance(nextScore), 1200);
-  }, [status, questions, questionIndex, score, advance]);
+    reviewTimeoutRef.current = setTimeout(() => {
+      isSubmittingRef.current = false;
+      advance(nextScore);
+    }, 1200);
+  }, [questions, questionIndex, score, advance]);
 
   const skip = useCallback(() => {
-    if (status !== 'playing') return;
+    if (statusRef.current !== 'playing' || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     const nextScore = { ...score, skipped: score.skipped + 1 };
     setScore(nextScore);
     setIsCorrect(null);
     setLastCorrectAnswer(null);
     setStatus('reviewing');
     // Fix 1: store timeout ref so it can be cleared on unmount
-    reviewTimeoutRef.current = setTimeout(() => advance(nextScore), 1200);
-  }, [status, score, advance]);
+    reviewTimeoutRef.current = setTimeout(() => {
+      isSubmittingRef.current = false;
+      advance(nextScore);
+    }, 1200);
+  }, [score, advance]);
 
   const finish = useCallback(() => {
     setStatus('finished');
