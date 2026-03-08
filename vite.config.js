@@ -19,5 +19,13 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        // Fix: Firefox strictly enforces TDZ for `const` in bundled output.
+        // Using `var` for Rollup-generated bindings prevents the
+        // "can't access lexical declaration before initialization" error.
+        generatedCode: { constBindings: false },
+      },
+    },
   },
 });
