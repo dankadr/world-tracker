@@ -407,6 +407,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       scrollWheelZoom={true}
       minZoom={2}
       maxZoom={8}
+      worldCopyJump={true}
+      maxBounds={[[-90, -Infinity], [90, Infinity]]}
+      maxBoundsViscosity={0.7}
     >
       <MapController center={[20, 0]} zoom={2} />
       <TileLayer
@@ -420,6 +423,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
             key={`friend-labels-${dark ? 'dark' : 'light'}`}
             url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
             opacity={0.95}
+            noWrap={false}
           />
         </Pane>
       )}
