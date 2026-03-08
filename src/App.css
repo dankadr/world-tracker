@@ -2602,17 +2602,6 @@ body {
     height: 18px;
   }
 
-  /* Map popup */
-  .world-popup-toggle,
-  .world-popup-explore {
-    padding: 10px 16px;
-    min-height: 44px;
-    font-size: 0.8rem;
-  }
-
-  .world-popup-name {
-    font-size: 1rem;
-  }
 }
 
 /* ---- Small Mobile (≤ 380px) ---- */
@@ -2880,11 +2869,6 @@ body {
     padding: 10px 24px;
   }
 
-  .world-popup-toggle,
-  .world-popup-explore {
-    min-height: 44px;
-    padding: 10px 16px;
-  }
 }
 
 /* ---- Landscape mobile ---- */
@@ -4313,7 +4297,13 @@ body {
 }
 
 .world-quick-links .list-heading {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.world-tracker-hint {
+  font-size: 0.72rem;
+  color: #8e99a4;
+  margin: 0 0 10px;
 }
 
 .world-tracker-grid {
@@ -4452,79 +4442,6 @@ body {
   padding: 4px 0 4px 16px;
 }
 
-/* World Map Country Popup */
-.world-country-popup .leaflet-popup-content-wrapper {
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-}
-
-.world-popup-content {
-  min-width: 160px;
-  padding: 4px 0;
-}
-
-.world-popup-name {
-  display: block;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-}
-
-.world-popup-status {
-  display: inline-block;
-  font-size: 0.72rem;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #7f8c8d;
-  margin-bottom: 8px;
-}
-
-.world-popup-status.visited {
-  background: rgba(216, 150, 72, 0.12);
-  color: #d89648;
-}
-
-.world-popup-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.world-popup-toggle {
-  padding: 5px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.03);
-  color: #2c3e50;
-  font-size: 0.75rem;
-  font-family: inherit;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.world-popup-toggle:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-.world-popup-explore {
-  padding: 6px 10px;
-  border: none;
-  background: linear-gradient(135deg, #c07a30, #a06020);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.world-popup-explore:hover {
-  background: linear-gradient(135deg, #a06020, #8a5018);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(192, 122, 48, 0.3);
-}
 
 /* World Floating Stats */
 .world-floating-stats .stats-label {
@@ -4708,4 +4625,95 @@ body {
 .friends-modal .friends-panel-content {
   flex: 1;
   overflow-y: auto;
+}
+
+/* ======== Bottom Tab Bar layout adjustments ======== */
+
+/* CSS custom property for tab bar height (used by map controls) */
+:root {
+  --tab-bar-height: 56px;
+  --tab-bar-safe-height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Bottom sheet sits above the tab bar */
+.app.is-mobile .mobile-bottom-sheet {
+  bottom: var(--tab-bar-safe-height);
+}
+
+/* Map controls shift up to stay above the tab bar on mobile */
+@media (max-width: 768px) {
+  .app.is-mobile .export-btn:not(.map-controls-cluster .export-btn),
+  .app.is-mobile .map-controls-cluster {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 12px);
+  }
+
+  .app.is-mobile .layer-control {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 60px);
+  }
+
+  .app.is-mobile .swiss-map .leaflet-control-zoom {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 108px) !important;
+  }
+
+  .app.is-mobile .friend-overlay-legend {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 12px);
+  }
+
+  /* World floating stats — shift up for tab bar (desktop shows this, mobile hides it) */
+  .app.is-mobile .world-floating-stats {
+    display: none;
+  }
+}
+
+/* ======== Tab Screen Panels ======== */
+
+.tab-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--tab-bar-safe-height);
+  z-index: 300;
+  background: var(--body-bg, #faf6f0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Status bar safe area at top */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.dark .tab-screen {
+  background: var(--body-bg, #1e1612);
+}
+
+.tab-screen-placeholder {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary, #9a8070);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.tab-screen-placeholder-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+/* Map container — add bottom padding on mobile to avoid tab bar overlap */
+@media (max-width: 768px) {
+  .app.is-mobile .map-container {
+    padding-bottom: var(--tab-bar-safe-height);
+  }
+}
+
+/* Toast container — shift up above tab bar on mobile */
+@media (max-width: 768px) {
+  .toast-container {
+    bottom: calc(var(--tab-bar-safe-height) + 16px);
+  }
 }

@@ -345,38 +345,16 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
         click: (e) => {
           if (comparisonModeRef.current) return;
-          if (isTracked) {
-            const isVisited = visitedRef.current.has(id);
-            const trackerId = TRACKED_COUNTRY_IDS[id];
-            const statusHtml = isVisited
-              ? '<span class="world-popup-status visited">Visited</span>'
-              : '<span class="world-popup-status">Not visited</span>';
-            const html = `<div class="world-popup-content" style="min-width:200px">
-              <strong class="world-popup-name">${name}</strong>
-              ${statusHtml}
-              <div class="world-popup-actions">
-                <button class="world-popup-toggle" onclick="document.dispatchEvent(new CustomEvent('world-toggle',{detail:'${id}'}))">${isVisited ? 'Mark unvisited' : 'Mark visited'}</button>
-                <button class="world-popup-explore" onclick="document.dispatchEvent(new CustomEvent('world-explore',{detail:'${trackerId}'}))">Explore Regions &#8594;</button>
-              </div>
-            </div>`;
-            L.popup({ className: 'world-country-popup', closeButton: true, offset: [0, -5] })
-              .setLatLng(e.latlng)
-              .setContent(html)
-              .openOn(e.target._map);
-          } else {
-            onToggle(id);
-            const target = e.target;
-            const willBeVisited = !visitedRef.current.has(id);
-            const finalStyle = willBeVisited ? VISITED_STYLE : UNVISITED_STYLE;
-            target.setStyle({
-              fillOpacity: 0.85,
-              weight: 2,
-              color: 'rgba(255,255,255,0.7)',
-            });
-            setTimeout(() => target.setStyle({ fillOpacity: 0.7, weight: 1.5 }), 120);
-            setTimeout(() => target.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
-            setTimeout(() => target.setStyle(finalStyle), 400);
-          }
+          onToggle(id);
+          const target = e.target;
+          const willBeVisited = !visitedRef.current.has(id);
+          const finalStyle = willBeVisited
+            ? (isTracked ? TRACKED_VISITED_STYLE : VISITED_STYLE)
+            : (isTracked ? TRACKED_STYLE : UNVISITED_STYLE);
+          target.setStyle({ fillOpacity: 0.85, weight: 2, color: 'rgba(255,255,255,0.7)' });
+          setTimeout(() => target.setStyle({ fillOpacity: 0.7, weight: 1.5 }), 120);
+          setTimeout(() => target.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
+          setTimeout(() => target.setStyle(finalStyle), 400);
         },
       });
     },
@@ -387,16 +365,11 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     function handleToggle(e) {
       onToggle(e.detail);
     }
-    function handleExplore(e) {
-      onExploreCountry(e.detail);
-    }
     document.addEventListener('world-toggle', handleToggle);
-    document.addEventListener('world-explore', handleExplore);
     return () => {
       document.removeEventListener('world-toggle', handleToggle);
-      document.removeEventListener('world-explore', handleExplore);
     };
-  }, [onToggle, onExploreCountry]);
+  }, [onToggle]);
 
   return (
     <MapContainer

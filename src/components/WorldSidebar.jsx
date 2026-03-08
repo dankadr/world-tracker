@@ -257,6 +257,7 @@ export default function WorldSidebar({
       {/* Quick Links to Detail Trackers */}
       <div className="world-quick-links">
         <h2 className="list-heading">Region Trackers</h2>
+        <p className="world-tracker-hint">Click a tracker to explore regions within that country</p>
         <div className="world-tracker-grid">
           <button
             className="world-tracker-card"

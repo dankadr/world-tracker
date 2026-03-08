@@ -1,0 +1,120 @@
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  display: flex;
+  align-items: stretch;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.88));
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border-top: 1px solid var(--glass-border, rgba(180, 130, 70, 0.18));
+  box-shadow: 0 -2px 16px rgba(80, 40, 10, 0.08);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Dark mode */
+.dark .bottom-tab-bar {
+  background: rgba(38, 30, 22, 0.92);
+  border-top-color: rgba(180, 130, 70, 0.14);
+}
+
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 100ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.tab-bar-item:active {
+  transform: scale(0.92);
+}
+
+.tab-bar-icon {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-bar-icon svg {
+  width: 24px;
+  height: 24px;
+  transition: color 200ms ease, transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  color: var(--text-secondary, #9a8070);
+}
+
+.tab-bar-item.active .tab-bar-icon svg {
+  color: var(--tab-active, #c07a30);
+  transform: scale(1.1);
+}
+
+.tab-bar-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  color: var(--text-secondary, #9a8070);
+  transition: color 200ms ease;
+  line-height: 1;
+}
+
+.tab-bar-item.active .tab-bar-label {
+  color: var(--tab-active, #c07a30);
+  font-weight: 600;
+}
+
+/* Active pill indicator */
+.tab-bar-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 32px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--tab-active, #c07a30);
+  transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.tab-bar-item.active::before {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Badge for notifications (e.g. pending friends) */
+.tab-bar-badge {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #e53e3e;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: -apple-system, system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(229, 62, 62, 0.4);
+}
