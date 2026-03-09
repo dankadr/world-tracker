@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import useGeographyGame from '../../hooks/useGeographyGame';
 import { checkTextAnswer } from '../../utils/gameAnswers';
 import { saveHighScore, isNewHighScore } from '../../utils/gameScores';
+import { recordGameCompletion } from '../../utils/gameAchievements';
 import GameTopBar from './GameTopBar';
 import AnswerInput from './AnswerInput';
 import GameResultScreen from './GameResultScreen';
@@ -33,6 +34,7 @@ export default function FlagQuiz({ onBack }) {
     const pct = total > 0 ? Math.round((score.correct / total) * 100) : 0;
     isNewBestRef.current = isNewHighScore(SCORE_KEY, pct);
     saveHighScore(SCORE_KEY, { correct: score.correct, total, pct });
+    recordGameCompletion('flag', pct);
   }, []);
 
   const {

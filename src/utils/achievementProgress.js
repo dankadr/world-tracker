@@ -7,6 +7,7 @@
  * - unlocked: boolean
  */
 
+import { getGameCompletions } from './gameAchievements';
 import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
@@ -303,6 +304,19 @@ export function computeProgress(rule, userId, allResults = []) {
       } catch { current = 0; }
       target = 1;
       break;
+    }
+
+    case 'gameCompleted': {
+      const completions = getGameCompletions();
+      if (!completions.any) return { current: 0, target: 1, pct: 0, unlocked: false };
+      if (rule.mode && !completions[rule.mode]) return { current: 0, target: 1, pct: 0, unlocked: false };
+      if (rule.minPct) {
+        const passes = rule.mode
+          ? (completions[rule.mode] || 0) >= rule.minPct
+          : Object.values(completions).some(v => typeof v === 'number' && v >= rule.minPct);
+        return { current: passes ? 1 : 0, target: 1, pct: passes ? 100 : 0, unlocked: passes };
+      }
+      return { current: 1, target: 1, pct: 100, unlocked: true };
     }
 
     default:

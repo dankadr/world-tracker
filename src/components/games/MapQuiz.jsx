@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import useGeographyGame from '../../hooks/useGeographyGame';
 import { saveHighScore, isNewHighScore } from '../../utils/gameScores';
+import { recordGameCompletion } from '../../utils/gameAchievements';
 import GameTopBar from './GameTopBar';
 import GameResultScreen from './GameResultScreen';
 import WorldMap from '../WorldMap';
@@ -46,6 +47,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
     const key = getScoreKey(filter);
     isNewBestRef.current = isNewHighScore(key, pct);
     saveHighScore(key, { correct: score.correct, total, pct });
+    recordGameCompletion(getScoreKey(filter), pct);
   }, [filter]);
 
   const {
