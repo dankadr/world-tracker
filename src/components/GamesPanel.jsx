@@ -78,14 +78,16 @@ export default function GamesPanel({ worldVisited, onClose }) {
   const [screen, setScreen] = useState('home');
   const [mapFilter, setMapFilter] = useState('all');
   const [capitalSubMode, setCapitalSubMode] = useState('country_to_capital');
+  const [gameKey, setGameKey] = useState(0);
 
   const handleBack = () => setScreen('home');
+  const handlePlayAgain = () => setGameKey(k => k + 1);
 
   if (screen === 'map-config') return <MapConfig onBack={handleBack} onStart={f => { setMapFilter(f); setScreen('map'); }} />;
   if (screen === 'capital-config') return <CapitalConfig onBack={handleBack} onStart={s => { setCapitalSubMode(s); setScreen('capital'); }} />;
-  if (screen === 'map') return <MapQuiz filter={mapFilter} worldVisited={worldVisited} onBack={handleBack} />;
-  if (screen === 'flag') return <FlagQuiz onBack={handleBack} />;
-  if (screen === 'capital') return <CapitalQuiz subMode={capitalSubMode} onBack={handleBack} />;
+  if (screen === 'map') return <MapQuiz key={gameKey} filter={mapFilter} worldVisited={worldVisited} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'flag') return <FlagQuiz key={gameKey} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'capital') return <CapitalQuiz key={gameKey} subMode={capitalSubMode} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
 
   return (
     <div className="games-panel">
