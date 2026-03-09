@@ -12,6 +12,8 @@ import continentMap from '../../config/continents.json';
 import './games.css';
 
 const EMPTY_SET = new Set();
+const EMPTY_VISITED = new Set();
+const EMPTY_WISHLIST = new Set();
 
 const CONTINENT_FILTER_KEYS = {
   africa: 'Africa',
@@ -66,13 +68,13 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
   }, [questionIndex]);
 
   // Stable submit ref so handleTextSubmit has empty deps
-  const submitStateRef = useRef({ question, submit });
-  submitStateRef.current = { question, submit };
+  const submitStateRef = useRef({ question, submit, pool });
+  submitStateRef.current = { question, submit, pool };
 
   const handleTextSubmit = useCallback((text) => {
-    const { question: q, submit: sub } = submitStateRef.current;
+    const { question: q, submit: sub, pool: p } = submitStateRef.current;
     if (!q) return;
-    const match = pool.find(c => checkTextAnswer(text, c.name));
+    const match = p.find(c => checkTextAnswer(text, c.name));
     const correct = match?.id === q.id;
     if (correct) {
       setCorrectId(q.id);
@@ -81,8 +83,8 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
       setIncorrectId(q.id);
       setCorrectId(null);
     }
-    sub(match?.id ?? text);
-  }, [pool]);
+    sub(match?.id ?? null);
+  }, []);
 
   const gameMode = useMemo(() => ({
     targetId: question?.id ?? null,
@@ -117,9 +119,9 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
       />
       <div style={{ flex: 1, position: 'relative' }}>
         <WorldMap
-          visited={new Set()}
+          visited={EMPTY_VISITED}
           onToggle={() => {}}
-          wishlist={new Set()}
+          wishlist={EMPTY_WISHLIST}
           comparisonMode={false}
           gameMode={gameMode}
         />
