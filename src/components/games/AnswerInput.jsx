@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { fuzzyMatches } from '../../utils/gameAnswers';
 import './games.css';
 
-export default function AnswerInput({ candidates, nameKey = 'name', onSubmit, onSkip, disabled }) {
+export default function AnswerInput({ candidates, nameKey = 'name', onSubmit, onSkip, disabled, dropUp = false }) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -37,7 +37,7 @@ export default function AnswerInput({ candidates, nameKey = 'name', onSubmit, on
         spellCheck={false}
       />
       {open && suggestions.length > 0 && (
-        <div className="answer-autocomplete">
+        <div className={`answer-autocomplete${dropUp ? ' answer-autocomplete--up' : ''}`}>
           {suggestions.map(s => (
             <button
               key={s.id ?? s[nameKey]}

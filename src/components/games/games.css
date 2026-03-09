@@ -1,5 +1,14 @@
 /* ===== Shared Game Styles ===== */
 
+/* Shape Quiz — target country pulse */
+@keyframes map-target-pulse {
+  0%, 100% { fill-opacity: 0.9; }
+  50%       { fill-opacity: 0.35; }
+}
+.map-target-pulse {
+  animation: map-target-pulse 1.4s ease-in-out infinite;
+}
+
 .game-top-bar {
   display: flex;
   align-items: center;
@@ -69,6 +78,11 @@
   overflow: hidden;
   z-index: 20;
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.answer-autocomplete--up {
+  top: auto;
+  bottom: calc(100% + 4px);
+  z-index: 1000;
 }
 
 .answer-autocomplete-item {
