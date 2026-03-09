@@ -63,3 +63,4 @@ htmlcov/
 scripts/gadm41_NOR_1.json
 scripts/gadm41_SJM_0.json
 scripts/gadm41_SJM_1.json
+scripts/gadm41_USA_1.json curl -L https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_USA_1.json -o /Users/dankadr/swiss-tracker/scripts/gadm41_USA_1.json
