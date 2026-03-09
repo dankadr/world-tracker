@@ -11,6 +11,8 @@ import worldData from '../../data/world.json';
 import continentMap from '../../config/continents.json';
 import './games.css';
 
+const EMPTY_SET = new Set();
+
 const CONTINENT_FILTER_KEYS = {
   africa: 'Africa',
   asia: 'Asia',
@@ -36,7 +38,7 @@ function getScoreKey(filter) {
   return `shape_${filter}`;
 }
 
-export default function ShapeQuiz({ filter = 'all', worldVisited = new Set(), onBack, onPlayAgain }) {
+export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
