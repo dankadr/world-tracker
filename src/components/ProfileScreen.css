@@ -1,0 +1,250 @@
+/* ── Segmented control header ── */
+.profile-seg-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--glass-border, rgba(180, 130, 70, 0.14));
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.9));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .profile-seg-header {
+  background: rgba(30, 22, 18, 0.92);
+  border-bottom-color: rgba(180, 130, 70, 0.1);
+}
+
+.profile-seg-control {
+  display: flex;
+  background: var(--glass-bg, rgba(180, 130, 70, 0.08));
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.dark .profile-seg-control {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.profile-seg-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  color: var(--text-secondary, #9a8070);
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, transform 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.profile-seg-btn.active {
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.95));
+  color: var(--text-primary, #2d1f0f);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark .profile-seg-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary, #f5ede0);
+}
+
+.profile-seg-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Tab body ── */
+.profile-tab-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── Profile overview tab ── */
+.profile-overview {
+  padding: 24px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar-btn {
+  flex-shrink: 0;
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 100ms ease;
+}
+
+.profile-avatar-btn:active {
+  transform: scale(0.95);
+}
+
+.profile-avatar-edit-hint {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.profile-user-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-username {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+  color: var(--text-primary, #2d1f0f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .profile-username {
+  color: var(--text-primary, #f5ede0);
+}
+
+.profile-level-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-level-label {
+  font-size: 15px;
+  font-weight: 600;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  color: var(--text-secondary, #9a8070);
+}
+
+.dark .profile-level-label {
+  color: var(--text-secondary, #b09a84);
+}
+
+.profile-xp-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-xp-bar {
+  height: 6px;
+  background: var(--glass-bg, rgba(180, 130, 70, 0.15));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dark .profile-xp-bar {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-xp-fill {
+  height: 100%;
+  background: var(--tab-active, #c07a30);
+  border-radius: 3px;
+  transition: width 400ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.profile-xp-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary, #9a8070);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.dark .profile-xp-label {
+  color: var(--text-secondary, #b09a84);
+}
+
+/* ── Profile actions ── */
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.profile-total-xp {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #9a8070);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.dark .profile-total-xp {
+  color: var(--text-secondary, #b09a84);
+}
+
+.profile-stats-btn {
+  background: var(--glass-bg, rgba(180, 130, 70, 0.1));
+  border: 1px solid var(--glass-border, rgba(180, 130, 70, 0.2));
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  color: var(--tab-active, #c07a30);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 100ms ease, background 150ms ease;
+}
+
+.profile-stats-btn:active {
+  transform: scale(0.97);
+  background: var(--glass-bg-heavy, rgba(180, 130, 70, 0.18));
+}
+
+/* ── Achievements tab ── */
+.achievements-tab-content {
+  padding: 16px 16px 32px;
+}
+
+.achievements-tab-summary {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #9a8070);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  text-align: center;
+}
+
+.dark .achievements-tab-summary {
+  color: var(--text-secondary, #b09a84);
+}
