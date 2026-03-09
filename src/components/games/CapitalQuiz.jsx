@@ -39,7 +39,7 @@ function buildPool(subMode) {
     });
 }
 
-export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) {
+export default function CapitalQuiz({ subMode = 'country_to_capital', onBack, onPlayAgain }) {
   const pool = useMemo(() => buildPool(subMode), [subMode]);
   const scoreKey = `capital_${subMode}`;
   const isNewBestRef = useRef(false);
@@ -77,7 +77,7 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) 
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={onBack}
+        onPlayAgain={onPlayAgain}
         onBack={onBack}
       />
     );

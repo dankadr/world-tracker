@@ -34,7 +34,7 @@ function getScoreKey(filter) {
   return `map_${filter}`;
 }
 
-export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack }) {
+export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -88,7 +88,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={onBack}
+        onPlayAgain={onPlayAgain}
         onBack={onBack}
       />
     );

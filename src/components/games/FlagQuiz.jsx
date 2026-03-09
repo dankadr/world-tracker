@@ -25,7 +25,7 @@ function buildPool() {
 
 const SCORE_KEY = 'flag';
 
-export default function FlagQuiz({ onBack }) {
+export default function FlagQuiz({ onBack, onPlayAgain }) {
   const pool = useMemo(() => buildPool(), []);
   const isNewBestRef = useRef(false);
 
@@ -54,7 +54,7 @@ export default function FlagQuiz({ onBack }) {
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={onBack}
+        onPlayAgain={onPlayAgain}
         onBack={onBack}
       />
     );
