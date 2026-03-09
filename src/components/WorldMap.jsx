@@ -251,6 +251,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
   // Update GeoJSON styles when visited set changes (without remounting)
   useEffect(() => {
+    if (gameMode) return;
     const layer = geoJsonRef.current;
     if (!layer) return;
     layer.eachLayer((l) => {
@@ -271,7 +272,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       }
       l.setStyle(style);
     });
-  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled]);
+  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]);
 
   const getStyle = useCallback(
     (feature) => {
@@ -326,6 +327,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           if (el) el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
         },
         mouseover: (e) => {
+          if (gameMode) return;
           const target = e.target;
           const isVisited = visitedRef.current.has(id);
           const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
@@ -338,6 +340,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.bringToFront();
         },
         mouseout: (e) => {
+          if (gameMode) return;
           const target = e.target;
           const isVisited = visitedRef.current.has(id);
           const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
