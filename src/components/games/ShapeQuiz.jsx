@@ -141,6 +141,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
           onSubmit={handleTextSubmit}
           onSkip={skip}
           disabled={status === 'reviewing'}
+          dropUp
         />
       </div>
     </div>
