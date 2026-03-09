@@ -73,6 +73,7 @@
 .answer-autocomplete--up {
   top: auto;
   bottom: calc(100% + 4px);
+  z-index: 1000;
 }
 
 .answer-autocomplete-item {
