@@ -7,6 +7,8 @@ import ChallengeDetailModal from './ChallengeDetailModal';
 import ConfirmDialog from './ConfirmDialog';
 import countries from '../data/countries';
 import { formatTimeRemaining, getDifficultyLabel } from '../utils/challengeUtils';
+import useDeviceType from '../hooks/useDeviceType';
+import { useNavigation } from '../context/NavigationContext';
 import './ChallengesPanel.css';
 
 const TRACKER_LABELS = {
@@ -133,6 +135,8 @@ function ChallengeCard({ challenge, userId, onClick }) {
 export default function ChallengesPanel({ onClose }) {
   const { user, isLoggedIn } = useAuth();
   const { challenges, loading, refresh, create, getDetail, leave, remove } = useChallenges();
+  const { isMobile } = useDeviceType();
+  const { push } = useNavigation();
   const [showCreate, setShowCreate] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [detailData, setDetailData] = useState(null);
@@ -140,6 +144,11 @@ export default function ChallengesPanel({ onClose }) {
   const [confirmLeave, setConfirmLeave] = useState(null);
 
   const handleOpenDetail = useCallback(async (challenge) => {
+    // On mobile, push a full Screen instead of opening a modal
+    if (isMobile) {
+      push('challenge', { challenge });
+      return;
+    }
     setSelectedChallenge(challenge);
     setDetailLoading(true);
     try {
@@ -150,7 +159,7 @@ export default function ChallengesPanel({ onClose }) {
     } finally {
       setDetailLoading(false);
     }
-  }, [getDetail]);
+  }, [isMobile, push, getDetail]);
 
   const handleCloseDetail = useCallback(() => {
     setSelectedChallenge(null);

@@ -37,7 +37,11 @@ import worldData from './data/world.json';
 import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
 import BottomTabBar from './components/BottomTabBar';
+import NavigationStack from './components/NavigationStack';
 import GamesPanel from './components/GamesPanel';
+import SocialScreen from './components/SocialScreen';
+import ProfileScreen from './components/ProfileScreen';
+import ExploreScreen from './components/ExploreScreen';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 
@@ -179,6 +183,7 @@ export default function App() {
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggle(regionId);
     if (!wasVisited) {
       grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
@@ -281,6 +286,7 @@ export default function App() {
 
   const handleToggleWorldCountry = useCallback((countryCode) => {
     const wasVisited = worldVisited.has(countryCode);
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
@@ -843,24 +849,24 @@ export default function App() {
 
       {/* Mobile tab screens — full-screen overlays over the map */}
       {isMobile && !isShareMode && activeTab === 'social' && (
-        <div className="tab-screen">
-          <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-        </div>
+        <SocialScreen onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
-        <div className="tab-screen">
-          <GamesPanel worldVisited={worldVisited} />
-        </div>
+        <ExploreScreen
+          worldVisited={worldVisited}
+          onToggleWorld={handleToggleWorldCountry}
+          onExploreCountry={handleExploreCountry}
+        />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <div className="tab-screen tab-screen-placeholder">
-          <span className="tab-screen-placeholder-icon">👤</span>
-          <p>Profile — coming in Phase 2</p>
-        </div>
+        <ProfileScreen />
       )}
 
+      {/* Pushed screens — rendered on top of whatever tab is active */}
+      {isMobile && !isShareMode && <NavigationStack />}
+
       {!isMobile && gamesOpen && (
-        <div className="tab-screen" style={{ zIndex: 1200 }}>
+        <div className="tab-screen" style={{ zIndex: 1300 }}>
           <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
         </div>
       )}
