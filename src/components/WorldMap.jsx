@@ -40,25 +40,9 @@ const VISITED_STYLE = {
   lineCap: 'round',
 };
 
-const TRACKED_STYLE = {
-  fillColor: '#cfd8dc',
-  fillOpacity: 0.4,
-  color: 'rgba(192, 122, 48, 0.45)',
-  weight: 2,
-  dashArray: '4 3',
-  lineJoin: 'round',
-  lineCap: 'round',
-};
+const TRACKED_STYLE = UNVISITED_STYLE;
 
-const TRACKED_VISITED_STYLE = {
-  fillColor: VISITED_COLOR,
-  fillOpacity: 0.5,
-  color: 'rgba(192, 122, 48, 0.45)',
-  weight: 2,
-  dashArray: '4 3',
-  lineJoin: 'round',
-  lineCap: 'round',
-};
+const TRACKED_VISITED_STYLE = VISITED_STYLE;
 
 const WISHLIST_STYLE = {
   fillColor: '#f1c40f',
