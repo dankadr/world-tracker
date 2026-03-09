@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import useGeographyGame from '../../hooks/useGeographyGame';
 import { checkTextAnswer } from '../../utils/gameAnswers';
 import { saveHighScore, isNewHighScore } from '../../utils/gameScores';
@@ -41,6 +41,7 @@ function buildPool(subMode) {
 export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) {
   const pool = useMemo(() => buildPool(subMode), [subMode]);
   const scoreKey = `capital_${subMode}`;
+  const isNewBestRef = useRef(false);
 
   // Set id = answer text so hook's id comparison works for text matching
   const enginePool = useMemo(() => pool.map(p => ({ ...p, id: p.answer })), [pool]);
@@ -48,6 +49,7 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) 
   const handleFinish = useCallback((score) => {
     const total = score.correct + score.incorrect + score.skipped;
     const pct = total > 0 ? Math.round((score.correct / total) * 100) : 0;
+    isNewBestRef.current = isNewHighScore(scoreKey, pct);
     saveHighScore(scoreKey, { correct: score.correct, total, pct });
   }, [scoreKey]);
 
@@ -67,15 +69,12 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) 
   }, [question, candidates, submit]);
 
   if (status === 'finished') {
-    const t = score.correct + score.incorrect + score.skipped;
-    const pct = t > 0 ? Math.round((score.correct / t) * 100) : 0;
-    const newBest = isNewHighScore(scoreKey, pct);
     return (
       <GameResultScreen
         title={subMode === 'country_to_capital' ? 'Capital Quiz' : 'Country Quiz'}
         score={score}
         timeTaken={null}
-        isNewBest={newBest}
+        isNewBest={isNewBestRef.current}
         onPlayAgain={() => window.location.reload()}
         onBack={onBack}
       />
