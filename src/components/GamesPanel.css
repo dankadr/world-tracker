@@ -136,3 +136,19 @@
 .games-panel-close:hover {
   background: rgba(0,0,0,0.05);
 }
+
+/* Dark mode */
+.dark .game-card {
+  background: var(--glass-bg-heavy, rgba(40, 30, 22, 0.9));
+  border-color: rgba(180, 130, 70, 0.14);
+}
+
+.dark .game-config-screen {
+  background: var(--body-bg, #1e1612);
+}
+
+.dark .game-config-option {
+  background: var(--glass-bg-heavy, rgba(40, 30, 22, 0.9));
+  border-color: rgba(180, 130, 70, 0.15);
+  color: var(--text-primary, #f5ede0);
+}
