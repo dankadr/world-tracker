@@ -647,6 +647,15 @@ export default function App() {
                 </p>
               </div>
             )}
+            {!isShareMode && !isMobile && (
+              <button
+                className="games-desktop-btn"
+                onClick={() => setGamesOpen(true)}
+                title="Geography Games"
+              >
+                🎮
+              </button>
+            )}
             {comparisonFriend && (
               <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
                 📊 Compare Stats

@@ -912,8 +912,8 @@ body {
 
 .games-desktop-btn {
   position: absolute;
-  top: 56px;
-  right: 12px;
+  top: 12px;
+  right: 56px;
   z-index: 1000;
   width: 38px;
   height: 38px;
