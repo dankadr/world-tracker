@@ -334,12 +334,14 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       const isTracked = id in TRACKED_COUNTRY_IDS;
       const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
 
-      layer.bindTooltip(name, {
-        sticky: true,
-        className: 'canton-tooltip',
-        direction: 'top',
-        offset: [0, -10],
-      });
+      if (!gameModeRef.current) {
+        layer.bindTooltip(name, {
+          sticky: true,
+          className: 'canton-tooltip',
+          direction: 'top',
+          offset: [0, -10],
+        });
+      }
 
       layer.on({
         add: (e) => {
