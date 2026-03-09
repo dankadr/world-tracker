@@ -69,7 +69,6 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   // it always reads the current question and status, not a stale closure.
   const handleCountryClick = useCallback((clickedId) => {
     const { status: s, question: q, submit: sub } = clickStateRef.current;
-    console.log('[MapQuiz] click', { clickedId, questionId: q?.id, status: s, correct: clickedId === q?.id });
     if (s !== 'playing' || !q) return;
     const correct = clickedId === q.id;
     if (correct) {
@@ -89,7 +88,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={() => window.location.reload()}
+        onPlayAgain={onBack}
         onBack={onBack}
       />
     );
@@ -97,11 +96,11 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
 
   if (!question) return null;
 
-  const gameMode = {
+  const gameMode = useMemo(() => ({
     onCountryClick: handleCountryClick,
     correctId,
     incorrectId,
-  };
+  }), [handleCountryClick, correctId, incorrectId]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>

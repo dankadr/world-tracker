@@ -77,7 +77,7 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack }) 
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={() => window.location.reload()}
+        onPlayAgain={onBack}
         onBack={onBack}
       />
     );

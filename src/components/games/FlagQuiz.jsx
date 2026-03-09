@@ -54,7 +54,7 @@ export default function FlagQuiz({ onBack }) {
         score={score}
         timeTaken={null}
         isNewBest={isNewBestRef.current}
-        onPlayAgain={() => window.location.reload()}
+        onPlayAgain={onBack}
         onBack={onBack}
       />
     );
