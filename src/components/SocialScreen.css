@@ -1,0 +1,74 @@
+/* Segmented control header */
+.social-seg-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--glass-border, rgba(180, 130, 70, 0.14));
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.9));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+[data-theme="dark"] .social-seg-header {
+  background: rgba(30, 22, 18, 0.92);
+  border-bottom-color: rgba(180, 130, 70, 0.1);
+}
+
+.social-seg-control {
+  display: flex;
+  background: var(--glass-bg, rgba(180, 130, 70, 0.08));
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+  max-width: 320px;
+}
+
+[data-theme="dark"] .social-seg-control {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.social-seg-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  color: var(--text-secondary, #9a8070);
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, transform 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+.social-seg-btn.active {
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.95));
+  color: var(--text-primary, #2d1f0f);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .social-seg-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary, #f5ede0);
+}
+
+.social-seg-btn:active {
+  transform: scale(0.97);
+}
+
+/* Tab pane — fills remaining height and scrolls */
+.social-tab-pane {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}

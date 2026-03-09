@@ -42,14 +42,14 @@
 .game-card-icon { font-size: 2rem; }
 .game-card-title { font-size: 1rem; font-weight: 700; color: var(--text, #1a1a1a); }
 .game-card-desc { font-size: 0.75rem; color: var(--text-secondary, #6b7280); line-height: 1.4; }
-.game-card-best { font-size: 0.75rem; color: #3b82f6; font-weight: 600; margin-top: 4px; }
+.game-card-best { font-size: 0.75rem; color: var(--tab-active, #c07a30); font-weight: 600; margin-top: 4px; }
 
 .game-card-play {
   margin-top: 8px;
   padding: 10px;
   border-radius: 10px;
   border: none;
-  background: #3b82f6;
+  background: var(--tab-active, #c07a30);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -92,14 +92,14 @@
   transition: border-color 0.15s;
   flex-shrink: 0;
 }
-.game-config-option.selected { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
+.game-config-option.selected { border-color: var(--tab-active, #c07a30); color: var(--tab-active, #c07a30); font-weight: 600; }
 
 .game-config-start {
   margin-top: auto;
   padding: 14px;
   border-radius: 14px;
   border: none;
-  background: #3b82f6;
+  background: var(--tab-active, #c07a30);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
@@ -135,4 +135,20 @@
 }
 .games-panel-close:hover {
   background: rgba(0,0,0,0.05);
+}
+
+/* Dark mode */
+[data-theme="dark"] .game-card {
+  background: var(--glass-bg-heavy, rgba(40, 30, 22, 0.9));
+  border-color: rgba(180, 130, 70, 0.14);
+}
+
+[data-theme="dark"] .game-config-screen {
+  background: var(--body-bg, #1e1612);
+}
+
+[data-theme="dark"] .game-config-option {
+  background: var(--glass-bg-heavy, rgba(40, 30, 22, 0.9));
+  border-color: rgba(180, 130, 70, 0.15);
+  color: var(--text-primary, #f5ede0);
 }

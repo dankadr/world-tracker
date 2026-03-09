@@ -9,11 +9,25 @@ jobs:
     name: Delete Neon preview branch
     runs-on: ubuntu-latest
     env:
+      # Safe: PR head ref is set as an env var, never interpolated inline into run commands
       BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
     steps:
-      - name: Delete Neon branch
-        uses: neondatabase/delete-branch-action@v3
-        with:
-          project_id: ${{ secrets.NEON_PROJECT_ID }}
-          branch: ${{ env.BRANCH_NAME }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+      - name: Delete Neon branch via REST API
+        run: |
+          BRANCH_ID=$(curl -sf \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+            | jq -r --arg name "$BRANCH_NAME" '.branches[] | select(.name == $name) | .id')
+
+          if [ -z "$BRANCH_ID" ]; then
+            echo "Branch '$BRANCH_NAME' not found in Neon — nothing to delete."
+            exit 0
+          fi
+
+          curl -sf -X DELETE \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID"
+
+          echo "Deleted Neon branch: $BRANCH_NAME ($BRANCH_ID)"

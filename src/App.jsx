@@ -37,7 +37,10 @@ import worldData from './data/world.json';
 import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
 import BottomTabBar from './components/BottomTabBar';
+import NavigationStack from './components/NavigationStack';
 import GamesPanel from './components/GamesPanel';
+import SocialScreen from './components/SocialScreen';
+import ProfileScreen from './components/ProfileScreen';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 
@@ -843,9 +846,7 @@ export default function App() {
 
       {/* Mobile tab screens — full-screen overlays over the map */}
       {isMobile && !isShareMode && activeTab === 'social' && (
-        <div className="tab-screen">
-          <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-        </div>
+        <SocialScreen onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
         <div className="tab-screen">
@@ -853,14 +854,14 @@ export default function App() {
         </div>
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <div className="tab-screen tab-screen-placeholder">
-          <span className="tab-screen-placeholder-icon">👤</span>
-          <p>Profile — coming in Phase 2</p>
-        </div>
+        <ProfileScreen />
       )}
 
+      {/* Pushed screens — rendered on top of whatever tab is active */}
+      {isMobile && !isShareMode && <NavigationStack />}
+
       {!isMobile && gamesOpen && (
-        <div className="tab-screen" style={{ zIndex: 1200 }}>
+        <div className="tab-screen" style={{ zIndex: 1300 }}>
           <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
         </div>
       )}
