@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import useGeographyGame from '../../hooks/useGeographyGame';
 import { saveHighScore, isNewHighScore } from '../../utils/gameScores';
 import { recordGameCompletion } from '../../utils/gameAchievements';
@@ -55,19 +55,32 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
     status, isCorrect, submit, skip, finish,
   } = useGeographyGame(pool, { onFinish: handleFinish });
 
+  // Clear highlights immediately when the question advances
+  useEffect(() => {
+    setCorrectId(null);
+    setIncorrectId(null);
+  }, [questionIndex]);
+
+  // Keep a ref to always-fresh click state so handleCountryClick can be stable
+  const clickStateRef = useRef({ status, question, submit });
+  clickStateRef.current = { status, question, submit };
+
+  // Stable callback — Leaflet registers this once at GeoJSON mount; the ref ensures
+  // it always reads the current question and status, not a stale closure.
   const handleCountryClick = useCallback((clickedId) => {
-    if (status !== 'playing' || !question) return;
-    const correct = clickedId === question.id;
+    const { status: s, question: q, submit: sub } = clickStateRef.current;
+    console.log('[MapQuiz] click', { clickedId, questionId: q?.id, status: s, correct: clickedId === q?.id });
+    if (s !== 'playing' || !q) return;
+    const correct = clickedId === q.id;
     if (correct) {
       setCorrectId(clickedId);
       setIncorrectId(null);
     } else {
       setIncorrectId(clickedId);
-      setCorrectId(question.id);
+      setCorrectId(q.id);
     }
-    submit(clickedId);
-    setTimeout(() => { setCorrectId(null); setIncorrectId(null); }, 1200);
-  }, [status, question, submit]);
+    sub(clickedId);
+  }, []); // empty deps — stable reference, reads live state via ref
 
   if (status === 'finished') {
     return (
@@ -85,7 +98,6 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   if (!question) return null;
 
   const gameMode = {
-    targetId: question.id,
     onCountryClick: handleCountryClick,
     correctId,
     incorrectId,
@@ -106,7 +118,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         padding: '8px 16px', fontSize: '0.9rem', fontWeight: 600, zIndex: 500,
         pointerEvents: 'none', whiteSpace: 'nowrap',
       }}>
-        🔵 Click: {question.name}
+        Find: {question.name}
       </div>
       <div style={{ flex: 1, position: 'relative' }}>
         <WorldMap

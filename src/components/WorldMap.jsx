@@ -208,6 +208,8 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
 export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode }) {
   const geoJsonRef = useRef(null);
   // Use refs so event handlers always read current values even with stale closures
+  const gameModeRef = useRef(gameMode);
+  gameModeRef.current = gameMode; // sync update — no async window
   const comparisonModeRef = useRef(comparisonMode);
   useEffect(() => { comparisonModeRef.current = comparisonMode; }, [comparisonMode]);
   const visitedRef = useRef(visited);
@@ -249,6 +251,25 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     [greaterIsraelEnabled]
   );
 
+  // Imperatively update game-mode styles (react-leaflet GeoJSON doesn't reliably re-apply
+  // the style prop when correctId/incorrectId change, especially on mobile)
+  useEffect(() => {
+    if (!gameMode) return;
+    const layer = geoJsonRef.current;
+    if (!layer) return;
+    layer.eachLayer((l) => {
+      const id = l.feature?.properties?.id;
+      if (!id) return;
+      if (id === gameMode.correctId) {
+        l.setStyle({ fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 });
+      } else if (id === gameMode.incorrectId) {
+        l.setStyle({ fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 });
+      } else {
+        l.setStyle({ fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 });
+      }
+    });
+  }, [gameMode]);
+
   // Update GeoJSON styles when visited set changes (without remounting)
   useEffect(() => {
     if (gameMode) return;
@@ -282,7 +303,6 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       if (gameMode) {
         if (id === gameMode.correctId) return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
         if (id === gameMode.incorrectId) return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.targetId) return { fillColor: '#3b82f6', fillOpacity: 0.75, color: '#fff', weight: 2 };
         return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
       }
 
@@ -327,7 +347,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           if (el) el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
         },
         mouseover: (e) => {
-          if (gameMode) return;
+          if (gameModeRef.current) return;
           const target = e.target;
           const isVisited = visitedRef.current.has(id);
           const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
@@ -340,7 +360,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.bringToFront();
         },
         mouseout: (e) => {
-          if (gameMode) return;
+          if (gameModeRef.current) return;
           const target = e.target;
           const isVisited = visitedRef.current.has(id);
           const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
@@ -356,8 +376,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.setStyle(style);
         },
         click: (e) => {
-          if (gameMode) {
-            gameMode.onCountryClick(id);
+          if (gameModeRef.current) {
+            gameModeRef.current.onCountryClick(id);
             return;
           }
           if (comparisonModeRef.current) return;
@@ -374,7 +394,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
       });
     },
-    [onToggle, greaterIsraelEnabled, gameMode]
+    [onToggle, greaterIsraelEnabled]
   );
 
   useEffect(() => {
