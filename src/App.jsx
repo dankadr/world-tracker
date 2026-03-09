@@ -37,6 +37,7 @@ import worldData from './data/world.json';
 import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
 import BottomTabBar from './components/BottomTabBar';
+import GamesPanel from './components/GamesPanel';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 
@@ -523,6 +524,7 @@ export default function App() {
   }, [searchRef]);
 
   const [peekStatsOpen, setPeekStatsOpen] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
@@ -645,6 +647,15 @@ export default function App() {
                 </p>
               </div>
             )}
+            {!isShareMode && !isMobile && (
+              <button
+                className="games-desktop-btn"
+                onClick={() => setGamesOpen(true)}
+                title="Geography Games"
+              >
+                🎮
+              </button>
+            )}
             {comparisonFriend && (
               <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
                 📊 Compare Stats
@@ -764,6 +775,15 @@ export default function App() {
               comparisonMode={!!comparisonFriend}
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
+            {!isMobile && !isShareMode && (
+              <button
+                className="games-desktop-btn"
+                onClick={() => setGamesOpen(true)}
+                title="Geography Games"
+              >
+                🎮
+              </button>
+            )}
             {isMobile && !isShareMode && (
               <div className="map-controls-cluster">
                 <ExportButton country={country} />
@@ -828,15 +848,20 @@ export default function App() {
         </div>
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
-        <div className="tab-screen tab-screen-placeholder">
-          <span className="tab-screen-placeholder-icon">🗺️</span>
-          <p>Explore — coming in Phase 2</p>
+        <div className="tab-screen">
+          <GamesPanel worldVisited={worldVisited} />
         </div>
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
         <div className="tab-screen tab-screen-placeholder">
           <span className="tab-screen-placeholder-icon">👤</span>
           <p>Profile — coming in Phase 2</p>
+        </div>
+      )}
+
+      {!isMobile && gamesOpen && (
+        <div className="tab-screen" style={{ zIndex: 1200 }}>
+          <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
         </div>
       )}
 

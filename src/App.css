@@ -910,6 +910,31 @@ body {
   box-shadow: var(--glass-specular-strong), var(--glass-hover-glow);
 }
 
+.games-desktop-btn {
+  position: absolute;
+  top: 12px;
+  right: 56px;
+  z-index: 1000;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.25s;
+}
+.games-desktop-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--glass-specular-strong), var(--glass-hover-glow);
+}
+
 .export-spinner {
   width: 16px;
   height: 16px;

@@ -144,5 +144,10 @@
   { "id": "challenge-team-player", "icon": "🤝", "title": "Team Player", "desc": "Complete a collaborative challenge with 5+ participants", "category": "Challenges", "rule": { "type": "largeTeamChallenge", "min": 1 } },
   { "id": "challenge-creator", "icon": "✨", "title": "Challenge Creator", "desc": "Create a challenge", "category": "Challenges", "rule": { "type": "challengesCreated", "min": 1 } },
 
-  { "id": "easter-greater-israel", "icon": "🕎", "title": "ארץ ישראל השלמה", "desc": "Discover the ancient vision", "category": "Secret", "rule": { "type": "easterEggToggled", "easterEgg": "greater-israel" } }
+  { "id": "easter-greater-israel", "icon": "🕎", "title": "ארץ ישראל השלמה", "desc": "Discover the ancient vision", "category": "Secret", "rule": { "type": "easterEggToggled", "easterEgg": "greater-israel" } },
+
+  { "id": "game-first", "icon": "🎮", "title": "First Quiz", "desc": "Complete any geography quiz", "category": "Games", "rule": { "type": "gameCompleted" } },
+  { "id": "game-perfect", "icon": "⭐", "title": "Perfect Score", "desc": "Score 100% on any quiz", "category": "Games", "rule": { "type": "gameCompleted", "minPct": 100 } },
+  { "id": "game-cartographer", "icon": "🗺️", "title": "Cartographer", "desc": "Complete the full world map quiz", "category": "Games", "rule": { "type": "gameCompleted", "mode": "map_all" } },
+  { "id": "game-flag-master", "icon": "🏳️", "title": "Flag Master", "desc": "Score 100% on the Flag Quiz", "category": "Games", "rule": { "type": "gameCompleted", "mode": "flag", "minPct": 100 } }
 ]
