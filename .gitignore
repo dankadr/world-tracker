@@ -60,3 +60,4 @@ htmlcov/
 
 # Git worktrees
 .worktrees/
+scripts/gadm41_NOR_1.json
