@@ -1,5 +1,14 @@
 /* ===== Shared Game Styles ===== */
 
+/* Shape Quiz — target country pulse */
+@keyframes map-target-pulse {
+  0%, 100% { fill-opacity: 0.9; }
+  50%       { fill-opacity: 0.35; }
+}
+.map-target-pulse {
+  animation: map-target-pulse 1.4s ease-in-out infinite;
+}
+
 .game-top-bar {
   display: flex;
   align-items: center;
