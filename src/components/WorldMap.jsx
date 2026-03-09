@@ -218,7 +218,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
   const { dark } = useTheme();
   const [tileUrl, setTileUrl] = useState(
-    dark ? LAYERS[0].dark : LAYERS[0].light
+    dark ? LAYERS[1].dark : LAYERS[1].light
   );
   const [wishlistActive, setWishlistActive] = useState(true);
   const wishlistActiveRef = useRef(wishlistActive);

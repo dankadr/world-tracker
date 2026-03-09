@@ -14,7 +14,7 @@ export default function MapLayerControl({
   onUnescoToggle,
   unescoActive,
 }) {
-  const [active, setActive] = useState('clean');
+  const [active, setActive] = useState('labels');
   const [open, setOpen] = useState(false);
   const { dark } = useTheme();
   const wrapperRef = useRef(null);
