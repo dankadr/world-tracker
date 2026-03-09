@@ -74,7 +74,7 @@ function CapitalConfig({ onStart, onBack }) {
   );
 }
 
-export default function GamesPanel({ worldVisited }) {
+export default function GamesPanel({ worldVisited, onClose }) {
   const [screen, setScreen] = useState('home');
   const [mapFilter, setMapFilter] = useState('all');
   const [capitalSubMode, setCapitalSubMode] = useState('country_to_capital');
@@ -89,6 +89,9 @@ export default function GamesPanel({ worldVisited }) {
 
   return (
     <div className="games-panel">
+      {onClose && (
+        <button className="games-panel-close" onClick={onClose}>✕</button>
+      )}
       <h1 className="games-panel-title">🎮 Geography Games</h1>
       <p className="games-panel-subtitle">Test your geography knowledge</p>
       <div className="games-grid">

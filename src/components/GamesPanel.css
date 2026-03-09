@@ -1,4 +1,5 @@
 .games-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -114,4 +115,24 @@
   cursor: pointer;
   padding: 0;
   text-align: left;
+}
+
+.games-panel-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: 1px solid var(--border, rgba(0,0,0,0.12));
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-secondary, #6b7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.games-panel-close:hover {
+  background: rgba(0,0,0,0.05);
 }

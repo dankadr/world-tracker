@@ -524,6 +524,7 @@ export default function App() {
   }, [searchRef]);
 
   const [peekStatsOpen, setPeekStatsOpen] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
@@ -765,6 +766,15 @@ export default function App() {
               comparisonMode={!!comparisonFriend}
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
+            {!isMobile && !isShareMode && (
+              <button
+                className="games-desktop-btn"
+                onClick={() => setGamesOpen(true)}
+                title="Geography Games"
+              >
+                🎮
+              </button>
+            )}
             {isMobile && !isShareMode && (
               <div className="map-controls-cluster">
                 <ExportButton country={country} />
@@ -837,6 +847,12 @@ export default function App() {
         <div className="tab-screen tab-screen-placeholder">
           <span className="tab-screen-placeholder-icon">👤</span>
           <p>Profile — coming in Phase 2</p>
+        </div>
+      )}
+
+      {!isMobile && gamesOpen && (
+        <div className="tab-screen" style={{ zIndex: 1200 }}>
+          <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
         </div>
       )}
 
