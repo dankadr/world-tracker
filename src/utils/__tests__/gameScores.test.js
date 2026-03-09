@@ -28,6 +28,16 @@ describe('isNewHighScore', () => {
     saveHighScore('flag', { correct: 50, total: 195, pct: 26 });
     expect(isNewHighScore('flag', 25)).toBe(false);
   });
+
+  it('returns false when pct equals stored pct (tie)', () => {
+    saveHighScore('flag', { correct: 50, total: 195, pct: 26 });
+    expect(isNewHighScore('flag', 26)).toBe(false);
+  });
+
+  it('isNewHighScore returns true when stored score has no pct', () => {
+    localStorage.setItem('swiss-tracker-game-scores', JSON.stringify({ flag: { correct: 5 } }));
+    expect(isNewHighScore('flag', 0)).toBe(true);
+  });
 });
 
 describe('saveHighScore', () => {
@@ -40,5 +50,28 @@ describe('saveHighScore', () => {
     saveHighScore('flag', { correct: 80, total: 195, pct: 41 });
     saveHighScore('flag', { correct: 30, total: 195, pct: 15 });
     expect(getHighScore('flag').pct).toBe(41);
+  });
+
+  it('does not overwrite equal score', () => {
+    saveHighScore('flag', { correct: 80, total: 195, pct: 41 });
+    saveHighScore('flag', { correct: 100, total: 195, pct: 41 }); // same pct, different correct
+    expect(getHighScore('flag').correct).toBe(80); // first one preserved
+  });
+});
+
+describe('load() resilience', () => {
+  it('returns empty object when stored value is null JSON', () => {
+    localStorage.setItem('swiss-tracker-game-scores', 'null');
+    expect(getHighScore('flag')).toBeNull();
+  });
+
+  it('returns empty object when stored value is an array', () => {
+    localStorage.setItem('swiss-tracker-game-scores', '[]');
+    expect(getHighScore('flag')).toBeNull();
+  });
+
+  it('returns empty object when stored value is invalid JSON', () => {
+    localStorage.setItem('swiss-tracker-game-scores', 'not-json');
+    expect(getHighScore('flag')).toBeNull();
   });
 });

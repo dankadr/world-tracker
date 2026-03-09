@@ -1,8 +1,12 @@
 const STORAGE_KEY = 'swiss-tracker-game-scores';
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 function save(data) {
@@ -16,7 +20,7 @@ export function getHighScore(key) {
 
 export function isNewHighScore(key, pct) {
   const best = getHighScore(key);
-  return !best || pct > best.pct;
+  return !best || typeof best.pct !== 'number' || pct > best.pct;
 }
 
 export function saveHighScore(key, scoreObj) {
