@@ -205,7 +205,7 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
   );
 }
 
-export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode }) {
+export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode }) {
   const geoJsonRef = useRef(null);
   // Use refs so event handlers always read current values even with stale closures
   const comparisonModeRef = useRef(comparisonMode);
@@ -276,6 +276,15 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   const getStyle = useCallback(
     (feature) => {
       const id = feature.properties.id;
+
+      // Game mode overrides all other styles
+      if (gameMode) {
+        if (id === gameMode.correctId) return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.incorrectId) return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.targetId) return { fillColor: '#3b82f6', fillOpacity: 0.75, color: '#fff', weight: 2 };
+        return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
+      }
+
       const isVisited = visited.has(id);
       const isWishlisted = wishlistActive && wishlist?.has(id);
       const isTracked = id in TRACKED_COUNTRY_IDS;
@@ -295,7 +304,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
       return style;
     },
-    [visited, wishlist, wishlistActive, greaterIsraelEnabled]
+    [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]
   );
 
   const onEachFeature = useCallback(
@@ -344,6 +353,10 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           target.setStyle(style);
         },
         click: (e) => {
+          if (gameMode) {
+            gameMode.onCountryClick(id);
+            return;
+          }
           if (comparisonModeRef.current) return;
           onToggle(id);
           const target = e.target;
@@ -358,7 +371,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         },
       });
     },
-    [onToggle, greaterIsraelEnabled]
+    [onToggle, greaterIsraelEnabled, gameMode]
   );
 
   useEffect(() => {
@@ -386,9 +399,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     >
       <MapController center={[20, 0]} zoom={2} />
       <TileLayer
-        key={tileUrl}
+        key={gameMode ? 'game-clean' : tileUrl}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        url={tileUrl}
+        url={gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl}
       />
       {friendsActive && !comparisonFriend && (
         <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
@@ -421,7 +434,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           friendName={comparisonFriend.name}
         />
       )}
-      <MapLayerControl
+      {!gameMode && <MapLayerControl
         onLayerChange={setTileUrl}
         onFriendsToggle={onFriendsToggle}
         friendsActive={friendsActive}
@@ -429,7 +442,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         wishlistActive={wishlistActive}
         onUnescoToggle={setUnescoActive}
         unescoActive={unescoActive}
-      />
+      />}
       {unescoActive && <UnescoLayer />}
       {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
         <FriendOverlayLegend friendOverlayData={friendOverlayData} />
