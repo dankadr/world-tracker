@@ -75,6 +75,21 @@ const FRIEND_LABEL_LAYERS = {
   dark: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
 };
 
+function GameFocuser({ targetId, geoJsonRef }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!targetId || !geoJsonRef.current) return;
+    geoJsonRef.current.eachLayer((l) => {
+      if (l.feature?.properties?.id === targetId) {
+        try {
+          map.fitBounds(l.getBounds(), { padding: [60, 60], maxZoom: 6, animate: true });
+        } catch (_) {}
+      }
+    });
+  }, [targetId, map, geoJsonRef]);
+  return null;
+}
+
 function MapController({ center, zoom }) {
   const map = useMap();
   const initialized = useRef(false);
@@ -428,6 +443,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       maxBoundsViscosity={0.7}
     >
       <MapController center={[20, 0]} zoom={2} />
+      {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
       <TileLayer
         key={gameMode ? 'game-clean' : tileUrl}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
