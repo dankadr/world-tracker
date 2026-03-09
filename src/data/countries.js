@@ -12,6 +12,14 @@ import japanData from './japan.json';
 import australiaData from './australia.json';
 import philippinesData from './philippines.json';
 import brazilData from './brazil.json';
+import franceData from './france.json';
+import germanyData from './germany.json';
+import italyData from './italy.json';
+import spainData from './spain.json';
+import mexicoData from './mexico.json';
+import ukData from './uk.json';
+import indiaData from './india.json';
+import newZealandData from './new-zealand.json';
 
 // Map geoFile names to imported data
 const geoMap = {
@@ -26,6 +34,14 @@ const geoMap = {
   'australia.json': australiaData,
   'philippines.json': philippinesData,
   'brazil.json': brazilData,
+  'france.json': franceData,
+  'germany.json': germanyData,
+  'italy.json': italyData,
+  'spain.json': spainData,
+  'mexico.json': mexicoData,
+  'uk.json': ukData,
+  'india.json': indiaData,
+  'new-zealand.json': newZealandData,
 };
 
 // Build countries object from config
