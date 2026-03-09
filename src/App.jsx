@@ -37,6 +37,7 @@ import worldData from './data/world.json';
 import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
 import BottomTabBar from './components/BottomTabBar';
+import GamesPanel from './components/GamesPanel';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 
@@ -828,9 +829,8 @@ export default function App() {
         </div>
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
-        <div className="tab-screen tab-screen-placeholder">
-          <span className="tab-screen-placeholder-icon">🗺️</span>
-          <p>Explore — coming in Phase 2</p>
+        <div className="tab-screen">
+          <GamesPanel worldVisited={worldVisited} />
         </div>
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
