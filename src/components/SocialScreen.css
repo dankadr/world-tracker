@@ -11,7 +11,7 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-.dark .social-seg-header {
+[data-theme="dark"] .social-seg-header {
   background: rgba(30, 22, 18, 0.92);
   border-bottom-color: rgba(180, 130, 70, 0.1);
 }
@@ -26,7 +26,7 @@
   max-width: 320px;
 }
 
-.dark .social-seg-control {
+[data-theme="dark"] .social-seg-control {
   background: rgba(255, 255, 255, 0.07);
 }
 
@@ -54,7 +54,7 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dark .social-seg-btn.active {
+[data-theme="dark"] .social-seg-btn.active {
   background: rgba(255, 255, 255, 0.12);
   color: var(--text-primary, #f5ede0);
 }

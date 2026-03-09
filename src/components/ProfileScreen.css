@@ -11,7 +11,7 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-.dark .profile-seg-header {
+[data-theme="dark"] .profile-seg-header {
   background: rgba(30, 22, 18, 0.92);
   border-bottom-color: rgba(180, 130, 70, 0.1);
 }
@@ -26,7 +26,7 @@
   max-width: 280px;
 }
 
-.dark .profile-seg-control {
+[data-theme="dark"] .profile-seg-control {
   background: rgba(255, 255, 255, 0.07);
 }
 
@@ -53,7 +53,7 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dark .profile-seg-btn.active {
+[data-theme="dark"] .profile-seg-btn.active {
   background: rgba(255, 255, 255, 0.12);
   color: var(--text-primary, #f5ede0);
 }
@@ -136,7 +136,7 @@
   text-overflow: ellipsis;
 }
 
-.dark .profile-username {
+[data-theme="dark"] .profile-username {
   color: var(--text-primary, #f5ede0);
 }
 
@@ -153,7 +153,7 @@
   color: var(--text-secondary, #9a8070);
 }
 
-.dark .profile-level-label {
+[data-theme="dark"] .profile-level-label {
   color: var(--text-secondary, #b09a84);
 }
 
@@ -170,7 +170,7 @@
   overflow: hidden;
 }
 
-.dark .profile-xp-bar {
+[data-theme="dark"] .profile-xp-bar {
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -188,7 +188,7 @@
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
 }
 
-.dark .profile-xp-label {
+[data-theme="dark"] .profile-xp-label {
   color: var(--text-secondary, #b09a84);
 }
 
@@ -207,7 +207,7 @@
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
 }
 
-.dark .profile-total-xp {
+[data-theme="dark"] .profile-total-xp {
   color: var(--text-secondary, #b09a84);
 }
 
@@ -245,6 +245,6 @@
   text-align: center;
 }
 
-.dark .achievements-tab-summary {
+[data-theme="dark"] .achievements-tab-summary {
   color: var(--text-secondary, #b09a84);
 }
