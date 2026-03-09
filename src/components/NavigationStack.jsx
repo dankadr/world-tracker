@@ -1,11 +1,9 @@
 import { useNavigation } from '../context/NavigationContext';
+import ChallengeScreen from './ChallengeScreen';
 
-// Registry — call registerScreen(name, Component) to add pushable screens
-const SCREEN_REGISTRY = {};
-
-export function registerScreen(name, Component) {
-  SCREEN_REGISTRY[name] = Component;
-}
+const SCREEN_REGISTRY = {
+  challenge: ChallengeScreen,
+};
 
 /**
  * Renders pushed screens for the active tab.

@@ -41,6 +41,7 @@ import NavigationStack from './components/NavigationStack';
 import GamesPanel from './components/GamesPanel';
 import SocialScreen from './components/SocialScreen';
 import ProfileScreen from './components/ProfileScreen';
+import ExploreScreen from './components/ExploreScreen';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 
@@ -182,6 +183,7 @@ export default function App() {
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggle(regionId);
     if (!wasVisited) {
       grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
@@ -284,6 +286,7 @@ export default function App() {
 
   const handleToggleWorldCountry = useCallback((countryCode) => {
     const wasVisited = worldVisited.has(countryCode);
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
@@ -849,9 +852,11 @@ export default function App() {
         <SocialScreen onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
-        <div className="tab-screen">
-          <GamesPanel worldVisited={worldVisited} />
-        </div>
+        <ExploreScreen
+          worldVisited={worldVisited}
+          onToggleWorld={handleToggleWorldCountry}
+          onExploreCountry={handleExploreCountry}
+        />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
         <ProfileScreen />
