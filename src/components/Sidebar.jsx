@@ -12,6 +12,7 @@ import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
 import ConfirmDialog from './ConfirmDialog';
 import AddToBucketListModal from './AddToBucketListModal';
+import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 
 export default function Sidebar({
@@ -40,6 +41,7 @@ export default function Sidebar({
   bucketListItems,
   onAddToBucketList,
   isMobile,
+  onShowOnboarding,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
@@ -282,18 +284,13 @@ export default function Sidebar({
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
-        {!readOnly && (
-          <button className="reset-btn" onClick={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}>
-            Reset {country.regionLabel}
-          </button>
-        )}
       </div>
-      {!readOnly && (
-        <div className="sidebar-footer-secondary">
-          <button className="reset-all-btn" onClick={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}>
-            Reset Everything
-          </button>
-        </div>
+      {!isMobile && !readOnly && (
+        <SettingsPanel
+          onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+          onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+          onShowOnboarding={onShowOnboarding}
+        />
       )}
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}

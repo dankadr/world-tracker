@@ -727,6 +727,10 @@ export default function App() {
                 onOpenFriends={handleOpenFriends}
                 friendsPendingCount={pendingCount}
                 isMobile={isMobile}
+                onShowOnboarding={() => {
+                  localStorage.removeItem('onboarding-dismissed');
+                  window.location.reload();
+                }}
               />
             </MobileBottomSheet>
             )
@@ -756,6 +760,10 @@ export default function App() {
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
               isMobile={isMobile}
+              onShowOnboarding={() => {
+                localStorage.removeItem('onboarding-dismissed');
+                window.location.reload();
+              }}
             />
           )}
           <main className="map-container">
