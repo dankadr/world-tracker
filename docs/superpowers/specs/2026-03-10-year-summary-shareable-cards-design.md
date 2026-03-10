@@ -31,7 +31,7 @@ The "📥 Save" button label changes to "Share" to reflect the new format-picker
 - `variant: "yearly" | "alltime"`
 - `format: "portrait" | "square"`
 - `stats` — yearly stats object (from `computeYearStats`) or all-time stats object (from `computeAllTimeStats`)
-- `cardRef` — forwarded ref for html2canvas targeting
+- Use `React.forwardRef` and attach the forwarded `ref` to the root div — callers pass a standard `ref` prop for html2canvas targeting
 
 **Fixed pixel dimensions:**
 - Portrait: 450 × 800px
@@ -41,7 +41,7 @@ The "📥 Save" button label changes to "Share" to reflect the new format-picker
 - App logo + "Right World" wordmark
 - Year + "Year in Review" subtitle
 - Gold divider line
-- 2×2 grid of stat boxes: Regions, Trackers, Days, Badges (gold numbers, navy boxes with gold borders)
+- 2×2 grid of stat boxes: Regions, Trackers, Days, Badges (all time) (gold numbers, navy boxes with gold borders)
 - Top tracker row (flag + name + count)
 - `rightworld.app` footer
 
@@ -63,14 +63,14 @@ The "📥 Save" button label changes to "Share" to reflect the new format-picker
 **Returns:**
 ```js
 {
-  worldCountries: number,   // from visited-world in localStorage
-  totalRegions: number,     // sum across all tracker visited-* keys
-  continentsVisited: number, // from continent breakdown of world countries
-  achievements: number,     // achievements.filter(a => a.unlocked).length
+  worldCountries: number,    // from visited-world in localStorage
+  totalRegions: number,      // sum of visited regions across all tracker visited-{countryId} keys
+  continentsVisited: number, // from continent breakdown of world countries using continents.json
+  achievements: number,      // call getAchievements(userId), then .filter(a => a.unlocked).length
 }
 ```
 
-Follows the same localStorage pattern as `yearStats.js` — reads `visited-{countryId}` for each tracker in `countryList`, plus `visited-world` for world countries. Uses `continents.json` for continent mapping.
+Follows the same localStorage pattern as `yearStats.js` — reads `visited-{countryId}` for each tracker in `countryList`, plus `visited-world` for world countries. Uses `continents.json` for continent mapping. Uses `getAchievements(userId)` from `src/data/achievements.js` for the badge count — identical to the pattern in `yearStats.js` lines 138–141.
 
 **Files:** `src/utils/allTimeStats.js`
 
@@ -85,10 +85,11 @@ Follows the same localStorage pattern as `yearStats.js` — reads `visited-{coun
 2. "Share" button appears in the nav bar (replacing the old "Save" button)
 3. Clicking "Share" reveals an inline format picker: **Portrait** · **Square** (two small buttons)
 4. Selecting a format:
-   - Mounts the off-screen `<ShareCard variant="yearly" format={chosen} stats={stats} />`
-   - Runs `html2canvas` on the card ref
-   - Downloads PNG as `year-in-review-{year}-{format}.png`
-   - Unmounts the off-screen card
+   - Sets `exportFormat` state → React renders the off-screen `<ShareCard ref={cardRef} variant="yearly" format={exportFormat} stats={stats} />`
+   - Use a `useEffect` watching `cardRef.current` (or a ref callback) to fire html2canvas only **after** the element is mounted in the DOM — do not call html2canvas synchronously after `setState`, as the DOM update is asynchronous
+   - While capturing: disable the format buttons and show a loading indicator ("Saving…" text or spinner)
+   - Downloads PNG as `year-in-review-{year}-{format}.png` (e.g. `year-in-review-2025-portrait.png`)
+   - Clears `exportFormat` state to unmount the off-screen card
 
 The format picker is a small row of buttons that appears inline below the nav, not a full modal.
 
@@ -100,7 +101,7 @@ The format picker is a small row of buttons that appears inline below the nav, n
 
 **Placement:** Small "Share my stats" button in the Profile tab, below the XP bar and above any existing stats content.
 
-**Flow:** Same portrait/square picker pattern as Part 4. Uses `computeAllTimeStats(userId)`. Downloads as `my-travel-stats.png`.
+**Flow:** Same portrait/square picker pattern as Part 4. Call `computeAllTimeStats(userId)` at the `ProfileScreen` level (before the tab split) and pass `allTimeStats` down as a prop to `ProfileTab` — this avoids needing to plumb `userId` into the sub-component. Downloads as `my-travel-stats-{format}.png` (e.g. `my-travel-stats-portrait.png`).
 
 The button is visually subtle — a secondary/ghost style so it doesn't compete with the main profile content.
 
@@ -113,3 +114,6 @@ The button is visually subtle — a secondary/ghost style so it doesn't compete 
 - No new dependencies — `html2canvas` is already in the project
 - `computeAllTimeStats` is a pure utility (no React), testable in isolation
 - The format picker state is local to each parent (`YearInReview`, `ProfileScreen`) — no global state needed
+- html2canvas `scale: 2` for retina output (consistent with the existing YearInReview save handler) — portrait output will be 900×1600px, square will be 1200×1200px
+- `ShareCard` is purely self-contained (no external images, no cross-origin assets) — `useCORS` and `allowTaint` are not needed
+- Both integration points must show a loading/disabled state during capture to handle slow devices
