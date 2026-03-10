@@ -1,0 +1,2 @@
+# Exclude large source files from deployment bundle
+public/brand/*.tiff
