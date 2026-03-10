@@ -179,10 +179,10 @@ export default function Sidebar({
           </button>
           <div className="sidebar-title-group">
             <h1 className="sidebar-title">
-              <img src="/logo.png" alt="" className="sidebar-logo" />
-              Travel Tracker
+              <img src="/logo-sidebar.png" alt="" className="sidebar-logo" />
+              Right World Tracker
             </h1>
-            <p className="sidebar-subtitle">Mark the places you've been</p>
+            <p className="sidebar-subtitle">Your world. Your journey.</p>
           </div>
           <div className="header-actions">
             {!readOnly && onOpenFriends && (
