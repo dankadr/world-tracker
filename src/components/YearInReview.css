@@ -333,22 +333,30 @@
 .yir-summary-title {
   font-size: 28px;
   font-weight: 800;
-  margin: 4px 0 24px;
+  margin: 4px 0 16px;
   color: #fff;
+}
+
+.yir-summary-divider {
+  width: 70%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.6), transparent);
+  margin-bottom: 20px;
 }
 
 .yir-summary-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   margin: 0 auto;
-  max-width: 320px;
+  max-width: 300px;
 }
 
 .yir-summary-stat {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  padding: 16px 12px;
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  border-radius: 14px;
+  padding: 16px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -370,11 +378,16 @@
 }
 
 .yir-summary-label {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.5);
   margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.yir-summary-top-tracker {
+  margin-top: 16px;
 }
 
 /* ===== Navigation ===== */

@@ -168,8 +168,8 @@ export default function YearInReviewCard({ type, stats, visible }) {
     case 'summary':
       return (
         <div className="yir-card yir-card-summary">
-          <div className="yir-card-icon">✨</div>
           <h2 className="yir-summary-title">{stats.year} Recap</h2>
+          <div className="yir-summary-divider" />
           <div className="yir-summary-grid">
             <div className="yir-summary-stat">
               <span className="yir-summary-num">{stats.totalRegions}</span>
@@ -185,12 +185,12 @@ export default function YearInReviewCard({ type, stats, visible }) {
             </div>
             <div className="yir-summary-stat">
               <span className="yir-summary-num">{stats.achievementsUnlocked}</span>
-              <span className="yir-summary-label">Achievements</span>
+              <span className="yir-summary-label">Badges (all time)</span>
             </div>
           </div>
           {stats.topTracker && (
-            <p className="yir-card-detail" style={{ marginTop: '16px' }}>
-              Top tracker: {stats.topTracker.flag} {stats.topTracker.name}
+            <p className="yir-card-detail yir-summary-top-tracker">
+              🏆 {stats.topTracker.flag} {stats.topTracker.name} · {stats.topTracker.count} {stats.topTracker.regionLabel.toLowerCase()}
             </p>
           )}
         </div>

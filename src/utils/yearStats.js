@@ -137,7 +137,7 @@ export function computeYearStats(userId, year) {
   let achievementsUnlocked = 0;
   try {
     const achievements = getAchievements(userId);
-    achievementsUnlocked = achievements.filter(a => a.unlocked).length;
+    achievementsUnlocked = achievements.filter(a => a.check()).length;
   } catch { /* ignore */ }
 
   // Compute previous year stats for comparison
