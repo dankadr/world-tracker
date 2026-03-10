@@ -11,16 +11,16 @@
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.88));
   backdrop-filter: blur(24px) saturate(1.6);
   -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border-top: 1px solid var(--glass-border, rgba(180, 130, 70, 0.18));
-  box-shadow: 0 -2px 16px rgba(80, 40, 10, 0.08);
+  border-top: 1px solid var(--glass-border, rgba(201, 168, 76, 0.18));
+  box-shadow: 0 -2px 16px rgba(13, 27, 42, 0.12);
   user-select: none;
   -webkit-user-select: none;
 }
 
 /* Dark mode */
 .dark .bottom-tab-bar {
-  background: rgba(38, 30, 22, 0.92);
-  border-top-color: rgba(180, 130, 70, 0.14);
+  background: rgba(5, 14, 24, 0.92);
+  border-top-color: rgba(201, 168, 76, 0.18);
 }
 
 .tab-bar-item {
@@ -57,11 +57,11 @@
   width: 24px;
   height: 24px;
   transition: color 200ms ease, transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
-  color: var(--text-secondary, #9a8070);
+  color: var(--text-secondary, #4a6a8a);
 }
 
 .tab-bar-item.active .tab-bar-icon svg {
-  color: var(--tab-active, #c07a30);
+  color: var(--tab-active, #c9a84c);
   transform: scale(1.1);
 }
 
@@ -70,13 +70,13 @@
   font-weight: 500;
   letter-spacing: 0.01em;
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
-  color: var(--text-secondary, #9a8070);
+  color: var(--text-secondary, #4a6a8a);
   transition: color 200ms ease;
   line-height: 1;
 }
 
 .tab-bar-item.active .tab-bar-label {
-  color: var(--tab-active, #c07a30);
+  color: var(--tab-active, #c9a84c);
   font-weight: 600;
 }
 
@@ -90,7 +90,7 @@
   width: 32px;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: var(--tab-active, #c07a30);
+  background: var(--tab-active, #c9a84c);
   transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 

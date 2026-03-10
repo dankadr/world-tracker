@@ -115,7 +115,7 @@ export function computeYearStats(userId, year) {
       flag: info?.flag || '',
       count: regions.length,
       regionLabel: info?.regionLabel || 'regions',
-      color: info?.visitedColor || '#d89648',
+      color: info?.visitedColor || '#c9a84c',
     };
   }).sort((a, b) => b.count - a.count);
 
