@@ -1255,33 +1255,33 @@ body {
 
 /* ======== Dark Mode ======== */
 [data-theme="dark"] {
-  --glass-bg: rgba(60, 38, 18, 0.42);
-  --glass-bg-heavy: rgba(70, 46, 22, 0.62);
-  --glass-bg-subtle: rgba(55, 34, 15, 0.28);
-  --glass-border: rgba(180, 130, 80, 0.18);
-  --glass-border-subtle: rgba(160, 110, 60, 0.12);
-  --glass-highlight: rgba(255, 220, 170, 0.10);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.50);
-  --glass-specular: inset 1px 1px 0 rgba(255, 220, 170, 0.12),
-                     inset 0 0 8px rgba(255, 200, 140, 0.05);
-  --glass-specular-strong: inset 1px 1px 0 rgba(255, 220, 170, 0.16),
-                            inset 0 0 12px rgba(255, 200, 140, 0.07);
-  --glass-hover-glow: 0 0 20px rgba(200, 140, 60, 0.15);
-  --body-bg: linear-gradient(135deg, #1c1510 0%, #251a12 40%, #2a1f15 100%);
-  --text-primary: #f0e6d8;
-  --text-secondary: #c8b09a;
-  --text-tertiary: #a08060;
-  --text-muted: #7a6048;
-  --text-on-glass: #e8dcc8;
-  --bar-track: rgba(255, 200, 140, 0.10);
-  --divider: rgba(180, 130, 80, 0.18);
-  --input-bg: rgba(60, 38, 18, 0.45);
-  --hover-bg: rgba(80, 50, 22, 0.35);
+  --glass-bg: rgba(13, 27, 42, 0.55);
+  --glass-bg-heavy: rgba(13, 27, 42, 0.78);
+  --glass-bg-subtle: rgba(13, 27, 42, 0.30);
+  --glass-border: rgba(201, 168, 76, 0.22);
+  --glass-border-subtle: rgba(201, 168, 76, 0.12);
+  --glass-highlight: rgba(201, 168, 76, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --glass-specular: inset 1px 1px 0 rgba(201, 168, 76, 0.14),
+                     inset 0 0 8px rgba(201, 168, 76, 0.06);
+  --glass-specular-strong: inset 1px 1px 0 rgba(201, 168, 76, 0.20),
+                            inset 0 0 12px rgba(201, 168, 76, 0.10);
+  --glass-hover-glow: 0 0 20px rgba(201, 168, 76, 0.18);
+  --body-bg: linear-gradient(135deg, #050e18 0%, #0d1b2a 40%, #112236 100%);
+  --text-primary: #e8d5a3;
+  --text-secondary: #b8a870;
+  --text-tertiary: #7a8a9a;
+  --text-muted: #4a5a6a;
+  --text-on-glass: #e8d5a3;
+  --bar-track: rgba(201, 168, 76, 0.10);
+  --divider: rgba(201, 168, 76, 0.16);
+  --input-bg: rgba(5, 14, 24, 0.60);
+  --hover-bg: rgba(27, 58, 92, 0.45);
 }
 
 [data-theme="dark"] body {
-  color: #e0e0e0;
+  color: #e8d5a3;
 }
 
 [data-theme="dark"] .sidebar-title {
