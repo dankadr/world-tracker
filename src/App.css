@@ -94,6 +94,7 @@ body {
 }
 
 .sidebar-title {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -473,6 +474,7 @@ body {
 }
 
 .stats-numbers {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 2.2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -1844,6 +1846,7 @@ body {
 }
 
 .stats-summary-num {
+  font-family: 'Playfair Display', Georgia, serif;
   display: block;
   font-size: 1.6rem;
   font-weight: 700;
