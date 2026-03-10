@@ -70,14 +70,14 @@
 }
 
 .confirm-dialog-btn.confirm {
-  background: #c07a30;
+  background: #c9a84c;
   color: white;
 }
 
 .confirm-dialog-btn.confirm:hover {
-  background: #a06020;
+  background: #a08030;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(192, 122, 48, 0.3);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
 }
 
 .confirm-dialog-btn.confirm.destructive {

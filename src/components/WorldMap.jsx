@@ -9,8 +9,8 @@ import UnescoLayer from './UnescoLayer';
 import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
 
-const VISITED_COLOR = '#d89648';
-const VISITED_HOVER = '#c07a30';
+const VISITED_COLOR = '#c9a84c';
+const VISITED_HOVER = '#b8943a';
 
 const TRACKED_COUNTRY_IDS = {
   ch: 'ch',

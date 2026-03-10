@@ -4,20 +4,20 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px 8px;
-  border-bottom: 1px solid var(--glass-border, rgba(180, 130, 70, 0.14));
+  border-bottom: 1px solid var(--glass-border, rgba(201, 168, 76, 0.14));
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.9));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 [data-theme="dark"] .explore-seg-header {
-  background: rgba(30, 22, 18, 0.92);
-  border-bottom-color: rgba(180, 130, 70, 0.1);
+  background: rgba(5, 14, 24, 0.92);
+  border-bottom-color: rgba(201, 168, 76, 0.1);
 }
 
 .explore-seg-control {
   display: flex;
-  background: var(--glass-bg, rgba(180, 130, 70, 0.08));
+  background: var(--glass-bg, rgba(201, 168, 76, 0.08));
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
@@ -38,7 +38,7 @@
   font-size: 14px;
   font-weight: 500;
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
-  color: var(--text-secondary, #9a8070);
+  color: var(--text-secondary, #4a6a8a);
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease, transform 100ms ease;
   -webkit-tap-highlight-color: transparent;
@@ -47,14 +47,14 @@
 
 .explore-seg-btn.active {
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.95));
-  color: var(--text-primary, #2d1f0f);
+  color: var(--text-primary, #0d1b2a);
   font-weight: 600;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="dark"] .explore-seg-btn.active {
   background: rgba(255, 255, 255, 0.12);
-  color: var(--text-primary, #f5ede0);
+  color: var(--text-primary, #e8d5a3);
 }
 
 .explore-seg-btn:active {

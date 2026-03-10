@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c07a30, #e8a84a);
+  background: linear-gradient(135deg, #c9a84c, #d4b866);
   color: #fff;
   font-size: 0.55rem;
   font-weight: 700;
@@ -249,7 +249,7 @@
 }
 
 .comparison-stats-bar-fill.you {
-  background: linear-gradient(90deg, #c07a30, #a06020);
+  background: linear-gradient(90deg, #c9a84c, #a08030);
 }
 
 .comparison-stats-bar-fill.friend {
@@ -280,11 +280,11 @@
 }
 
 .comparison-stats-card.both {
-  background: rgba(216, 150, 72, 0.1);
+  background: rgba(201, 168, 76, 0.1);
 }
 
 .comparison-stats-card.only-me {
-  background: rgba(192, 122, 48, 0.1);
+  background: rgba(201, 168, 76, 0.1);
 }
 
 .comparison-stats-card.only-friend {
@@ -298,11 +298,11 @@
 }
 
 .comparison-stats-card.both .comparison-stats-card-number {
-  color: #e8a84a;
+  color: #d4b866;
 }
 
 .comparison-stats-card.only-me .comparison-stats-card-number {
-  color: #a06020;
+  color: #a08030;
 }
 
 .comparison-stats-card.only-friend .comparison-stats-card-number {
@@ -326,8 +326,8 @@
 /* ── Compare button in FriendsPanel ── */
 .fp-compare-btn {
   border: none;
-  background: rgba(192, 122, 48, 0.1);
-  color: #c07a30;
+  background: rgba(201, 168, 76, 0.1);
+  color: #c9a84c;
   padding: 4px 10px;
   border-radius: 5px;
   font-size: 0.72rem;
@@ -339,8 +339,8 @@
 }
 
 .fp-compare-btn:hover:not(:disabled) {
-  background: rgba(192, 122, 48, 0.2);
-  box-shadow: 0 1px 4px rgba(192, 122, 48, 0.15);
+  background: rgba(201, 168, 76, 0.2);
+  box-shadow: 0 1px 4px rgba(201, 168, 76, 0.15);
 }
 
 .fp-compare-btn:disabled {
@@ -349,12 +349,12 @@
 }
 
 .fp-compare-btn.active {
-  background: #c07a30;
+  background: #c9a84c;
   color: #fff;
 }
 
 .fp-compare-btn.active:hover {
-  background: #a06020;
+  background: #a08030;
 }
 
 .fp-friend-actions {
@@ -403,11 +403,11 @@
 }
 
 [data-theme="dark"] .comparison-stats-card.both {
-  background: rgba(216, 150, 72, 0.08);
+  background: rgba(201, 168, 76, 0.08);
 }
 
 [data-theme="dark"] .comparison-stats-card.only-me {
-  background: rgba(192, 122, 48, 0.08);
+  background: rgba(201, 168, 76, 0.08);
 }
 
 [data-theme="dark"] .comparison-stats-card.only-friend {

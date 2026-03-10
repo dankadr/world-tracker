@@ -68,12 +68,12 @@
 
 .easter-egg-input:focus {
   outline: none;
-  border-color: #e8a84a;
-  box-shadow: 0 0 0 3px rgba(232, 168, 74, 0.1);
+  border-color: #d4b866;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
 [data-theme="dark"] .easter-egg-input:focus {
-  box-shadow: 0 0 0 3px rgba(232, 168, 74, 0.2);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
 }
 
 .easter-egg-error {
@@ -102,14 +102,14 @@
 }
 
 .easter-egg-submit {
-  background: #e8a84a;
+  background: #d4b866;
   color: white;
 }
 
 .easter-egg-submit:hover {
-  background: #c07a30;
+  background: #c9a84c;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(192, 122, 48, 0.3);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
 }
 
 .easter-egg-submit:active {

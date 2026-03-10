@@ -100,7 +100,7 @@
 
 .stat-value {
   font-weight: 700;
-  color: #e8a84a;
+  color: #d4b866;
   font-size: 24px;
 }
 
@@ -152,9 +152,9 @@
 
 .filters-toggle-btn,
 .clear-filters-btn {
-  border: 1px solid rgba(192, 122, 48, 0.25);
-  background: rgba(192, 122, 48, 0.08);
-  color: #9b5f1f;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  background: rgba(201, 168, 76, 0.08);
+  color: #7a6a2a;
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 12px;
@@ -162,7 +162,7 @@
 }
 
 .filters-toggle-btn.active {
-  background: rgba(192, 122, 48, 0.18);
+  background: rgba(201, 168, 76, 0.18);
 }
 
 .results-summary {
@@ -186,8 +186,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #c07a30;
-  box-shadow: 0 0 0 3px rgba(192, 122, 48, 0.1);
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
 }
 
 .filter-row {
@@ -219,9 +219,9 @@
 
 .unesco-panel.dark .filters-toggle-btn,
 .unesco-panel.dark .clear-filters-btn {
-  background: rgba(192, 122, 48, 0.2);
-  border-color: rgba(232, 168, 74, 0.3);
-  color: #f2c47c;
+  background: rgba(201, 168, 76, 0.2);
+  border-color: rgba(201, 168, 76, 0.3);
+  color: #d4b866;
 }
 
 .unesco-panel.dark .results-summary {
@@ -230,7 +230,7 @@
 
 .filter-row select:focus {
   outline: none;
-  border-color: #c07a30;
+  border-color: #c9a84c;
 }
 
 .unesco-list {
@@ -302,20 +302,20 @@
 }
 
 .site-item:hover {
-  background: rgba(192, 122, 48, 0.05);
-  border-color: rgba(192, 122, 48, 0.2);
+  background: rgba(201, 168, 76, 0.05);
+  border-color: rgba(201, 168, 76, 0.2);
 }
 
 .unesco-panel.dark .site-item:hover {
-  background: rgba(192, 122, 48, 0.1);
+  background: rgba(201, 168, 76, 0.1);
 }
 
 .site-item.visited {
-  background: rgba(216, 150, 72, 0.05);
+  background: rgba(201, 168, 76, 0.05);
 }
 
 .unesco-panel.dark .site-item.visited {
-  background: rgba(216, 150, 72, 0.1);
+  background: rgba(201, 168, 76, 0.1);
 }
 
 .site-checkbox {
@@ -333,8 +333,8 @@
 }
 
 .site-item.visited .site-checkbox {
-  background: #d89648;
-  border-color: #d89648;
+  background: #c9a84c;
+  border-color: #c9a84c;
   color: white;
   font-weight: bold;
 }
