@@ -140,7 +140,7 @@ export default function WorldSidebar({
           </button>
           <div className="sidebar-title-group">
             <h1 className="sidebar-title">
-              <img src="/logo-sidebar.png" alt="" className="sidebar-logo" />
+              <span className="sidebar-logo-emoji">🧭</span>
               Right World Tracker
             </h1>
             <p className="sidebar-subtitle">Your world. Your journey.</p>
