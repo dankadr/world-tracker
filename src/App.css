@@ -2946,7 +2946,7 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .mobile-bottom-sheet[data-snap="92"] .sheet-body {
+  .mobile-bottom-sheet[data-snap="92"] {
     padding-top: env(safe-area-inset-top, 44px);
   }
 
