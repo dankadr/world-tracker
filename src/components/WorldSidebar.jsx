@@ -140,10 +140,10 @@ export default function WorldSidebar({
           </button>
           <div className="sidebar-title-group">
             <h1 className="sidebar-title">
-              <span className="world-globe-icon">🌍</span>
-              World Tracker
+              <img src="/logo-sidebar.png" alt="" className="sidebar-logo" />
+              Right World Tracker
             </h1>
-            <p className="sidebar-subtitle">Track every country you visit</p>
+            <p className="sidebar-subtitle">Your world. Your journey.</p>
           </div>
           <div className="header-actions">
             {onOpenFriends && (
