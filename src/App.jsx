@@ -859,7 +859,7 @@ export default function App() {
         />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <ProfileScreen />
+        <ProfileScreen onReset={reset} onResetAll={resetAll} />
       )}
 
       {/* Pushed screens — rendered on top of whatever tab is active */}

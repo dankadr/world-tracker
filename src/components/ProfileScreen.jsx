@@ -5,13 +5,14 @@ import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
 import AchievementCard from './AchievementCard';
 import StatsModal from './StatsModal';
+import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 import useXp from '../hooks/useXp';
 import getAchievements from '../data/achievements';
 import { computeProgress } from '../utils/achievementProgress';
 import './ProfileScreen.css';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ onReset, onResetAll }) {
   const [tab, setTab] = useState('profile');
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
           {[
             { id: 'profile', label: 'Profile' },
             { id: 'achievements', label: 'Badges' },
+            { id: 'settings', label: 'Settings' },
           ].map(({ id, label }) => (
             <button
               key={id}
@@ -55,6 +57,16 @@ export default function ProfileScreen() {
           />
         )}
         {tab === 'achievements' && <AchievementsTab userId={userId} />}
+        {tab === 'settings' && (
+          <SettingsPanel
+            onReset={onReset}
+            onResetAll={onResetAll}
+            onShowOnboarding={() => {
+              localStorage.removeItem('onboarding-dismissed');
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
 
       {showAvatarEditor && (
