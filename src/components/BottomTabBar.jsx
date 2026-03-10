@@ -56,7 +56,7 @@ export default function BottomTabBar({ activeTab, onTabChange, socialBadge = 0 }
           aria-selected={activeTab === id}
           aria-label={label}
           className={`tab-bar-item${activeTab === id ? ' active' : ''}`}
-          onClick={() => onTabChange(id)}
+          onClick={() => { navigator.vibrate?.(8); onTabChange(id); }}
         >
           <span className="tab-bar-icon">
             <Icon />
