@@ -1,6 +1,6 @@
-# Travel Tracker
+# Right World Tracker
 
-An interactive web app to track your travels across the world. Mark countries on the world map, explore detailed region trackers, track capitals and UNESCO sites, set travel goals, and unlock achievements along the way. Supports optional Google login for cross-device sync.
+Your world. Your journey. — An interactive travel tracker where you mark countries, explore detailed region maps, track capitals and UNESCO sites, set goals, and unlock achievements. Supports optional Google login for cross-device sync.
 
 ## Supported Trackers
 
@@ -17,10 +17,11 @@ An interactive web app to track your travels across the world. Mark countries on
 | 🇯🇵 Japan | 47 prefectures | Polygon |
 | 🇦🇺 Australia | 8 states & territories | Polygon |
 | 🇵🇭 Philippines | 17 regions | Polygon |
+| 🇧🇷 Brazil | 26 states + DF | Polygon |
 
 ## Feature Highlights
 
-- **World + Regional Maps** — 11 tracker views with polygon and point datasets.
+- **World + Regional Maps** — 12 tracker views with polygon and point datasets.
 - **UNESCO Overlay** — optional UNESCO World Heritage layer with **270 sites**.
 - **Bucket List Planner** — add planned trips, target dates, and mark destinations complete.
 - **Travel Challenges** — create personal or friend challenges with streak-friendly progress.
@@ -33,8 +34,49 @@ An interactive web app to track your travels across the world. Mark countries on
 - **Wishlist / Planned** — mark places to visit next and manage a global wish list.
 - **Map Layer Controls** — switch base maps (clean, labels, satellite, terrain).
 - **Export + Share** — export map visuals and generate share links.
+- **Geography Mini Games** — Map Quiz, Flag Quiz, and Capital Quiz — test your knowledge on blank maps with scored rounds, high scores, and multiple difficulty modes. *(In Progress)*
 - **Dark Mode + Mobile UX** — optimized for desktop and touch devices.
 - **Google Sign-In or Guest Mode** — local-only mode or account sync.
+
+## Geography Mini Games *(In Progress)*
+
+An interactive games section accessible from the Explore tab that tests your geographical knowledge using the app's existing map infrastructure.
+
+### Game Modes
+
+| Mode | Description |
+|------|-------------|
+| 🗺️ **Map Quiz** | A blank world map highlights a random country — type or select its name |
+| 🚩 **Flag Quiz** | Identify a country from its flag (or pick the correct flag for a country name) |
+| 🏛️ **Capital Quiz** | Name the capital of a highlighted country, or identify the country from its capital |
+
+### How It Works
+
+- All three modes share a common game engine (`useGeographyGame` hook) that handles shuffling, scoring, timer, and state transitions
+- **Score tracking:** correct / incorrect / skipped counts per session
+- **High scores** saved to localStorage per mode
+- **Quiz pools** can be scoped: all countries, only visited, only unvisited — integrating with your personal tracker data
+- **Result screen** shows score breakdown and a replay button after each session
+
+### Architecture
+
+```
+GamesPanel (mode selector)
+├── MapQuiz      → useGeographyGame(worldPool, options)
+├── FlagQuiz     → useGeographyGame(worldPool, options)
+└── CapitalQuiz  → useGeographyGame(capitalPool, options)
+                        └── GameResultScreen (shared)
+```
+
+**Key files:**
+- `src/hooks/useGeographyGame.js` — shared game engine (shuffling, scoring, timer, state machine)
+- `src/components/GamesPanel.jsx` — mode selection screen
+- `src/components/MapQuiz.jsx` — blank map click-to-guess UI using Leaflet
+- `src/components/FlagQuiz.jsx` — flag display + multiple choice or text input
+- `src/components/CapitalQuiz.jsx` — capital city round
+- `src/components/GameResultScreen.jsx` — shared end screen with score breakdown
+
+---
 
 ## Architecture
 
