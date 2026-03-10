@@ -38,7 +38,7 @@ const ShareCard = forwardRef(function ShareCard({ variant, format, stats }, ref)
             </div>
             <div className="share-card-stat">
               <span className="share-card-num">{stats.achievementsUnlocked}</span>
-              <span className="share-card-label">Badges{'\n'}(all time)</span>
+              <span className="share-card-label">Badges<br />(all time)</span>
             </div>
           </div>
 
@@ -50,7 +50,7 @@ const ShareCard = forwardRef(function ShareCard({ variant, format, stats }, ref)
         </>
       ) : (
         <>
-          <div className="share-card-title">My Travel{'\n'}Journey</div>
+          <div className="share-card-title">My Travel<br />Journey</div>
           <div className="share-card-divider" />
 
           <div className="share-card-list">
