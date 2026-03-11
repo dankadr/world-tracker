@@ -4,6 +4,7 @@ import { fetchAllVisited, invalidateBulkCache } from '../utils/api';
 import { cacheGet, cacheGetStale } from '../utils/cache';
 import { addToBatch } from '../utils/batchQueue';
 import { emitVisitedChange } from '../utils/events';
+import { secureStorage } from '../utils/secureStorage';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -13,7 +14,7 @@ function storagePrefix(userId) {
 
 function loadVisitedWorld(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return new Set(arr);
@@ -23,7 +24,7 @@ function loadVisitedWorld(userId) {
 }
 
 function saveVisitedWorld(set, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'visited-world', JSON.stringify([...set]));
+  secureStorage.setItem(storagePrefix(userId) + 'visited-world', JSON.stringify([...set]));
 }
 
 // --------------- API helpers ---------------

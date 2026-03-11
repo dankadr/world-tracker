@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, createContext, useContext } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { XP_RULES, levelFromXp } from '../utils/xpSystem';
+import { secureStorage } from '../utils/secureStorage';
 
 const LEGACY_AWARDED_KEY = 'swiss-tracker-xp-awarded';
 
@@ -11,19 +12,19 @@ function storagePrefix(userId) {
 
 function loadXp(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'xp');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'xp');
     if (raw) return parseInt(raw, 10) || 0;
   } catch { /* ignore */ }
   return 0;
 }
 
 function saveXp(userId, xp) {
-  localStorage.setItem(storagePrefix(userId) + 'xp', String(xp));
+  secureStorage.setItem(storagePrefix(userId) + 'xp', String(xp));
 }
 
 function loadXpLog(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'xp-log');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'xp-log');
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return [];
@@ -32,12 +33,12 @@ function loadXpLog(userId) {
 function saveXpLog(userId, log) {
   // Keep only last 200 entries locally
   const trimmed = log.slice(-200);
-  localStorage.setItem(storagePrefix(userId) + 'xp-log', JSON.stringify(trimmed));
+  secureStorage.setItem(storagePrefix(userId) + 'xp-log', JSON.stringify(trimmed));
 }
 
 function loadPendingDeltas(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'xp-pending-deltas');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'xp-pending-deltas');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) return parsed;
@@ -49,14 +50,14 @@ function loadPendingDeltas(userId) {
 function savePendingDeltas(userId, deltas) {
   // Keep only last 200 pending entries
   const trimmed = deltas.slice(-200);
-  localStorage.setItem(storagePrefix(userId) + 'xp-pending-deltas', JSON.stringify(trimmed));
+  secureStorage.setItem(storagePrefix(userId) + 'xp-pending-deltas', JSON.stringify(trimmed));
 }
 
 function loadGrantedKeys(userId) {
   const keys = new Set();
 
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'xp-granted-keys');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'xp-granted-keys');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) parsed.forEach((k) => keys.add(k));
@@ -75,7 +76,7 @@ function loadGrantedKeys(userId) {
 
   if (hadLegacy) {
     try {
-      localStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
+      secureStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
     } catch { /* ignore */ }
     try {
       localStorage.removeItem(LEGACY_AWARDED_KEY);
@@ -86,7 +87,7 @@ function loadGrantedKeys(userId) {
 }
 
 function saveGrantedKeys(userId, keys) {
-  localStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
+  secureStorage.setItem(storagePrefix(userId) + 'xp-granted-keys', JSON.stringify([...keys]));
 }
 
 // --------------- API helpers ---------------

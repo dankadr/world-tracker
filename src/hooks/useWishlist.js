@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
+import { secureStorage } from '../utils/secureStorage';
 import {
   fetchWishlist,
   upsertWishlistItem,
@@ -15,7 +16,7 @@ function storagePrefix(userId) {
 
 function loadLocalBucketList(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'bucket-list');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'bucket-list');
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
 
@@ -24,7 +25,7 @@ function loadLocalBucketList(userId) {
   const nowIso = new Date().toISOString();
   countryList.forEach((c) => {
     try {
-      const raw = localStorage.getItem(storagePrefix(userId) + 'wishlist-' + c.id);
+      const raw = secureStorage.getItemSync(storagePrefix(userId) + 'wishlist-' + c.id);
       if (!raw) return;
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) {
@@ -52,7 +53,7 @@ function loadLocalBucketList(userId) {
 }
 
 function saveLocalBucketList(items, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'bucket-list', JSON.stringify(items));
+  secureStorage.setItem(storagePrefix(userId) + 'bucket-list', JSON.stringify(items));
 }
 
 // --------------- Hook ---------------
