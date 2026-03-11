@@ -33,6 +33,8 @@ export default function AchievementCard({ achievement, isExpanded, onToggle }) {
   const detail = isExpanded ? getDetailItems(rule, achievement._userId ?? null) : null;
 
   const remaining = target - Math.min(current, target);
+  // Suppress raw "N to go" for types whose target is a large number (area, population)
+  const showRemainingCount = remaining > 0 && ruleType !== 'worldAreaVisited' && ruleType !== 'worldPopulationVisited';
 
   return (
     <div
@@ -86,7 +88,7 @@ export default function AchievementCard({ achievement, isExpanded, onToggle }) {
             </div>
             <span className="achievement-detail-bar-label">
               {formatProgressText(current, target, ruleType)}
-              {remaining > 0 && ` · ${remaining} to go`}
+              {showRemainingCount && ` · ${remaining} to go`}
             </span>
           </div>
 

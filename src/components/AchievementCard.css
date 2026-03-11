@@ -15,7 +15,6 @@
   background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(201, 168, 76, 0.04));
   border: 1.5px solid rgba(201, 168, 76, 0.4);
   border-radius: 14px;
-  align-items: flex-start;
   padding: 14px 16px;
   position: relative;
   animation: achievement-fade-in 0.2s ease-out;
@@ -46,6 +45,12 @@
   border-radius: 0 14px 0 14px;
 }
 .achievement-detail-close:hover { color: rgba(255, 255, 255, 0.6); }
+
+/* Detail panel — left-align all content inside expanded badge */
+.achievement-detail {
+  width: 100%;
+  text-align: left;
+}
 
 /* Description text in expanded state */
 .achievement-detail-desc {
