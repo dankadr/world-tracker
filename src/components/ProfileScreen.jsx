@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
@@ -11,6 +11,8 @@ import useXp from '../hooks/useXp';
 import getAchievements from '../data/achievements';
 import { computeProgress } from '../utils/achievementProgress';
 import './ProfileScreen.css';
+import ShareCard from './ShareCard';
+import { computeAllTimeStats } from '../utils/allTimeStats';
 
 export default function ProfileScreen({ onReset, onResetAll }) {
   const [tab, setTab] = useState('profile');
@@ -20,6 +22,49 @@ export default function ProfileScreen({ onReset, onResetAll }) {
   const { level, currentXp, nextLevelXp, totalXp } = useXp();
   const { user } = useAuth();
   const userId = user?.id ?? null;
+
+  // All-time stats (memoized — recomputed only when userId changes)
+  const allTimeStats = useMemo(() => computeAllTimeStats(userId), [userId]);
+
+  // Share flow state
+  const [showSharePicker, setShowSharePicker] = useState(false);
+  const [exportFormat, setExportFormat] = useState(null); // null | 'portrait' | 'square'
+  const [exporting, setExporting] = useState(false);
+  const shareCardRef = useRef(null);
+
+  // Capture all-time share card after it mounts
+  useEffect(() => {
+    if (!exportFormat || !shareCardRef.current) return;
+
+    let cancelled = false;
+    setExporting(true);
+
+    (async () => {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(shareCardRef.current, {
+          backgroundColor: null,
+          scale: 2,
+        });
+        if (!cancelled) {
+          const link = document.createElement('a');
+          link.download = `my-travel-stats-${exportFormat}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        }
+      } catch (err) {
+        console.error('Failed to export share card:', err);
+      } finally {
+        if (!cancelled) {
+          setExporting(false);
+          setExportFormat(null);
+          setShowSharePicker(false);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [exportFormat]);
 
   return (
     <div className="tab-screen profile-screen">
@@ -54,6 +99,11 @@ export default function ProfileScreen({ onReset, onResetAll }) {
             user={user}
             onEditAvatar={() => setShowAvatarEditor(true)}
             onOpenStats={() => setShowStats(true)}
+            showSharePicker={showSharePicker}
+            onToggleShare={() => setShowSharePicker(p => !p)}
+            onExport={setExportFormat}
+            exporting={exporting}
+            exportFormat={exportFormat}
           />
         )}
         {tab === 'achievements' && <AchievementsTab userId={userId} />}
@@ -78,11 +128,20 @@ export default function ProfileScreen({ onReset, onResetAll }) {
         />
       )}
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {/* Off-screen ShareCard for all-time export */}
+      {exportFormat && (
+        <ShareCard
+          ref={shareCardRef}
+          variant="alltime"
+          format={exportFormat}
+          stats={allTimeStats}
+        />
+      )}
     </div>
   );
 }
 
-function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats }) {
+function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats, showSharePicker, onToggleShare, onExport, exporting, exportFormat }) {
   const xpPct = nextLevelXp > 0 ? Math.min(currentXp / nextLevelXp, 1) : 0;
 
   return (
@@ -112,7 +171,33 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
         <button className="profile-stats-btn" onClick={onOpenStats}>
           View Travel Stats
         </button>
+        <button
+          className="profile-share-btn"
+          onClick={onToggleShare}
+          disabled={exporting}
+        >
+          {exporting ? 'Saving…' : 'Share my stats'}
+        </button>
       </div>
+
+      {showSharePicker && (
+        <div className="profile-share-picker">
+          <button
+            className="yir-format-btn"
+            onClick={() => onExport('portrait')}
+            disabled={exporting}
+          >
+            {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
+          </button>
+          <button
+            className="yir-format-btn"
+            onClick={() => onExport('square')}
+            disabled={exporting}
+          >
+            {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

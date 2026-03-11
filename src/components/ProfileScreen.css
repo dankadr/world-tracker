@@ -248,3 +248,42 @@
 [data-theme="dark"] .achievements-tab-summary {
   color: var(--text-secondary, #7a8a9a);
 }
+
+/* Share my stats button */
+.profile-share-btn {
+  margin-top: 8px;
+  padding: 10px 20px;
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  border-radius: 20px;
+  background: rgba(201, 168, 76, 0.08);
+  color: #c9a84c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.profile-share-btn:hover:not(:disabled) {
+  background: rgba(201, 168, 76, 0.18);
+  border-color: #c9a84c;
+}
+
+.profile-share-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Format picker under share button */
+.profile-share-picker {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
