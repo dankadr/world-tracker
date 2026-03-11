@@ -8,6 +8,10 @@ const NON_LISTABLE = new Set([
   'totalVisited', 'totalPercent', 'achievementsUnlocked', 'categoryComplete',
   'worldAreaVisited', 'worldPopulationVisited', 'hemisphereVisited',
   'gameCompleted', 'easterEggToggled', 'specificCapitalVisited',
+  // UNESCO tracker rules
+  'unescoVisited', 'unescoTypesVisited', 'unescoRegionsVisited', 'unescoOldSiteVisited',
+  // Challenge rules
+  'challengesCompleted', 'raceWon', 'largeTeamChallenge', 'challengesCreated',
 ]);
 
 function storagePrefix(userId) {
@@ -38,7 +42,7 @@ function getVisitedWorldSet(userId) {
 
 // Quick id→name lookup for world countries
 const worldNameMap = Object.fromEntries(
-  worldData.features.map(f => [f.properties.id, f.properties.name])
+  (worldData.features ?? []).map(f => [f.properties?.id, f.properties?.name])
 );
 
 function sorted(arr) {
