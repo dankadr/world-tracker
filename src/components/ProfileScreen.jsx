@@ -205,31 +205,34 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
 function AchievementsTab({ userId }) {
   const [expandedId, setExpandedId] = useState(null);
 
-  const achievements = getAchievements(userId);
-  const baseResults = achievements.map(a => ({ ...a, unlocked: a.check() }));
-  const results = baseResults.map(a => ({
-    ...a,
-    progress: computeProgress(a.rule, userId, baseResults),
-    _userId: userId, // forwarded to getDetailItems inside AchievementCard
-  }));
+  const { results, groups, unlockedCount } = useMemo(() => {
+    const achievements = getAchievements(userId);
+    const baseResults = achievements.map(a => ({ ...a, unlocked: a.check() }));
+    const results = baseResults.map(a => ({
+      ...a,
+      progress: computeProgress(a.rule, userId, baseResults),
+      _userId: userId, // forwarded to getDetailItems inside AchievementCard
+    }));
 
-  const groups = {};
-  results.forEach(a => {
-    const cat = a.category || 'General';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(a);
-  });
-
-  Object.values(groups).forEach(badges => {
-    badges.sort((a, b) => {
-      const aScore = a.unlocked ? 1 : a.progress.pct > 0 ? 2 : 0;
-      const bScore = b.unlocked ? 1 : b.progress.pct > 0 ? 2 : 0;
-      if (aScore !== bScore) return bScore - aScore;
-      return b.progress.pct - a.progress.pct;
+    const groups = {};
+    results.forEach(a => {
+      const cat = a.category || 'General';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(a);
     });
-  });
 
-  const unlockedCount = results.filter(r => r.unlocked).length;
+    Object.values(groups).forEach(badges => {
+      badges.sort((a, b) => {
+        const aScore = a.unlocked ? 1 : a.progress.pct > 0 ? 2 : 0;
+        const bScore = b.unlocked ? 1 : b.progress.pct > 0 ? 2 : 0;
+        if (aScore !== bScore) return bScore - aScore;
+        return b.progress.pct - a.progress.pct;
+      });
+    });
+
+    const unlockedCount = results.filter(r => r.unlocked).length;
+    return { results, groups, unlockedCount };
+  }, [userId]);
 
   function handleToggle(id) {
     setExpandedId(prev => prev === id ? null : id);
