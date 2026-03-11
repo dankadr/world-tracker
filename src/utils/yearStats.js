@@ -4,6 +4,16 @@ import continentMap from '../config/continents.json';
 import getAchievements from '../data/achievements';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+const WORLD_TOTAL = worldData.features.length;
+
+function getFlagEmoji(code) {
+  if (!code || code.length !== 2) return '';
+  const offset = 0x1F1E6 - 65;
+  return String.fromCodePoint(
+    code.toUpperCase().charCodeAt(0) + offset,
+    code.toUpperCase().charCodeAt(1) + offset,
+  );
+}
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -122,6 +132,8 @@ export function computeYearStats(userId, year) {
   // World countries: we don't have per-country dates, but we can note total
   const worldVisited = getWorldVisitedIds(userId);
   const worldCount = worldVisited.length;
+  const worldPercent = worldCount > 0 ? +((worldCount / WORLD_TOTAL) * 100).toFixed(1) : 0;
+  const visitedFlags = worldVisited.map(getFlagEmoji).filter(Boolean);
 
   // Continent breakdown for world countries
   const continentBreakdown = {};
@@ -137,7 +149,7 @@ export function computeYearStats(userId, year) {
   let achievementsUnlocked = 0;
   try {
     const achievements = getAchievements(userId);
-    achievementsUnlocked = achievements.filter(a => a.unlocked).length;
+    achievementsUnlocked = achievements.filter(a => a.check()).length;
   } catch { /* ignore */ }
 
   // Compute previous year stats for comparison
@@ -177,6 +189,9 @@ export function computeYearStats(userId, year) {
     topTracker,
     trackerBreakdown,
     worldCountries: worldCount,
+    worldTotal: WORLD_TOTAL,
+    worldPercent,
+    visitedFlags,
     continentBreakdown,
     achievementsUnlocked,
     totalVisitDays: allDatesInYear.size,

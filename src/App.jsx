@@ -589,6 +589,7 @@ export default function App() {
                   collapsed={false}
                   onOpenFriends={handleOpenFriends}
                   friendsPendingCount={pendingCount}
+                  isMobile={isMobile}
                 />
               </MobileBottomSheet>
             )
@@ -600,6 +601,7 @@ export default function App() {
               collapsed={sidebarCollapsed}
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
+              isMobile={isMobile}
             />
           )}
           <main
@@ -654,13 +656,11 @@ export default function App() {
               </div>
             )}
             {!isShareMode && !isMobile && (
-              <button
-                className="games-desktop-btn"
-                onClick={() => setGamesOpen(true)}
-                title="Geography Games"
-              >
-                🎮
-              </button>
+              <div className="map-action-buttons">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                  🎮
+                </button>
+              </div>
             )}
             {comparisonFriend && (
               <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
@@ -726,6 +726,11 @@ export default function App() {
                 onSearchFocus={handleSearchFocus}
                 onOpenFriends={handleOpenFriends}
                 friendsPendingCount={pendingCount}
+                isMobile={isMobile}
+                onShowOnboarding={() => {
+                  localStorage.removeItem('onboarding-dismissed');
+                  window.location.reload();
+                }}
               />
             </MobileBottomSheet>
             )
@@ -754,6 +759,11 @@ export default function App() {
               onBackToWorld={handleBackToWorld}
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
+              isMobile={isMobile}
+              onShowOnboarding={() => {
+                localStorage.removeItem('onboarding-dismissed');
+                window.location.reload();
+              }}
             />
           )}
           <main className="map-container">
@@ -782,13 +792,11 @@ export default function App() {
             />
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {!isMobile && !isShareMode && (
-              <button
-                className="games-desktop-btn"
-                onClick={() => setGamesOpen(true)}
-                title="Geography Games"
-              >
-                🎮
-              </button>
+              <div className="map-action-buttons">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                  🎮
+                </button>
+              </div>
             )}
             {isMobile && !isShareMode && (
               <div className="map-controls-cluster">
@@ -859,7 +867,7 @@ export default function App() {
         />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <ProfileScreen />
+        <ProfileScreen onReset={reset} onResetAll={resetAll} />
       )}
 
       {/* Pushed screens — rendered on top of whatever tab is active */}

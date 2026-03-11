@@ -8,6 +8,7 @@ import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 export default function Achievements() {
   const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
   const { user } = useAuth();
   const userId = user?.id || null;
 
@@ -23,7 +24,12 @@ export default function Achievements() {
   const results = baseResults.map((a) => ({
     ...a,
     progress: computeProgress(a.rule, userId, baseResults),
+    _userId: userId,
   }));
+
+  function handleToggle(id) {
+    setExpandedId(prev => prev === id ? null : id);
+  }
 
   const unlockedCount = results.filter((r) => r.unlocked).length;
   const { handleRef, dragHandlers } = useSwipeToDismiss(() => setOpen(false));
@@ -76,7 +82,12 @@ export default function Achievements() {
                     </h3>
                     <div className="achievements-grid">
                       {badges.map((a) => (
-                        <AchievementCard key={a.id} achievement={a} />
+                        <AchievementCard
+                          key={a.id}
+                          achievement={a}
+                          isExpanded={expandedId === a.id}
+                          onToggle={() => handleToggle(a.id)}
+                        />
                       ))}
                     </div>
                   </div>

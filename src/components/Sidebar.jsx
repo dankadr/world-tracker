@@ -12,6 +12,7 @@ import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
 import ConfirmDialog from './ConfirmDialog';
 import AddToBucketListModal from './AddToBucketListModal';
+import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 
 export default function Sidebar({
@@ -39,6 +40,8 @@ export default function Sidebar({
   onOpenBucketList,
   bucketListItems,
   onAddToBucketList,
+  isMobile,
+  onShowOnboarding,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const [editingDate, setEditingDate] = useState(null);
@@ -185,7 +188,7 @@ export default function Sidebar({
             <p className="sidebar-subtitle">Your world. Your journey.</p>
           </div>
           <div className="header-actions">
-            {!readOnly && onOpenFriends && (
+            {!isMobile && !readOnly && onOpenFriends && (
               <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -206,7 +209,7 @@ export default function Sidebar({
                 )}
               </button>
             )}
-            {!readOnly && (
+            {!isMobile && !readOnly && (
               <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="20" x2="18" y2="10" />
@@ -215,13 +218,15 @@ export default function Sidebar({
                 </svg>
               </button>
             )}
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {dark ? '☀️' : '🌙'}
-            </button>
+            {!isMobile && (
+              <button
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {dark ? '☀️' : '🌙'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -279,18 +284,13 @@ export default function Sidebar({
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
-        {!readOnly && (
-          <button className="reset-btn" onClick={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}>
-            Reset {country.regionLabel}
-          </button>
-        )}
       </div>
-      {!readOnly && (
-        <div className="sidebar-footer-secondary">
-          <button className="reset-all-btn" onClick={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}>
-            Reset Everything
-          </button>
-        </div>
+      {!isMobile && !readOnly && (
+        <SettingsPanel
+          onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+          onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+          onShowOnboarding={onShowOnboarding}
+        />
       )}
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}

@@ -1,0 +1,214 @@
+/* ======== Achievement Detail (Expand In Place) ======== */
+
+/* Touch UX on the badge itself */
+.achievement-badge {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 56px; /* comfortable tap target */
+}
+
+/* Expanded badge spans full grid width */
+.achievement-badge.achievement-badge-expanded {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(201, 168, 76, 0.04));
+  border: 1.5px solid rgba(201, 168, 76, 0.4);
+  border-radius: 14px;
+  padding: 14px 16px;
+  position: relative;
+  animation: achievement-fade-in 0.2s ease-out;
+}
+
+@keyframes achievement-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Close button — 44×44px tap target, top-right corner */
+.achievement-detail-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 0 14px 0 14px;
+}
+.achievement-detail-close:hover { color: rgba(255, 255, 255, 0.6); }
+
+/* Detail panel — left-align all content inside expanded badge */
+.achievement-detail {
+  width: 100%;
+  text-align: left;
+}
+
+/* Description text in expanded state */
+.achievement-detail-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 4px 0 8px;
+  line-height: 1.4;
+  padding-right: 32px; /* don't overlap close button */
+}
+
+/* Status pill */
+.achievement-detail-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+.achievement-detail-pill-unlocked {
+  background: rgba(80, 180, 100, 0.12);
+  color: #6dc882;
+  border: 1px solid rgba(80, 180, 100, 0.25);
+}
+.achievement-detail-pill-in-progress {
+  background: rgba(201, 168, 76, 0.12);
+  color: #c9a84c;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+}
+.achievement-detail-pill-locked {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Progress bar */
+.achievement-detail-bar-wrap { width: 100%; margin-bottom: 14px; }
+.achievement-detail-bar-track {
+  background: rgba(255, 255, 255, 0.08);
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.achievement-detail-bar-fill {
+  background: linear-gradient(90deg, #c9a84c, #d4b866);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
+}
+.achievement-detail-bar-label {
+  display: block;
+  font-size: 12px;
+  color: #c9a84c;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* Section labels (VISITED / STILL NEEDED) */
+.achievement-detail-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 7px;
+}
+.achievement-detail-section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+}
+.achievement-detail-section-count {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Chips — informational, not tappable; stagger fade-in between sections */
+.achievement-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  animation: achievement-fade-in 0.15s ease-out both;
+}
+.achievement-chip-list:first-of-type { animation-delay: 0.1s; }
+.achievement-chip-list:last-of-type  { animation-delay: 0.15s; }
+.achievement-chip {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 10px;
+  border-radius: 20px;
+  line-height: 1;
+}
+.achievement-chip-visited {
+  background: rgba(80, 180, 100, 0.12);
+  color: #7dd89a;
+  border: 1px solid rgba(80, 180, 100, 0.22);
+}
+.achievement-chip-remaining {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.achievement-chip-more {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+/* Hint box for non-listable achievements */
+.achievement-detail-hint {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Light mode overrides */
+[data-theme="light"] .achievement-badge.achievement-badge-expanded {
+  background: linear-gradient(135deg, rgba(180, 130, 20, 0.08), rgba(180, 130, 20, 0.03));
+  border-color: rgba(180, 130, 20, 0.35);
+}
+[data-theme="light"] .achievement-chip-visited {
+  background: rgba(30, 140, 60, 0.1);
+  color: #1a7a38;
+  border-color: rgba(30, 140, 60, 0.25);
+}
+[data-theme="light"] .achievement-chip-remaining {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.45);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme="light"] .achievement-detail-section-label { color: rgba(0, 0, 0, 0.4); }
+[data-theme="light"] .achievement-detail-section-count {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.45);
+}
+[data-theme="light"] .achievement-detail-bar-track { background: rgba(0, 0, 0, 0.08); }
+[data-theme="light"] .achievement-detail-hint {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.45);
+}
+[data-theme="light"] .achievement-detail-close { color: rgba(0, 0, 0, 0.25); }
+[data-theme="light"] .achievement-detail-close:hover { color: rgba(0, 0, 0, 0.5); }
+[data-theme="light"] .achievement-detail-desc { color: rgba(0, 0, 0, 0.5); }
+[data-theme="light"] .achievement-detail-bar-label { color: #a07820; }
+[data-theme="light"] .achievement-detail-pill-unlocked { background: rgba(30,140,60,0.1); color: #1a7a38; border-color: rgba(30,140,60,0.25); }
+[data-theme="light"] .achievement-detail-pill-in-progress { background: rgba(180,130,20,0.1); color: #a07820; border-color: rgba(180,130,20,0.25); }

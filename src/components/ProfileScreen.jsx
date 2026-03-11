@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
 import AchievementCard from './AchievementCard';
 import StatsModal from './StatsModal';
+import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 import useXp from '../hooks/useXp';
 import getAchievements from '../data/achievements';
 import { computeProgress } from '../utils/achievementProgress';
 import './ProfileScreen.css';
+import ShareCard from './ShareCard';
+import { computeAllTimeStats } from '../utils/allTimeStats';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ onReset, onResetAll }) {
   const [tab, setTab] = useState('profile');
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -20,6 +23,50 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
 
+  // All-time stats (memoized — recomputed only when userId changes)
+  const allTimeStats = useMemo(() => computeAllTimeStats(userId), [userId]);
+
+  // Share flow state
+  const [showSharePicker, setShowSharePicker] = useState(false);
+  const [exportFormat, setExportFormat] = useState(null); // null | 'portrait' | 'square'
+  const [exportTheme, setExportTheme] = useState('dark'); // 'dark' | 'light'
+  const [exporting, setExporting] = useState(false);
+  const shareCardRef = useRef(null);
+
+  // Capture all-time share card after it mounts
+  useEffect(() => {
+    if (!exportFormat || !shareCardRef.current) return;
+
+    let cancelled = false;
+    setExporting(true);
+
+    (async () => {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(shareCardRef.current, {
+          backgroundColor: null,
+          scale: 2,
+        });
+        if (!cancelled) {
+          const link = document.createElement('a');
+          link.download = `my-travel-stats-${exportFormat}-${exportTheme}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        }
+      } catch (err) {
+        console.error('Failed to export share card:', err);
+      } finally {
+        if (!cancelled) {
+          setExporting(false);
+          setExportFormat(null);
+          setShowSharePicker(false);
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [exportFormat]);
+
   return (
     <div className="tab-screen profile-screen">
       <div className="profile-seg-header">
@@ -27,6 +74,7 @@ export default function ProfileScreen() {
           {[
             { id: 'profile', label: 'Profile' },
             { id: 'achievements', label: 'Badges' },
+            { id: 'settings', label: 'Settings' },
           ].map(({ id, label }) => (
             <button
               key={id}
@@ -52,9 +100,26 @@ export default function ProfileScreen() {
             user={user}
             onEditAvatar={() => setShowAvatarEditor(true)}
             onOpenStats={() => setShowStats(true)}
+            showSharePicker={showSharePicker}
+            onToggleShare={() => setShowSharePicker(p => !p)}
+            onExport={setExportFormat}
+            onSetTheme={setExportTheme}
+            exporting={exporting}
+            exportFormat={exportFormat}
+            exportTheme={exportTheme}
           />
         )}
         {tab === 'achievements' && <AchievementsTab userId={userId} />}
+        {tab === 'settings' && (
+          <SettingsPanel
+            onReset={onReset}
+            onResetAll={onResetAll}
+            onShowOnboarding={() => {
+              localStorage.removeItem('onboarding-dismissed');
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
 
       {showAvatarEditor && (
@@ -66,11 +131,21 @@ export default function ProfileScreen() {
         />
       )}
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {/* Off-screen ShareCard for all-time export */}
+      {exportFormat && (
+        <ShareCard
+          ref={shareCardRef}
+          variant="alltime"
+          format={exportFormat}
+          theme={exportTheme}
+          stats={allTimeStats}
+        />
+      )}
     </div>
   );
 }
 
-function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats }) {
+function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats, showSharePicker, onToggleShare, onExport, onSetTheme, exporting, exportFormat, exportTheme }) {
   const xpPct = nextLevelXp > 0 ? Math.min(currentXp / nextLevelXp, 1) : 0;
 
   return (
@@ -100,36 +175,74 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
         <button className="profile-stats-btn" onClick={onOpenStats}>
           View Travel Stats
         </button>
+        <button
+          className="profile-share-btn"
+          onClick={onToggleShare}
+          disabled={exporting}
+        >
+          {exporting ? 'Saving…' : 'Share my stats'}
+        </button>
       </div>
+
+      {showSharePicker && (
+        <div className="profile-share-picker">
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => onExport('portrait')} disabled={exporting}>
+              {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
+            </button>
+            <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => onExport('square')} disabled={exporting}>
+              {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
+            </button>
+          </div>
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => onSetTheme('dark')} disabled={exporting}>
+              🌑 Dark
+            </button>
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => onSetTheme('light')} disabled={exporting}>
+              ☀️ Light
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function AchievementsTab({ userId }) {
-  const achievements = getAchievements(userId);
-  const baseResults = achievements.map(a => ({ ...a, unlocked: a.check() }));
-  const results = baseResults.map(a => ({
-    ...a,
-    progress: computeProgress(a.rule, userId, baseResults),
-  }));
+  const [expandedId, setExpandedId] = useState(null);
 
-  const groups = {};
-  results.forEach(a => {
-    const cat = a.category || 'General';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(a);
-  });
+  const { results, groups, unlockedCount } = useMemo(() => {
+    const achievements = getAchievements(userId);
+    const baseResults = achievements.map(a => ({ ...a, unlocked: a.check() }));
+    const results = baseResults.map(a => ({
+      ...a,
+      progress: computeProgress(a.rule, userId, baseResults),
+      _userId: userId, // forwarded to getDetailItems inside AchievementCard
+    }));
 
-  Object.values(groups).forEach(badges => {
-    badges.sort((a, b) => {
-      const aScore = a.unlocked ? 1 : a.progress.pct > 0 ? 2 : 0;
-      const bScore = b.unlocked ? 1 : b.progress.pct > 0 ? 2 : 0;
-      if (aScore !== bScore) return bScore - aScore;
-      return b.progress.pct - a.progress.pct;
+    const groups = {};
+    results.forEach(a => {
+      const cat = a.category || 'General';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(a);
     });
-  });
 
-  const unlockedCount = results.filter(r => r.unlocked).length;
+    Object.values(groups).forEach(badges => {
+      badges.sort((a, b) => {
+        const aScore = a.unlocked ? 1 : a.progress.pct > 0 ? 2 : 0;
+        const bScore = b.unlocked ? 1 : b.progress.pct > 0 ? 2 : 0;
+        if (aScore !== bScore) return bScore - aScore;
+        return b.progress.pct - a.progress.pct;
+      });
+    });
+
+    const unlockedCount = results.filter(r => r.unlocked).length;
+    return { results, groups, unlockedCount };
+  }, [userId]);
+
+  function handleToggle(id) {
+    setExpandedId(prev => prev === id ? null : id);
+  }
 
   return (
     <div className="achievements-tab-content">
@@ -143,7 +256,14 @@ function AchievementsTab({ userId }) {
               <span className="achievement-cat-count">{catUnlocked}/{badges.length}</span>
             </h3>
             <div className="achievements-grid">
-              {badges.map(a => <AchievementCard key={a.id} achievement={a} />)}
+              {badges.map(a => (
+                <AchievementCard
+                  key={a.id}
+                  achievement={a}
+                  isExpanded={expandedId === a.id}
+                  onToggle={() => handleToggle(a.id)}
+                />
+              ))}
             </div>
           </div>
         );

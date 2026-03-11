@@ -1,7 +1,7 @@
 # ToDo: Geography Mini Games
 
 **Date:** 2026-03-06
-**Status:** Not Started
+**Status:** In Progress — active branch `feat/geography-mini-games`; implementation plan at `docs/plans/2026-03-08-mini-games.md`
 **Priority:** Medium
 **Scope:** Add interactive geography mini games where users test their knowledge on blank maps by guessing countries, states, cantons, and regions
 
