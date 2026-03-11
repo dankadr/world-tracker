@@ -1,7 +1,16 @@
 import { forwardRef } from 'react';
 import './ShareCard.css';
 
-const MAX_FLAGS = 8;
+const MAX_FLAGS = 12;
+
+const CONTINENT_ABBREV = {
+  'Africa': 'AF',
+  'Asia': 'AS',
+  'Europe': 'EU',
+  'North America': 'NA',
+  'South America': 'SA',
+  'Oceania': 'OC',
+};
 
 function FlagRow({ flags, total }) {
   const shown = flags.slice(0, MAX_FLAGS);
@@ -12,8 +21,27 @@ function FlagRow({ flags, total }) {
         <span key={i} className="sc-flag">{flag}</span>
       ))}
       {overflow > 0 && (
-        <span className="sc-flag sc-flag-more">+{overflow}</span>
+        <span className="sc-flag-more">+{overflow}</span>
       )}
+    </div>
+  );
+}
+
+function ContinentPills({ breakdown }) {
+  const entries = Object.entries(breakdown)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) return null;
+  return (
+    <div className="sc-continents">
+      {entries.map(([name, count]) => (
+        <div key={name} className="sc-continent-pill">
+          <span className="sc-continent-abbrev">
+            {CONTINENT_ABBREV[name] || name.slice(0, 2).toUpperCase()}
+          </span>
+          <span className="sc-continent-count">{count}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -28,36 +56,40 @@ const ShareCard = forwardRef(function ShareCard({ variant, format, theme = 'dark
   const worldTotal = stats.worldTotal ?? 238;
   const visitedFlags = stats.visitedFlags ?? [];
 
-  // Display: floor the integer part, show one decimal if ≥ 1
   const pctInt = worldPct < 1 && worldPct > 0 ? '<1' : String(Math.floor(worldPct));
-  const pctFrac = worldPct >= 1 && worldPct % 1 !== 0
-    ? '.' + worldPct.toFixed(1).split('.')[1]
-    : '';
 
   const mrzLine1 = `RIGHTWORLD<<${isYearly ? stats.year : 'ALLTIME'}<<PASSPORT`.padEnd(44, '<').slice(0, 44);
   const mrzLine2 = `TRACKED<<${worldCountries}<<OF<<${worldTotal}<<COUNTRIES<<`.padEnd(44, '<').slice(0, 44);
 
+  const watermarkSrc = isDark
+    ? '/brand/rw-monogram-globe-white.png'
+    : '/brand/rw-compass-navy.png';
+
+  const showTopTracker = isYearly && isPortrait && stats.topTracker;
+  const showComparison = isYearly && isPortrait && stats.comparedToPrevYear;
+  const showContinentPills = isYearly && isPortrait && stats.continentBreakdown;
+
   return (
-    <div
-      ref={ref}
-      className={`share-card share-card-${format} share-card-${theme}`}
-    >
+    <div ref={ref} className={`share-card share-card-${format} share-card-${theme}`}>
+
+      {/* Background watermark */}
+      <img className="sc-watermark" src={watermarkSrc} alt="" aria-hidden="true" />
+
       {/* Header */}
       <div className="sc-header">
-        <span className="sc-compass">🧭</span>
+        <div className="sc-brand-mark" aria-hidden="true">✦</div>
         <span className="sc-brand">Right World</span>
-        <span className="sc-year-tag">
-          {isYearly ? stats.year : 'ALL TIME'}
-        </span>
+        <span className="sc-year-tag">{isYearly ? stats.year : 'All Time'}</span>
       </div>
 
       {/* Hero — world % */}
       <div className="sc-hero">
+        {isDark && <div className="sc-hero-glow" />}
         <div className="sc-pct-row">
           <span className="sc-pct-num">{pctInt}</span>
           <span className="sc-pct-symbol">%</span>
         </div>
-        <div className="sc-pct-label">of the world</div>
+        <div className="sc-pct-label">of the world explored</div>
         <div className="sc-prog-bar">
           <div className="sc-prog-fill" style={{ width: `${Math.min(worldPct, 100)}%` }} />
         </div>
@@ -73,40 +105,70 @@ const ShareCard = forwardRef(function ShareCard({ variant, format, theme = 'dark
 
       <div className="sc-divider" />
 
+      {/* Continent breakdown (yearly portrait) */}
+      {showContinentPills && (
+        <ContinentPills breakdown={stats.continentBreakdown} />
+      )}
+
       {/* Stats grid */}
-      {isYearly ? (
-        <div className="sc-stats">
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
-            <span className="sc-stat-label">Regions</span>
+      <div className="sc-stats">
+        {isYearly ? (
+          <>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
+              <span className="sc-stat-label">Regions</span>
+            </div>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.trackersUsed ?? 0}</span>
+              <span className="sc-stat-label">Trackers</span>
+            </div>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.totalVisitDays ?? 0}</span>
+              <span className="sc-stat-label">Days</span>
+            </div>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.achievementsUnlocked ?? 0}</span>
+              <span className="sc-stat-label">Badges</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
+              <span className="sc-stat-label">Regions</span>
+            </div>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.continentsVisited ?? 0}/6</span>
+              <span className="sc-stat-label">Continents</span>
+            </div>
+            <div className="sc-stat">
+              <span className="sc-stat-num">{stats.achievements ?? 0}</span>
+              <span className="sc-stat-label">Badges</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Top tracker (yearly portrait) */}
+      {showTopTracker && (
+        <div className="sc-top-tracker">
+          <span className="sc-top-tracker-flag">{stats.topTracker.flag}</span>
+          <div className="sc-top-tracker-info">
+            <span className="sc-top-tracker-label">Most explored</span>
+            <span className="sc-top-tracker-name">{stats.topTracker.name}</span>
           </div>
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.trackersUsed ?? 0}</span>
-            <span className="sc-stat-label">Trackers</span>
-          </div>
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.totalVisitDays ?? 0}</span>
-            <span className="sc-stat-label">Days</span>
-          </div>
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.achievementsUnlocked ?? 0}</span>
-            <span className="sc-stat-label">Badges</span>
-          </div>
+          <span className="sc-top-tracker-count">
+            {stats.topTracker.count}&nbsp;{stats.topTracker.regionLabel}
+          </span>
         </div>
-      ) : (
-        <div className="sc-stats">
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
-            <span className="sc-stat-label">Regions</span>
-          </div>
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.continentsVisited ?? 0}</span>
-            <span className="sc-stat-label">Continents</span>
-          </div>
-          <div className="sc-stat">
-            <span className="sc-stat-num">{stats.achievements ?? 0}</span>
-            <span className="sc-stat-label">Badges</span>
-          </div>
+      )}
+
+      {/* Year comparison (yearly portrait) */}
+      {showComparison && (
+        <div className={`sc-vs-prev${stats.comparedToPrevYear === 'first-year' ? ' sc-vs-first' : stats.comparedToPrevYear.startsWith('+') ? ' sc-vs-up' : ' sc-vs-down'}`}>
+          {stats.comparedToPrevYear === 'first-year'
+            ? '⭐ First year on record'
+            : `${stats.comparedToPrevYear} compared to ${stats.year - 1}`}
         </div>
       )}
 
