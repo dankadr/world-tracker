@@ -1,5 +1,6 @@
 import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
+import worldData from '../data/world.json';
 import getAchievements from '../data/achievements';
 
 function storagePrefix(userId) {
@@ -11,14 +12,24 @@ const INHABITED_CONTINENTS = new Set([
   'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania',
 ]);
 
+const WORLD_TOTAL = worldData.features.length; // 238
+
+function getFlagEmoji(code) {
+  if (!code || code.length !== 2) return '';
+  const offset = 0x1F1E6 - 65;
+  return String.fromCodePoint(
+    code.toUpperCase().charCodeAt(0) + offset,
+    code.toUpperCase().charCodeAt(1) + offset,
+  );
+}
+
 /**
  * Compute all-time aggregate stats across all trackers.
- * @param {string|null} userId
- * @returns {{ worldCountries: number, totalRegions: number, continentsVisited: number, achievements: number }}
  */
 export function computeAllTimeStats(userId) {
   // World countries + continents
   let worldCountries = 0;
+  let visitedFlags = [];
   const continentsSet = new Set();
   try {
     const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
@@ -26,12 +37,17 @@ export function computeAllTimeStats(userId) {
       const data = JSON.parse(raw);
       const ids = Array.isArray(data) ? data : [];
       worldCountries = ids.length;
+      visitedFlags = ids.map(getFlagEmoji).filter(Boolean);
       ids.forEach(id => {
         const continent = continentMap[id];
         if (continent && INHABITED_CONTINENTS.has(continent)) continentsSet.add(continent);
       });
     }
   } catch { /* ignore */ }
+
+  const worldPercent = worldCountries > 0
+    ? +((worldCountries / WORLD_TOTAL) * 100).toFixed(1)
+    : 0;
 
   // Total visited regions across all trackers
   let totalRegions = 0;
@@ -46,7 +62,7 @@ export function computeAllTimeStats(userId) {
     } catch { /* ignore */ }
   }
 
-  // Achievements unlocked — getAchievements returns objects with .check(), not .unlocked
+  // Achievements unlocked
   let achievements = 0;
   try {
     const all = getAchievements(userId);
@@ -55,6 +71,9 @@ export function computeAllTimeStats(userId) {
 
   return {
     worldCountries,
+    worldTotal: WORLD_TOTAL,
+    worldPercent,
+    visitedFlags,
     totalRegions,
     continentsVisited: continentsSet.size,
     achievements,

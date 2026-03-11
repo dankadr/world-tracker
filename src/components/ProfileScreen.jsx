@@ -29,6 +29,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
   // Share flow state
   const [showSharePicker, setShowSharePicker] = useState(false);
   const [exportFormat, setExportFormat] = useState(null); // null | 'portrait' | 'square'
+  const [exportTheme, setExportTheme] = useState('dark'); // 'dark' | 'light'
   const [exporting, setExporting] = useState(false);
   const shareCardRef = useRef(null);
 
@@ -48,7 +49,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
         });
         if (!cancelled) {
           const link = document.createElement('a');
-          link.download = `my-travel-stats-${exportFormat}.png`;
+          link.download = `my-travel-stats-${exportFormat}-${exportTheme}.png`;
           link.href = canvas.toDataURL();
           link.click();
         }
@@ -102,8 +103,10 @@ export default function ProfileScreen({ onReset, onResetAll }) {
             showSharePicker={showSharePicker}
             onToggleShare={() => setShowSharePicker(p => !p)}
             onExport={setExportFormat}
+            onSetTheme={setExportTheme}
             exporting={exporting}
             exportFormat={exportFormat}
+            exportTheme={exportTheme}
           />
         )}
         {tab === 'achievements' && <AchievementsTab userId={userId} />}
@@ -134,6 +137,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
           ref={shareCardRef}
           variant="alltime"
           format={exportFormat}
+          theme={exportTheme}
           stats={allTimeStats}
         />
       )}
@@ -141,7 +145,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
   );
 }
 
-function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats, showSharePicker, onToggleShare, onExport, exporting, exportFormat }) {
+function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEditAvatar, onOpenStats, showSharePicker, onToggleShare, onExport, onSetTheme, exporting, exportFormat, exportTheme }) {
   const xpPct = nextLevelXp > 0 ? Math.min(currentXp / nextLevelXp, 1) : 0;
 
   return (
@@ -182,20 +186,22 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
 
       {showSharePicker && (
         <div className="profile-share-picker">
-          <button
-            className="yir-format-btn"
-            onClick={() => onExport('portrait')}
-            disabled={exporting}
-          >
-            {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
-          </button>
-          <button
-            className="yir-format-btn"
-            onClick={() => onExport('square')}
-            disabled={exporting}
-          >
-            {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
-          </button>
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => onExport('portrait')} disabled={exporting}>
+              {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
+            </button>
+            <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => onExport('square')} disabled={exporting}>
+              {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
+            </button>
+          </div>
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => onSetTheme('dark')} disabled={exporting}>
+              🌑 Dark
+            </button>
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => onSetTheme('light')} disabled={exporting}>
+              ☀️ Light
+            </button>
+          </div>
         </div>
       )}
     </div>

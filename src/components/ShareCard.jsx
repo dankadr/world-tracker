@@ -1,80 +1,124 @@
 import { forwardRef } from 'react';
 import './ShareCard.css';
 
-const ShareCard = forwardRef(function ShareCard({ variant, format, stats }, ref) {
+const MAX_FLAGS = 8;
+
+function FlagRow({ flags, total }) {
+  const shown = flags.slice(0, MAX_FLAGS);
+  const overflow = total - MAX_FLAGS;
+  return (
+    <div className="sc-flags">
+      {shown.map((flag, i) => (
+        <span key={i} className="sc-flag">{flag}</span>
+      ))}
+      {overflow > 0 && (
+        <span className="sc-flag sc-flag-more">+{overflow}</span>
+      )}
+    </div>
+  );
+}
+
+const ShareCard = forwardRef(function ShareCard({ variant, format, theme = 'dark', stats }, ref) {
   const isPortrait = format === 'portrait';
   const isYearly = variant === 'yearly';
+  const isDark = theme === 'dark';
+
+  const worldPct = stats.worldPercent ?? 0;
+  const worldCountries = stats.worldCountries ?? 0;
+  const worldTotal = stats.worldTotal ?? 238;
+  const visitedFlags = stats.visitedFlags ?? [];
+
+  // Display: floor the integer part, show one decimal if ≥ 1
+  const pctInt = worldPct < 1 && worldPct > 0 ? '<1' : String(Math.floor(worldPct));
+  const pctFrac = worldPct >= 1 && worldPct % 1 !== 0
+    ? '.' + worldPct.toFixed(1).split('.')[1]
+    : '';
+
+  const mrzLine1 = `RIGHTWORLD<<${isYearly ? stats.year : 'ALLTIME'}<<PASSPORT`.padEnd(44, '<').slice(0, 44);
+  const mrzLine2 = `TRACKED<<${worldCountries}<<OF<<${worldTotal}<<COUNTRIES<<`.padEnd(44, '<').slice(0, 44);
 
   return (
     <div
       ref={ref}
-      className={`share-card share-card-${format}`}
+      className={`share-card share-card-${format} share-card-${theme}`}
     >
       {/* Header */}
-      <div className="share-card-header">
-        <span className="share-card-globe">🌍</span>
-        <span className="share-card-brand">Right World</span>
+      <div className="sc-header">
+        <span className="sc-compass">🧭</span>
+        <span className="sc-brand">Right World</span>
+        <span className="sc-year-tag">
+          {isYearly ? stats.year : 'ALL TIME'}
+        </span>
       </div>
 
-      {isYearly ? (
-        <>
-          <div className="share-card-year">{stats.year}</div>
-          <div className="share-card-year-sub">Year in Review</div>
-          <div className="share-card-divider" />
+      {/* Hero — world % */}
+      <div className="sc-hero">
+        <div className="sc-pct-row">
+          <span className="sc-pct-num">{pctInt}</span>
+          <span className="sc-pct-symbol">%</span>
+        </div>
+        <div className="sc-pct-label">of the world</div>
+        <div className="sc-prog-bar">
+          <div className="sc-prog-fill" style={{ width: `${Math.min(worldPct, 100)}%` }} />
+        </div>
+        <div className="sc-pct-detail">
+          {worldCountries} of {worldTotal} countries
+        </div>
+      </div>
 
-          {/* Stats grid: 2x2 for portrait, 4-across for square */}
-          <div className={`share-card-grid ${isPortrait ? 'share-card-grid-2x2' : 'share-card-grid-4'}`}>
-            <div className="share-card-stat">
-              <span className="share-card-num">{stats.totalRegions}</span>
-              <span className="share-card-label">Regions</span>
-            </div>
-            <div className="share-card-stat">
-              <span className="share-card-num">{stats.trackersUsed}</span>
-              <span className="share-card-label">Trackers</span>
-            </div>
-            <div className="share-card-stat">
-              <span className="share-card-num">{stats.totalVisitDays}</span>
-              <span className="share-card-label">Days</span>
-            </div>
-            <div className="share-card-stat">
-              <span className="share-card-num">{stats.achievementsUnlocked}</span>
-              <span className="share-card-label">Badges<br />(all time)</span>
-            </div>
-          </div>
-
-          {stats.topTracker && (
-            <div className="share-card-top-tracker">
-              🏆 {stats.topTracker.flag} {stats.topTracker.name} · {stats.topTracker.count} {stats.topTracker.regionLabel.toLowerCase()}
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <div className="share-card-title">My Travel<br />Journey</div>
-          <div className="share-card-divider" />
-
-          <div className="share-card-list">
-            <div className="share-card-list-row">
-              <span className="share-card-list-label">🌍 Countries</span>
-              <span className="share-card-list-num">{stats.worldCountries}</span>
-            </div>
-            <div className="share-card-list-row">
-              <span className="share-card-list-label">📍 Regions</span>
-              <span className="share-card-list-num">{stats.totalRegions}</span>
-            </div>
-            <div className="share-card-list-row">
-              <span className="share-card-list-label">🌐 Continents</span>
-              <span className="share-card-list-num">{stats.continentsVisited}</span>
-            </div>
-            <div className="share-card-list-row">
-              <span className="share-card-list-label">🎖️ Badges</span>
-              <span className="share-card-list-num">{stats.achievements}</span>
-            </div>
-          </div>
-        </>
+      {/* Flag row */}
+      {visitedFlags.length > 0 && (
+        <FlagRow flags={visitedFlags} total={worldCountries} />
       )}
 
-      <div className="share-card-footer">rightworld.app</div>
+      <div className="sc-divider" />
+
+      {/* Stats grid */}
+      {isYearly ? (
+        <div className="sc-stats">
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
+            <span className="sc-stat-label">Regions</span>
+          </div>
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.trackersUsed ?? 0}</span>
+            <span className="sc-stat-label">Trackers</span>
+          </div>
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.totalVisitDays ?? 0}</span>
+            <span className="sc-stat-label">Days</span>
+          </div>
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.achievementsUnlocked ?? 0}</span>
+            <span className="sc-stat-label">Badges</span>
+          </div>
+        </div>
+      ) : (
+        <div className="sc-stats">
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.totalRegions ?? 0}</span>
+            <span className="sc-stat-label">Regions</span>
+          </div>
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.continentsVisited ?? 0}</span>
+            <span className="sc-stat-label">Continents</span>
+          </div>
+          <div className="sc-stat">
+            <span className="sc-stat-num">{stats.achievements ?? 0}</span>
+            <span className="sc-stat-label">Badges</span>
+          </div>
+        </div>
+      )}
+
+      {/* MRZ zone — light mode only */}
+      {!isDark && (
+        <div className="sc-mrz">
+          <div>{mrzLine1}</div>
+          <div>{mrzLine2}</div>
+        </div>
+      )}
+
+      <div className="sc-footer">rightworld.app</div>
     </div>
   );
 });

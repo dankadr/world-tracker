@@ -502,10 +502,17 @@
 /* ===== Share Format Picker ===== */
 .yir-format-picker {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   justify-content: center;
   padding: 8px 0 0;
   animation: yir-fade-up 0.2s ease-out;
+}
+
+.yir-picker-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
 .yir-format-btn {
@@ -528,6 +535,17 @@
 .yir-format-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.yir-format-btn.active {
+  background: rgba(201, 168, 76, 0.22);
+  border-color: #c9a84c;
+  color: #fff;
+}
+
+.yir-theme-btn {
+  flex: 1;
+  max-width: 120px;
 }
 
 .yir-nav-share {

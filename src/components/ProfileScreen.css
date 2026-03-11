@@ -277,8 +277,9 @@
 /* Format picker under share button */
 .profile-share-picker {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  justify-content: center;
+  align-items: center;
   margin-top: 10px;
   animation: fadeIn 0.2s ease-out;
 }

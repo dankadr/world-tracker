@@ -76,6 +76,7 @@ export default function YearInReview({ year, onClose }) {
   // Share flow state
   const [showFormatPicker, setShowFormatPicker] = useState(false);
   const [exportFormat, setExportFormat] = useState(null); // null | 'portrait' | 'square'
+  const [exportTheme, setExportTheme] = useState('dark'); // 'dark' | 'light'
   const [exporting, setExporting] = useState(false);
   const shareCardRef = useRef(null);
 
@@ -95,7 +96,7 @@ export default function YearInReview({ year, onClose }) {
         });
         if (!cancelled) {
           const link = document.createElement('a');
-          link.download = `year-in-review-${year}-${exportFormat}.png`;
+          link.download = `year-in-review-${year}-${exportFormat}-${exportTheme}.png`;
           link.href = canvas.toDataURL();
           link.click();
         }
@@ -184,15 +185,25 @@ export default function YearInReview({ year, onClose }) {
               )}
             </div>
 
-            {/* Format picker — appears below nav on last card */}
+            {/* Format + theme picker — appears below nav on last card */}
             {isLastCard && showFormatPicker && (
               <div className="yir-format-picker">
-                <button className="yir-format-btn" onClick={() => setExportFormat('portrait')} disabled={exporting}>
-                  {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
-                </button>
-                <button className="yir-format-btn" onClick={() => setExportFormat('square')} disabled={exporting}>
-                  {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
-                </button>
+                <div className="yir-picker-row">
+                  <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => setExportFormat('portrait')} disabled={exporting}>
+                    {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
+                  </button>
+                  <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => setExportFormat('square')} disabled={exporting}>
+                    {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
+                  </button>
+                </div>
+                <div className="yir-picker-row">
+                  <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => setExportTheme('dark')} disabled={exporting}>
+                    🌑 Dark
+                  </button>
+                  <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => setExportTheme('light')} disabled={exporting}>
+                    ☀️ Light
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -202,7 +213,7 @@ export default function YearInReview({ year, onClose }) {
 
       {/* Off-screen ShareCard — separate portal so it's not inside the overlay stacking context */}
       {exportFormat && createPortal(
-        <ShareCard ref={shareCardRef} variant="yearly" format={exportFormat} stats={stats} />,
+        <ShareCard ref={shareCardRef} variant="yearly" format={exportFormat} theme={exportTheme} stats={stats} />,
         document.body
       )}
     </>
