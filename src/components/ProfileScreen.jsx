@@ -203,11 +203,14 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
 }
 
 function AchievementsTab({ userId }) {
+  const [expandedId, setExpandedId] = useState(null);
+
   const achievements = getAchievements(userId);
   const baseResults = achievements.map(a => ({ ...a, unlocked: a.check() }));
   const results = baseResults.map(a => ({
     ...a,
     progress: computeProgress(a.rule, userId, baseResults),
+    _userId: userId, // forwarded to getDetailItems inside AchievementCard
   }));
 
   const groups = {};
@@ -228,6 +231,10 @@ function AchievementsTab({ userId }) {
 
   const unlockedCount = results.filter(r => r.unlocked).length;
 
+  function handleToggle(id) {
+    setExpandedId(prev => prev === id ? null : id);
+  }
+
   return (
     <div className="achievements-tab-content">
       <p className="achievements-tab-summary">{unlockedCount} / {results.length} unlocked</p>
@@ -240,7 +247,14 @@ function AchievementsTab({ userId }) {
               <span className="achievement-cat-count">{catUnlocked}/{badges.length}</span>
             </h3>
             <div className="achievements-grid">
-              {badges.map(a => <AchievementCard key={a.id} achievement={a} />)}
+              {badges.map(a => (
+                <AchievementCard
+                  key={a.id}
+                  achievement={a}
+                  isExpanded={expandedId === a.id}
+                  onToggle={() => handleToggle(a.id)}
+                />
+              ))}
             </div>
           </div>
         );
