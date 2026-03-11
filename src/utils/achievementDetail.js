@@ -137,8 +137,8 @@ export function getDetailItems(rule, userId) {
     const ALL = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
     return {
       isListable: true,
-      visited: ALL.filter(c => visitedConts.has(c)),
-      remaining: ALL.filter(c => !visitedConts.has(c)),
+      visited: sorted(ALL.filter(c => visitedConts.has(c))),
+      remaining: sorted(ALL.filter(c => !visitedConts.has(c))),
     };
   }
 
