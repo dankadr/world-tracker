@@ -16,6 +16,7 @@
 
 import { invalidateBulkCache } from './api';
 import { emitVisitedChange } from './events';
+import { secureStorage } from './secureStorage';
 
 const ANON_PREFIX = 'swiss-tracker-';
 const USER_PREFIX_RE = /^swiss-tracker-u\d+-/;
@@ -92,29 +93,32 @@ function collectAnonymousData() {
 /**
  * Copy values into user-scoped localStorage keys and remove anonymous keys.
  */
-function migrateKeys(userId, anonData) {
+async function migrateKeys(userId, anonData) {
   const userPrefix = `swiss-tracker-u${userId}-`;
+  const writes = [];
 
   // Regions
   for (const [countryId, data] of Object.entries(anonData.regions)) {
     if (data.visited.length > 0) {
-      localStorage.setItem(userPrefix + 'visited-' + countryId, JSON.stringify(data.visited));
+      writes.push(secureStorage.setItem(userPrefix + 'visited-' + countryId, JSON.stringify(data.visited)));
     }
     if (Object.keys(data.dates).length > 0) {
-      localStorage.setItem(userPrefix + 'dates-' + countryId, JSON.stringify(data.dates));
+      writes.push(secureStorage.setItem(userPrefix + 'dates-' + countryId, JSON.stringify(data.dates)));
     }
     if (Object.keys(data.notes).length > 0) {
-      localStorage.setItem(userPrefix + 'notes-' + countryId, JSON.stringify(data.notes));
+      writes.push(secureStorage.setItem(userPrefix + 'notes-' + countryId, JSON.stringify(data.notes)));
     }
     if (data.wishlist.length > 0) {
-      localStorage.setItem(userPrefix + 'wishlist-' + countryId, JSON.stringify(data.wishlist));
+      writes.push(secureStorage.setItem(userPrefix + 'wishlist-' + countryId, JSON.stringify(data.wishlist)));
     }
   }
 
   // World
   if (anonData.world && anonData.world.length > 0) {
-    localStorage.setItem(userPrefix + 'visited-world', JSON.stringify(anonData.world));
+    writes.push(secureStorage.setItem(userPrefix + 'visited-world', JSON.stringify(anonData.world)));
   }
+
+  await Promise.all(writes);
 
   // Remove anonymous keys
   const keysToRemove = [];
@@ -222,7 +226,7 @@ export async function syncLocalDataToServer(token, userId) {
     await Promise.all([...regionPromises, worldPromise]);
 
     // Migrate to user-scoped keys & clean up anonymous ones
-    migrateKeys(userId, anonData);
+    await migrateKeys(userId, anonData);
 
     // Bust the bulk cache so hooks re-fetch the fresh merged data
     invalidateBulkCache(token);
