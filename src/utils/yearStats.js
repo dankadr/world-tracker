@@ -2,6 +2,7 @@ import { countryList } from '../data/countries';
 import worldData from '../data/world.json';
 import continentMap from '../config/continents.json';
 import getAchievements from '../data/achievements';
+import { secureStorage } from './secureStorage';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const WORLD_TOTAL = worldData.features.length;
@@ -21,7 +22,7 @@ function storagePrefix(userId) {
 
 function getDatesForCountry(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'dates-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'dates-' + countryId);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return {};
@@ -29,7 +30,7 @@ function getDatesForCountry(countryId, userId) {
 
 function getVisitedIds(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : Object.keys(data);
@@ -40,7 +41,7 @@ function getVisitedIds(countryId, userId) {
 
 function getWorldVisitedIds(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : [];

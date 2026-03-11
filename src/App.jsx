@@ -44,6 +44,7 @@ import ProfileScreen from './components/ProfileScreen';
 import ExploreScreen from './components/ExploreScreen';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
+import { secureStorage } from './utils/secureStorage';
 
 function parseShareHash() {
   try {
@@ -70,7 +71,7 @@ function AchievementToasts() {
 
     let seen;
     try {
-      seen = JSON.parse(localStorage.getItem(seenKey) || '[]');
+      seen = JSON.parse(secureStorage.getItemSync(seenKey) || '[]');
     } catch {
       seen = [];
     }
@@ -78,7 +79,7 @@ function AchievementToasts() {
     if (prevUnlocked.current === null) {
       prevUnlocked.current = new Set(seen.length > 0 ? seen : currentUnlocked);
       if (seen.length === 0) {
-        localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
+        secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
       }
       return;
     }
@@ -104,7 +105,7 @@ function AchievementToasts() {
     // achievements lost after unmarking a region/country are removed.
     // This lets them re-trigger a toast if re-earned later.
     prevUnlocked.current = new Set(currentUnlocked);
-    localStorage.setItem(seenKey, JSON.stringify(currentUnlocked));
+    secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
 
   useEffect(() => {
@@ -212,12 +213,12 @@ export default function App() {
   const removeLegacyWishlistEntry = useCallback((trackerId, regionId) => {
     try {
       const key = wishlistStorageKey(trackerId);
-      const raw = localStorage.getItem(key);
+      const raw = secureStorage.getItemSync(key);
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) {
           const next = arr.filter((id) => id !== regionId);
-          localStorage.setItem(key, JSON.stringify(next));
+          secureStorage.setItem(key, JSON.stringify(next));
         }
       }
     } catch { /* ignore */ }
@@ -449,14 +450,14 @@ export default function App() {
           : 'swiss-tracker-confetti-milestones';
         let shown;
         try {
-          shown = new Set(JSON.parse(localStorage.getItem(confettiKey) || '[]'));
+          shown = new Set(JSON.parse(secureStorage.getItemSync(confettiKey) || '[]'));
         } catch {
           shown = new Set();
         }
         const milestoneId = `${countryId}-${m}`;
         if (!shown.has(milestoneId)) {
           shown.add(milestoneId);
-          localStorage.setItem(confettiKey, JSON.stringify([...shown]));
+          secureStorage.setItem(confettiKey, JSON.stringify([...shown])); // fire-and-forget
           setShowConfetti(true);
         }
         break;

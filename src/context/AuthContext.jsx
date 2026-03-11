@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { syncLocalDataToServer } from '../utils/syncLocalData';
 import { cacheInvalidatePrefix } from '../utils/cache';
 import { clearBatch } from '../utils/batchQueue';
+import { deriveKey } from '../utils/crypto';
+import { setActiveKey, clearActiveKey, warmCache } from '../utils/secureStorage';
 
 const AuthContext = createContext(null);
 
@@ -34,8 +36,17 @@ export function AuthProvider({ children }) {
 
   // On mount, if already logged in, check for any leftover anonymous data
   useEffect(() => {
-    if (auth?.jwt_token && auth?.user?.id) {
-      syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
+    if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
+      (async () => {
+        try {
+          const key = await deriveKey(auth.user.sub);
+          setActiveKey(key);
+          await warmCache(auth.user.id);
+        } catch (e) {
+          console.error('[auth] key derivation failed on mount:', e);
+        }
+        syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
+      })();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -55,8 +66,15 @@ export function AuthProvider({ children }) {
       setAuth(data);
       saveAuth(data);
 
-      // Sync any anonymous localStorage data to the server
-      if (data.jwt_token && data.user?.id) {
+      // Derive encryption key and warm the cache BEFORE syncing
+      if (data.jwt_token && data.user?.id && data.user?.sub) {
+        try {
+          const key = await deriveKey(data.user.sub);
+          setActiveKey(key);
+          await warmCache(data.user.id);
+        } catch (e) {
+          console.error('[auth] key derivation failed on login:', e);
+        }
         syncLocalDataToServer(data.jwt_token, data.user.id).catch(() => {});
       }
     } catch (err) {
@@ -68,6 +86,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    clearActiveKey(); // wipe encryption key and decrypted data cache
     // Drop any queued writes so they don't fire with a stale token after logout
     clearBatch();
     // Clear all cache entries before wiping auth (token still needed for key)

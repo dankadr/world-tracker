@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { defaultAvatar } from '../config/avatarParts';
+import { secureStorage } from '../utils/secureStorage';
 
 function storageKey(userId) {
   return userId ? `swiss-tracker-u${userId}-avatar` : 'swiss-tracker-avatar';
@@ -8,7 +9,7 @@ function storageKey(userId) {
 
 function loadAvatar(userId) {
   try {
-    const raw = localStorage.getItem(storageKey(userId));
+    const raw = secureStorage.getItemSync(storageKey(userId));
     if (raw) {
       const data = JSON.parse(raw);
       return { ...defaultAvatar, ...data };
@@ -18,7 +19,7 @@ function loadAvatar(userId) {
 }
 
 function saveAvatar(userId, config) {
-  localStorage.setItem(storageKey(userId), JSON.stringify(config));
+  secureStorage.setItem(storageKey(userId), JSON.stringify(config));
 }
 
 export default function useAvatar() {

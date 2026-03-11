@@ -2,6 +2,7 @@ import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
 import countryMeta from '../config/countryMeta.json';
+import { secureStorage } from './secureStorage';
 
 // Rule types that have no named region list — show hint box instead
 const NON_LISTABLE = new Set([
@@ -20,7 +21,7 @@ function storagePrefix(userId) {
 
 function getVisitedSet(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       return new Set(Array.isArray(data) ? data : Object.keys(data));
@@ -31,7 +32,7 @@ function getVisitedSet(countryId, userId) {
 
 function getVisitedWorldSet(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const data = JSON.parse(raw);
       return new Set(Array.isArray(data) ? data : []);

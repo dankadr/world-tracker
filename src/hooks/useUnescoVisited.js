@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { invalidateBulkCache } from '../utils/api';
 import { emitVisitedChange } from '../utils/events';
+import { secureStorage } from '../utils/secureStorage';
 
 const TRACKER_ID = 'unesco';
 
@@ -12,7 +13,7 @@ function storagePrefix(userId) {
 
 function loadLocal(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + TRACKER_ID);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + TRACKER_ID);
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return new Set(arr);
@@ -22,7 +23,7 @@ function loadLocal(userId) {
 }
 
 function saveLocal(set, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'visited-' + TRACKER_ID, JSON.stringify([...set]));
+  secureStorage.setItem(storagePrefix(userId) + 'visited-' + TRACKER_ID, JSON.stringify([...set]));
 }
 
 // --------------- API helpers ---------------

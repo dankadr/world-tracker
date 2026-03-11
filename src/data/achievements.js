@@ -5,6 +5,7 @@ import worldData from './world.json';
 import countryMeta from '../config/countryMeta.json';
 import capitalsData from './capitals.json';
 import unescoData from './unesco-sites.json';
+import { secureStorage } from '../utils/secureStorage';
 
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
@@ -15,7 +16,7 @@ function storagePrefix(userId) {
 
 function getVisitedIds(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : Object.keys(data);
@@ -43,7 +44,7 @@ function getAllTotal() {
 
 function getWorldVisited(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : [];
