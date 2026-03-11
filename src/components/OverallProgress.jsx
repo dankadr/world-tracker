@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { countryList } from '../data/countries';
+import { secureStorage } from '../utils/secureStorage';
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -8,7 +9,7 @@ function storagePrefix(userId) {
 
 function getVisitedCount(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data)) return data.length;

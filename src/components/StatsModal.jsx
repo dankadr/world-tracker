@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { secureStorage } from '../utils/secureStorage';
 import { getAvailableYears } from '../utils/yearStats';
 import YearInReview from './YearInReview';
 import UnescoStatsCard from './UnescoStatsCard';
@@ -22,7 +23,7 @@ function storagePrefix(userId) {
 
 function getVisitedIds(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : Object.keys(data);
@@ -35,7 +36,7 @@ function getAllDates(userId) {
   const timeline = [];
   for (const c of countryList) {
     try {
-      const raw = localStorage.getItem(storagePrefix(userId) + 'dates-' + c.id);
+      const raw = secureStorage.getItemSync(storagePrefix(userId) + 'dates-' + c.id);
       if (raw) {
         const dates = JSON.parse(raw);
         for (const [regionId, dateStr] of Object.entries(dates)) {
@@ -144,7 +145,7 @@ function computeGeoInsights(coords) {
 
 function getWorldVisitedIds(userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const data = JSON.parse(raw);
       return Array.isArray(data) ? data : [];

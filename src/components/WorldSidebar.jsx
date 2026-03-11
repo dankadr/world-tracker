@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
+import { secureStorage } from '../utils/secureStorage';
 import { countryList } from '../data/countries';
 import { useAuth } from '../context/AuthContext';
 import worldData from '../data/world.json';
@@ -32,7 +33,7 @@ function storagePrefix(userId) {
 
 function getVisitedCount(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const data = JSON.parse(raw);
       if (Array.isArray(data)) return data.length;
