@@ -2,6 +2,7 @@ import { countryList } from '../data/countries';
 import continentMap from '../config/continents.json';
 import worldData from '../data/world.json';
 import getAchievements from '../data/achievements';
+import { secureStorage } from './secureStorage';
 
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
@@ -34,7 +35,7 @@ export function computeAllTimeStats(userId) {
   const continentBreakdown = {};
   [...INHABITED_CONTINENTS].forEach(c => { continentBreakdown[c] = 0; });
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-world');
     if (raw) {
       const data = JSON.parse(raw);
       const ids = Array.isArray(data) ? data : [];
@@ -58,7 +59,7 @@ export function computeAllTimeStats(userId) {
   let totalRegions = 0;
   for (const c of countryList) {
     try {
-      const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + c.id);
+      const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + c.id);
       if (raw) {
         const data = JSON.parse(raw);
         const ids = Array.isArray(data) ? data : Object.keys(data);
