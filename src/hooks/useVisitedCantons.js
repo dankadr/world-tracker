@@ -5,6 +5,7 @@ import { fetchAllVisited, invalidateBulkCache, deleteAllVisited } from '../utils
 import { cacheGet, cacheGetStale } from '../utils/cache';
 import { addToBatch } from '../utils/batchQueue';
 import { emitVisitedChange } from '../utils/events';
+import { secureStorage } from '../utils/secureStorage';
 
 const VISITED_TTL = 5 * 60 * 1000;
 
@@ -19,7 +20,7 @@ function storagePrefix(userId) {
 
 function loadLocal(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'visited-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'visited-' + countryId);
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return new Set(arr);
@@ -29,36 +30,36 @@ function loadLocal(countryId, userId) {
 }
 
 function saveLocal(countryId, set, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'visited-' + countryId, JSON.stringify([...set]));
+  secureStorage.setItem(storagePrefix(userId) + 'visited-' + countryId, JSON.stringify([...set]));
 }
 
 function loadDates(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'dates-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'dates-' + countryId);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return {};
 }
 
 function saveDates(countryId, dates, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'dates-' + countryId, JSON.stringify(dates));
+  secureStorage.setItem(storagePrefix(userId) + 'dates-' + countryId, JSON.stringify(dates));
 }
 
 function loadNotes(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'notes-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'notes-' + countryId);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return {};
 }
 
 function saveNotes(countryId, notes, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'notes-' + countryId, JSON.stringify(notes));
+  secureStorage.setItem(storagePrefix(userId) + 'notes-' + countryId, JSON.stringify(notes));
 }
 
 function loadWishlist(countryId, userId) {
   try {
-    const raw = localStorage.getItem(storagePrefix(userId) + 'wishlist-' + countryId);
+    const raw = secureStorage.getItemSync(storagePrefix(userId) + 'wishlist-' + countryId);
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return new Set(arr);
@@ -68,7 +69,7 @@ function loadWishlist(countryId, userId) {
 }
 
 function saveWishlist(countryId, set, userId) {
-  localStorage.setItem(storagePrefix(userId) + 'wishlist-' + countryId, JSON.stringify([...set]));
+  secureStorage.setItem(storagePrefix(userId) + 'wishlist-' + countryId, JSON.stringify([...set]));
 }
 
 // --------------- API helpers ---------------
