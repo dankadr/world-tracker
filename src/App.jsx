@@ -213,12 +213,12 @@ export default function App() {
   const removeLegacyWishlistEntry = useCallback((trackerId, regionId) => {
     try {
       const key = wishlistStorageKey(trackerId);
-      const raw = localStorage.getItem(key);
+      const raw = secureStorage.getItemSync(key);
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) {
           const next = arr.filter((id) => id !== regionId);
-          localStorage.setItem(key, JSON.stringify(next));
+          secureStorage.setItem(key, JSON.stringify(next));
         }
       }
     } catch { /* ignore */ }
