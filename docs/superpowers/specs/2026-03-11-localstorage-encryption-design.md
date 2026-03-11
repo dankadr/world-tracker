@@ -129,6 +129,7 @@ User signs in with Google
   → saveAuth(jwt_token, user)
   → key = await deriveKey(user.sub)     [~100ms, one-time, cached]
   → setActiveKey(key)
+  → await warmCache(user.id)            [decrypt all existing user keys into memCache]
   → await syncLocalDataToServer(...)    [reads anonymous plaintext, writes user-scoped encrypted]
 ```
 
