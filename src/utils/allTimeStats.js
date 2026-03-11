@@ -31,6 +31,8 @@ export function computeAllTimeStats(userId) {
   let worldCountries = 0;
   let visitedFlags = [];
   const continentsSet = new Set();
+  const continentBreakdown = {};
+  [...INHABITED_CONTINENTS].forEach(c => { continentBreakdown[c] = 0; });
   try {
     const raw = localStorage.getItem(storagePrefix(userId) + 'visited-world');
     if (raw) {
@@ -40,7 +42,10 @@ export function computeAllTimeStats(userId) {
       visitedFlags = ids.map(getFlagEmoji).filter(Boolean);
       ids.forEach(id => {
         const continent = continentMap[id];
-        if (continent && INHABITED_CONTINENTS.has(continent)) continentsSet.add(continent);
+        if (continent && INHABITED_CONTINENTS.has(continent)) {
+          continentsSet.add(continent);
+          continentBreakdown[continent] = (continentBreakdown[continent] || 0) + 1;
+        }
       });
     }
   } catch { /* ignore */ }
@@ -76,6 +81,7 @@ export function computeAllTimeStats(userId) {
     visitedFlags,
     totalRegions,
     continentsVisited: continentsSet.size,
+    continentBreakdown,
     achievements,
   };
 }

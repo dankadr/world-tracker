@@ -67,7 +67,7 @@ const ShareCard = forwardRef(function ShareCard({ variant, format, theme = 'dark
 
   const showTopTracker = isYearly && isPortrait && stats.topTracker;
   const showComparison = isYearly && isPortrait && stats.comparedToPrevYear;
-  const showContinentPills = isYearly && isPortrait && stats.continentBreakdown;
+  const showContinentPills = isPortrait && stats.continentBreakdown;
 
   return (
     <div ref={ref} className={`share-card share-card-${format} share-card-${theme}`}>

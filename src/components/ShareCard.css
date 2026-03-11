@@ -68,7 +68,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 75%;
+  width: 92%;
   height: auto;
   pointer-events: none;
   user-select: none;
@@ -76,12 +76,12 @@
 }
 
 .share-card-dark .sc-watermark {
-  opacity: 0.055;
+  opacity: 0.038;
   filter: blur(1px);
 }
 
 .share-card-light .sc-watermark {
-  opacity: 0.06;
+  opacity: 0.042;
   filter: blur(0.5px);
 }
 
