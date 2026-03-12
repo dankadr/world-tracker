@@ -16,7 +16,20 @@ from crypto import enc, dec, enc_json, dec_json, is_encrypted  # noqa: E402
 
 
 def _make_engine(db_url: str):
-    sync_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+    # Convert async-only driver prefixes to their sync equivalents.
+    # postgresql+asyncpg  → postgresql+psycopg  (if psycopg installed, else postgresql)
+    # postgresql+psycopg_async → postgresql+psycopg
+    # postgresql+psycopg  → already sync, leave as-is
+    # postgresql          → already sync (uses psycopg2 or default), leave as-is
+    replacements = [
+        ("postgresql+asyncpg://", "postgresql+psycopg://"),
+        ("postgresql+psycopg_async://", "postgresql+psycopg://"),
+    ]
+    sync_url = db_url
+    for old, new in replacements:
+        if db_url.startswith(old):
+            sync_url = db_url.replace(old, new, 1)
+            break
     return create_engine(sync_url, echo=False)
 
 
