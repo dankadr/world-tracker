@@ -9,12 +9,26 @@ const AuthContext = createContext(null);
 
 const STORAGE_KEY = 'swiss-tracker-auth';
 
+function decodeJwtEmail(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))?.email || null;
+  } catch {
+    return null;
+  }
+}
+
 function loadAuth() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      if (data.jwt_token && data.user) return data;
+      if (data.jwt_token && data.user) {
+        // Backfill email from JWT payload if missing (e.g. older cached auth)
+        if (!data.user.email) {
+          data.user.email = decodeJwtEmail(data.jwt_token);
+        }
+        return data;
+      }
     }
   } catch {
     // ignore
