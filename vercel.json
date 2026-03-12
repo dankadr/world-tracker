@@ -8,6 +8,7 @@
   "rewrites": [
     { "source": "/auth/:path*", "destination": "/api" },
     { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/admin/:path*", "destination": "/api" },
     { "source": "/nominatim/:path*", "destination": "https://nominatim.openstreetmap.org/:path*" }
   ],
   "headers": [
