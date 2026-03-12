@@ -1229,7 +1229,7 @@ async def list_challenges(user: CurrentUser = Depends(get_current_user), db: Asy
             "completed_at": c.completed_at.isoformat() if c.completed_at else None,
             "creator_id": c.creator_id,
             "participant_count": len(part_users),
-            "participants": [{"id": u.id, "name": u.name, "picture": u.picture} for u in part_users[:5]],
+            "participants": [{"id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture)} for u in part_users[:5]],
             "progress": progress,
         })
 
@@ -1358,7 +1358,7 @@ async def get_challenge_detail(challenge_id: str, user: CurrentUser = Depends(ge
         "completed_at": challenge.completed_at.isoformat() if challenge.completed_at else None,
         "creator_id": challenge.creator_id,
         "participants": [
-            {"id": u.id, "name": u.name, "picture": u.picture, "joined_at": cp.joined_at.isoformat()}
+            {"id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture), "joined_at": cp.joined_at.isoformat()}
             for cp, u in parts.all()
         ],
         "progress": progress,
