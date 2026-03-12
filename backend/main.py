@@ -40,6 +40,11 @@ except ImportError:
         generate_friend_code, generate_challenge_id,
     )
 
+try:
+    from backend.crypto import enc, enc_json, dec_json_safe, dec_str_safe, is_encrypted
+except ImportError:
+    from crypto import enc, enc_json, dec_json_safe, dec_str_safe, is_encrypted
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -271,22 +276,24 @@ async def google_login(body: GoogleLoginRequest, db: AsyncSession = Depends(get_
 
     if user:
         user.email = email
-        user.name = name
-        user.picture = picture
+        # name/picture set after flush (need user.id for key derivation)
         logger.info("User updated: id=%s email=%s", user.id, email)
     else:
-        user = User(google_id=google_id, email=email, name=name, picture=picture)
+        user = User(google_id=google_id, email=email, name=None, picture=None)
         db.add(user)
         logger.info("New user created: email=%s", email)
 
-    await db.flush()
+    await db.flush()  # user.id now available for both new and existing users
+    uid = user.id
+    user.name = enc(uid, name) if name else None
+    user.picture = enc(uid, picture) if picture else None
     await db.commit()
 
-    jwt_token = create_jwt(user.id, user.email)
+    jwt_token = create_jwt(uid, user.email)
 
     return GoogleLoginResponse(
         jwt_token=jwt_token,
-        user={"id": user.id, "email": user.email, "name": user.name, "picture": user.picture},
+        user={"id": uid, "email": user.email, "name": name, "picture": picture},  # return plaintext
     )
 
 
@@ -378,34 +385,35 @@ async def put_visited(
         )
     )
     record = result.scalar_one_or_none()
+    uid = user.id
 
     if record:
-        record.regions = body.regions
+        record.regions = enc_json(uid, body.regions)
         if body.dates is not None:
-            record.dates = body.dates
+            record.dates = enc_json(uid, body.dates)
         if body.notes is not None:
-            record.notes = body.notes
+            record.notes = enc_json(uid, body.notes)
         if body.wishlist is not None:
-            record.wishlist = body.wishlist
+            record.wishlist = enc_json(uid, body.wishlist)
         record.updated_at = datetime.now(timezone.utc)
     else:
         record = VisitedRegions(
-            user_id=user.id,
+            user_id=uid,
             country_id=country_id,
-            regions=body.regions,
-            dates=body.dates or {},
-            notes=body.notes or {},
-            wishlist=body.wishlist or [],
+            regions=enc_json(uid, body.regions),
+            dates=enc_json(uid, body.dates or {}),
+            notes=enc_json(uid, body.notes or {}),
+            wishlist=enc_json(uid, body.wishlist or []),
         )
         db.add(record)
 
     await db.commit()
     return VisitedResponse(
         country_id=country_id,
-        regions=record.regions,
-        dates=record.dates or {},
-        notes=record.notes or {},
-        wishlist=record.wishlist or [],
+        regions=body.regions,
+        dates=body.dates or {},
+        notes=body.notes or {},
+        wishlist=body.wishlist or [],
     )
 
 
@@ -430,20 +438,21 @@ async def patch_visited_region(
     )
     record = result.scalar_one_or_none()
 
+    uid = user.id
     if not record:
         record = VisitedRegions(
-            user_id=user.id,
+            user_id=uid,
             country_id=country_id,
-            regions=[],
-            dates={},
-            notes={},
-            wishlist=[],
+            regions=enc_json(uid, []),
+            dates=enc_json(uid, {}),
+            notes=enc_json(uid, {}),
+            wishlist=enc_json(uid, []),
         )
         db.add(record)
 
-    regions = list(record.regions or [])
-    dates = dict(record.dates or {})
-    notes = dict(record.notes or {})
+    regions = dec_json_safe(uid, record.regions) or []
+    dates = dec_json_safe(uid, record.dates) or {}
+    notes = dec_json_safe(uid, record.notes) or {}
 
     if body.action == "add":
         if body.region not in regions:
@@ -454,18 +463,18 @@ async def patch_visited_region(
         dates.pop(body.region, None)
         notes.pop(body.region, None)
 
-    record.regions = regions
-    record.dates = dates
-    record.notes = notes
+    record.regions = enc_json(uid, regions)
+    record.dates = enc_json(uid, dates)
+    record.notes = enc_json(uid, notes)
     record.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
     return VisitedResponse(
         country_id=country_id,
-        regions=record.regions or [],
-        dates=record.dates or {},
-        notes=record.notes or {},
-        wishlist=record.wishlist or [],
+        regions=regions,
+        dates=dates,
+        notes=notes,
+        wishlist=dec_json_safe(uid, record.wishlist) or [],
     )
 
 
@@ -489,18 +498,19 @@ async def patch_visited_wishlist(
     )
     record = result.scalar_one_or_none()
 
+    uid = user.id
     if not record:
         record = VisitedRegions(
-            user_id=user.id,
+            user_id=uid,
             country_id=country_id,
-            regions=[],
-            dates={},
-            notes={},
-            wishlist=[],
+            regions=enc_json(uid, []),
+            dates=enc_json(uid, {}),
+            notes=enc_json(uid, {}),
+            wishlist=enc_json(uid, []),
         )
         db.add(record)
 
-    wishlist = list(record.wishlist or [])
+    wishlist = dec_json_safe(uid, record.wishlist) or []
 
     if body.action == "add":
         if body.region not in wishlist:
@@ -509,16 +519,16 @@ async def patch_visited_wishlist(
         if body.region in wishlist:
             wishlist.remove(body.region)
 
-    record.wishlist = wishlist
+    record.wishlist = enc_json(uid, wishlist)
     record.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
     return VisitedResponse(
         country_id=country_id,
-        regions=record.regions or [],
-        dates=record.dates or {},
-        notes=record.notes or {},
-        wishlist=record.wishlist or [],
+        regions=dec_json_safe(uid, record.regions) or [],
+        dates=dec_json_safe(uid, record.dates) or {},
+        notes=dec_json_safe(uid, record.notes) or {},
+        wishlist=wishlist,
     )
 
 
@@ -536,11 +546,12 @@ async def patch_visited_world(
     )
     record = result.scalar_one_or_none()
 
+    uid = user.id
     if not record:
-        record = VisitedWorld(user_id=user.id, countries=[])
+        record = VisitedWorld(user_id=uid, countries=enc_json(uid, []))
         db.add(record)
 
-    countries = list(record.countries or [])
+    countries = dec_json_safe(uid, record.countries) or []
 
     if body.action == "add":
         if body.country not in countries:
@@ -549,11 +560,11 @@ async def patch_visited_world(
         if body.country in countries:
             countries.remove(body.country)
 
-    record.countries = countries
+    record.countries = enc_json(uid, countries)
     record.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
-    return WorldVisitedResponse(countries=record.countries)
+    return WorldVisitedResponse(countries=countries)
 
 
 # --------------- Batch endpoint ---------------
@@ -564,6 +575,7 @@ async def batch_actions(
     db: AsyncSession = Depends(get_db),
 ):
     """Execute multiple actions in a single request (single DB transaction)."""
+    uid = user.id
     results = []
     for item in body.actions:
         action = item.action
@@ -578,20 +590,21 @@ async def batch_actions(
                 continue
             result = await db.execute(
                 select(VisitedRegions).where(
-                    VisitedRegions.user_id == user.id,
+                    VisitedRegions.user_id == uid,
                     VisitedRegions.country_id == country_id,
                 )
             )
             record = result.scalar_one_or_none()
             if not record:
                 record = VisitedRegions(
-                    user_id=user.id, country_id=country_id,
-                    regions=[], dates={}, notes={}, wishlist=[],
+                    user_id=uid, country_id=country_id,
+                    regions=enc_json(uid, []), dates=enc_json(uid, {}),
+                    notes=enc_json(uid, {}), wishlist=enc_json(uid, []),
                 )
                 db.add(record)
-            regions = list(record.regions or [])
-            dates = dict(record.dates or {})
-            notes = dict(record.notes or {})
+            regions = dec_json_safe(uid, record.regions) or []
+            dates = dec_json_safe(uid, record.dates) or {}
+            notes = dec_json_safe(uid, record.notes) or {}
             if act == "add":
                 if region not in regions:
                     regions.append(region)
@@ -600,9 +613,9 @@ async def batch_actions(
                     regions.remove(region)
                 dates.pop(region, None)
                 notes.pop(region, None)
-            record.regions = regions
-            record.dates = dates
-            record.notes = notes
+            record.regions = enc_json(uid, regions)
+            record.dates = enc_json(uid, dates)
+            record.notes = enc_json(uid, notes)
             record.updated_at = datetime.now(timezone.utc)
             results.append({"action": action, "ok": True})
 
@@ -613,20 +626,20 @@ async def batch_actions(
                 results.append({"action": action, "ok": False, "error": "invalid params"})
                 continue
             result = await db.execute(
-                select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+                select(VisitedWorld).where(VisitedWorld.user_id == uid)
             )
             record = result.scalar_one_or_none()
             if not record:
-                record = VisitedWorld(user_id=user.id, countries=[])
+                record = VisitedWorld(user_id=uid, countries=enc_json(uid, []))
                 db.add(record)
-            countries_list = list(record.countries or [])
+            countries_list = dec_json_safe(uid, record.countries) or []
             if act == "add":
                 if country_code not in countries_list:
                     countries_list.append(country_code)
             else:
                 if country_code in countries_list:
                     countries_list.remove(country_code)
-            record.countries = countries_list
+            record.countries = enc_json(uid, countries_list)
             record.updated_at = datetime.now(timezone.utc)
             results.append({"action": action, "ok": True})
 
@@ -639,22 +652,25 @@ async def batch_actions(
             category = p.get("category", "solo")
             result = await db.execute(
                 select(WishlistItem).where(
-                    WishlistItem.user_id == user.id,
+                    WishlistItem.user_id == uid,
                     WishlistItem.tracker_id == tracker_id,
                     WishlistItem.region_id == region_id,
                 )
             )
             wi = result.scalar_one_or_none()
             if wi:
-                wi.priority = priority
-                wi.target_date = target_date
-                wi.notes = notes_val
-                wi.category = category
+                wi.priority = enc(uid, priority)
+                wi.target_date = enc(uid, target_date) if target_date else None
+                wi.notes = enc(uid, notes_val) if notes_val else None
+                wi.category = enc(uid, category)
                 wi.updated_at = datetime.now(timezone.utc)
             else:
                 wi = WishlistItem(
-                    user_id=user.id, tracker_id=tracker_id, region_id=region_id,
-                    priority=priority, target_date=target_date, notes=notes_val, category=category,
+                    user_id=uid, tracker_id=tracker_id, region_id=region_id,
+                    priority=enc(uid, priority),
+                    target_date=enc(uid, target_date) if target_date else None,
+                    notes=enc(uid, notes_val) if notes_val else None,
+                    category=enc(uid, category),
                 )
                 db.add(wi)
             results.append({"action": action, "ok": True})
@@ -705,15 +721,16 @@ async def put_visited_world(
     )
     record = result.scalar_one_or_none()
 
+    uid = user.id
     if record:
-        record.countries = body.countries
+        record.countries = enc_json(uid, body.countries)
         record.updated_at = datetime.now(timezone.utc)
     else:
-        record = VisitedWorld(user_id=user.id, countries=body.countries)
+        record = VisitedWorld(user_id=uid, countries=enc_json(uid, body.countries))
         db.add(record)
 
     await db.commit()
-    return WorldVisitedResponse(countries=record.countries)
+    return WorldVisitedResponse(countries=body.countries)
 
 
 # --------------- Friends endpoints ---------------
@@ -1141,7 +1158,7 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
                 db.add(XpLog(
                     user_id=u.id,
                     amount=xp_amount,
-                    reason="complete_challenge",
+                    reason=enc(u.id, "complete_challenge"),
                     tracker_id=challenge.tracker_id,
                 ))
     else:  # race
@@ -1163,7 +1180,7 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
                 db.add(XpLog(
                     user_id=u.id,
                     amount=xp_amount,
-                    reason=f"complete_challenge_rank{i+1}",
+                    reason=enc(u.id, f"complete_challenge_rank{i+1}"),
                     tracker_id=challenge.tracker_id,
                 ))
 
@@ -1508,22 +1525,23 @@ async def upsert_wishlist_item(
         )
     )
     item = result.scalar_one_or_none()
+    uid = user.id
 
     if item:
-        item.priority = body.priority
-        item.target_date = body.target_date
-        item.notes = body.notes
-        item.category = body.category
+        item.priority = enc(uid, body.priority)
+        item.target_date = enc(uid, body.target_date) if body.target_date else None
+        item.notes = enc(uid, body.notes) if body.notes else None
+        item.category = enc(uid, body.category)
         item.updated_at = datetime.now(timezone.utc)
     else:
         item = WishlistItem(
-            user_id=user.id,
+            user_id=uid,
             tracker_id=tracker_id,
             region_id=region_id,
-            priority=body.priority,
-            target_date=body.target_date,
-            notes=body.notes,
-            category=body.category,
+            priority=enc(uid, body.priority),
+            target_date=enc(uid, body.target_date) if body.target_date else None,
+            notes=enc(uid, body.notes) if body.notes else None,
+            category=enc(uid, body.category),
         )
         db.add(item)
 
@@ -1531,10 +1549,10 @@ async def upsert_wishlist_item(
     return {
         "tracker_id": item.tracker_id,
         "region_id": item.region_id,
-        "priority": item.priority,
-        "target_date": item.target_date,
-        "notes": item.notes,
-        "category": item.category,
+        "priority": body.priority,
+        "target_date": body.target_date,
+        "notes": body.notes,
+        "category": body.category,
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
 
@@ -1559,18 +1577,19 @@ async def patch_wishlist_item(
     if not item:
         raise HTTPException(404, "Wishlist item not found")
 
+    uid = user.id
     if body.priority is not None:
         if body.priority not in ("high", "medium", "low"):
             raise HTTPException(400, "priority must be 'high', 'medium', or 'low'")
-        item.priority = body.priority
+        item.priority = enc(uid, body.priority)
     if body.target_date is not None:
-        item.target_date = body.target_date if body.target_date else None
+        item.target_date = enc(uid, body.target_date) if body.target_date else None
     if body.notes is not None:
-        item.notes = body.notes if body.notes else None
+        item.notes = enc(uid, body.notes) if body.notes else None
     if body.category is not None:
         if body.category not in ("solo", "friends", "family", "work"):
             raise HTTPException(400, "category must be 'solo', 'friends', 'family', or 'work'")
-        item.category = body.category
+        item.category = enc(uid, body.category)
 
     item.updated_at = datetime.now(timezone.utc)
     await db.commit()
@@ -1578,10 +1597,10 @@ async def patch_wishlist_item(
     return {
         "tracker_id": item.tracker_id,
         "region_id": item.region_id,
-        "priority": item.priority,
-        "target_date": item.target_date,
-        "notes": item.notes,
-        "category": item.category,
+        "priority": dec_str_safe(uid, item.priority),
+        "target_date": dec_str_safe(uid, item.target_date),
+        "notes": dec_str_safe(uid, item.notes),
+        "category": dec_str_safe(uid, item.category),
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
 
@@ -1699,7 +1718,7 @@ async def add_user_xp(
     log_entry = XpLog(
         user_id=user.id,
         amount=applied_delta,
-        reason=body.reason,
+        reason=enc(user.id, body.reason),
         tracker_id=body.tracker_id,
     )
     db.add(log_entry)
