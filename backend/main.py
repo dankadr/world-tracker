@@ -310,21 +310,22 @@ async def get_all_visited(
         select(VisitedRegions).where(VisitedRegions.user_id == user.id)
     )
     records = result.scalars().all()
+    uid = user.id
     regions_data = {}
     for r in records:
         regions_data[r.country_id] = {
             "country_id": r.country_id,
-            "regions": dec_json_safe(user.id, r.regions) or [],
-            "dates": dec_json_safe(user.id, r.dates) or {},
-            "notes": dec_json_safe(user.id, r.notes) or {},
-            "wishlist": dec_json_safe(user.id, r.wishlist) or [],
+            "regions": dec_json_safe(uid, r.regions) or [],
+            "dates": dec_json_safe(uid, r.dates) or {},
+            "notes": dec_json_safe(uid, r.notes) or {},
+            "wishlist": dec_json_safe(uid, r.wishlist) or [],
         }
 
     result = await db.execute(
-        select(VisitedWorld).where(VisitedWorld.user_id == user.id)
+        select(VisitedWorld).where(VisitedWorld.user_id == uid)
     )
     world_record = result.scalar_one_or_none()
-    world_countries = dec_json_safe(user.id, world_record.countries) if world_record and world_record.countries else []
+    world_countries = dec_json_safe(uid, world_record.countries) if world_record and world_record.countries else []
 
     return {"regions": regions_data, "world": world_countries}
 
@@ -361,10 +362,11 @@ async def get_visited(
         )
     )
     record = result.scalar_one_or_none()
-    regions = dec_json_safe(user.id, record.regions) if record else []
-    dates = (dec_json_safe(user.id, record.dates) or {}) if record else {}
-    notes = (dec_json_safe(user.id, record.notes) or {}) if record else {}
-    wishlist = (dec_json_safe(user.id, record.wishlist) or []) if record else []
+    uid = user.id
+    regions = dec_json_safe(uid, record.regions) if record else []
+    dates = (dec_json_safe(uid, record.dates) or {}) if record else {}
+    notes = (dec_json_safe(uid, record.notes) or {}) if record else {}
+    wishlist = (dec_json_safe(uid, record.wishlist) or []) if record else []
     return VisitedResponse(country_id=country_id, regions=regions, dates=dates, notes=notes, wishlist=wishlist)
 
 
