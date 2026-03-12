@@ -768,7 +768,7 @@ async def get_user_by_code(friend_code: str, user: CurrentUser = Depends(get_cur
     target = result.scalar_one_or_none()
     if not target:
         raise HTTPException(404, "User not found")
-    return {"id": target.id, "name": target.name, "picture": target.picture}
+    return {"id": target.id, "name": dec_str_safe(target.id, target.name), "picture": dec_str_safe(target.id, target.picture)}
 
 
 @app.post("/api/friends/request")
@@ -809,7 +809,7 @@ async def send_friend_request(body: FriendRequestCreate, user: CurrentUser = Dep
     req = FriendRequest(from_user_id=user.id, to_user_id=target.id, status="pending")
     db.add(req)
     await db.commit()
-    return {"id": req.id, "status": "pending", "to_user": {"id": target.id, "name": target.name, "picture": target.picture}}
+    return {"id": req.id, "status": "pending", "to_user": {"id": target.id, "name": dec_str_safe(target.id, target.name), "picture": dec_str_safe(target.id, target.picture)}}
 
 
 @app.get("/api/friends/requests")
@@ -830,9 +830,9 @@ async def list_friend_requests(user: CurrentUser = Depends(get_current_user), db
 
     return {
         "incoming": [{"id": r.id, "status": r.status, "created_at": r.created_at.isoformat(),
-                       "from_user": {"id": u.id, "name": u.name, "picture": u.picture}} for r, u in incoming],
+                       "from_user": {"id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture)}} for r, u in incoming],
         "outgoing": [{"id": r.id, "status": r.status, "created_at": r.created_at.isoformat(),
-                       "to_user": {"id": u.id, "name": u.name, "picture": u.picture}} for r, u in outgoing],
+                       "to_user": {"id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture)}} for r, u in outgoing],
     }
 
 
@@ -896,9 +896,9 @@ async def list_friends(user: CurrentUser = Depends(get_current_user), db: AsyncS
         # Get countries count
         world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == u.id))).scalar_one_or_none()
         friends.append({
-            "id": u.id, "name": u.name, "picture": u.picture,
+            "id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
             "friend_code": u.friend_code,
-            "countries_count": len(world.countries) if world else 0,
+            "countries_count": len(dec_json_safe(u.id, world.countries) or []) if world and world.countries else 0,
             "since": since.isoformat() if since else None,
         })
     return friends
@@ -933,14 +933,17 @@ async def get_friend_visited(friend_id: int, user: CurrentUser = Depends(get_cur
 
     # Regions
     regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id == friend_id))
-    regions = [{"country_id": r.country_id, "regions": r.regions} for r in regions_result.scalars().all()]
+    regions = [
+        {"country_id": r.country_id, "regions": dec_json_safe(friend_id, r.regions) or []}
+        for r in regions_result.scalars().all()
+    ]
 
     # World
     world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == friend_id))).scalar_one_or_none()
 
     return {
         "regions": regions,
-        "world": {"countries": world.countries if world else []},
+        "world": {"countries": dec_json_safe(friend_id, world.countries) if world and world.countries else []},
     }
 
 
@@ -959,13 +962,13 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
         if not u:
             continue
         world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == uid))).scalar_one_or_none()
-        countries_count = len(world.countries) if world else 0
+        countries_count = len(dec_json_safe(uid, world.countries) or []) if world and world.countries else 0
 
         regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id == uid))
-        regions_count = sum(len(r.regions) for r in regions_result.scalars().all())
+        regions_count = sum(len(dec_json_safe(uid, r.regions) or []) for r in regions_result.scalars().all())
 
         entries.append({
-            "user_id": u.id, "name": u.name, "picture": u.picture,
+            "user_id": u.id, "name": dec_str_safe(uid, u.name), "picture": dec_str_safe(uid, u.picture),
             "countries_count": countries_count, "regions_count": regions_count,
             "is_self": u.id == user.id,
         })
@@ -1003,8 +1006,8 @@ async def get_activity(user: CurrentUser = Depends(get_current_user), db: AsyncS
     )
     for r, u in regions.all():
         activities.append({
-            "type": "regions", "user_id": u.id, "name": u.name, "picture": u.picture,
-            "country_id": r.country_id, "count": len(r.regions),
+            "type": "regions", "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
+            "country_id": r.country_id, "count": len(dec_json_safe(u.id, r.regions) or []),
             "updated_at": r.updated_at.isoformat() if r.updated_at else None,
         })
 
@@ -1018,8 +1021,8 @@ async def get_activity(user: CurrentUser = Depends(get_current_user), db: AsyncS
     )
     for w, u in worlds.all():
         activities.append({
-            "type": "world", "user_id": u.id, "name": u.name, "picture": u.picture,
-            "count": len(w.countries),
+            "type": "world", "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
+            "count": len(dec_json_safe(u.id, w.countries) or []),
             "updated_at": w.updated_at.isoformat() if w.updated_at else None,
         })
 
@@ -1058,13 +1061,13 @@ async def _get_visited_for_user(user_id: int, db: AsyncSession):
     records = result.scalars().all()
     regions = {}
     for r in records:
-        regions[r.country_id] = r.regions or []
+        regions[r.country_id] = dec_json_safe(user_id, r.regions) or []
 
     result = await db.execute(
         select(VisitedWorld).where(VisitedWorld.user_id == user_id)
     )
     world_record = result.scalar_one_or_none()
-    world = world_record.countries if world_record else []
+    world = dec_json_safe(user_id, world_record.countries) if world_record and world_record.countries else []
 
     return regions, world
 
@@ -1101,8 +1104,8 @@ async def _compute_challenge_progress(challenge, db: AsyncSession):
         all_visited |= user_matching
         participant_progress.append({
             "user_id": u.id,
-            "name": u.name,
-            "picture": u.picture,
+            "name": dec_str_safe(u.id, u.name),
+            "picture": dec_str_safe(u.id, u.picture),
             "visited_count": len(user_matching),
             "visited_regions": list(user_matching),
         })
