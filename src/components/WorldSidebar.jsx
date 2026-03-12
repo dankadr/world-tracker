@@ -14,6 +14,9 @@ import Achievements from './Achievements';
 import StatsModal from './StatsModal';
 import UnescoPanel from './UnescoPanel';
 import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs';
+import { ADMIN_EMAIL } from '../utils/adminConfig';
+import AdminPanel from './AdminPanel';
+import SwipeableModal from './SwipeableModal';
 
 const CONTINENT_EMOJI = {
   'Africa': '🌍',
@@ -59,11 +62,13 @@ export default function WorldSidebar({
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();
   const userId = user?.id || null;
+  const isAdmin = user?.email === ADMIN_EMAIL;
   const [search, setSearch] = useState('');
   const [openContinents, setOpenContinents] = useState({});
   const [showAvatar, setShowAvatar] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showUnesco, setShowUnesco] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -177,6 +182,13 @@ export default function WorldSidebar({
                 title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {dark ? '☀️' : '🌙'}
+              </button>
+            )}
+            {!isMobile && isAdmin && (
+              <button className="header-icon-btn" onClick={() => setShowAdmin(true)} title="Admin Panel">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                </svg>
               </button>
             )}
           </div>
@@ -364,6 +376,11 @@ export default function WorldSidebar({
           onReset={resetAvatar}
           onClose={() => setShowAvatar(false)}
         />
+      )}
+      {showAdmin && (
+        <SwipeableModal onClose={() => setShowAdmin(false)} maxWidth={480}>
+          <AdminPanel />
+        </SwipeableModal>
       )}
     </aside>
   );
