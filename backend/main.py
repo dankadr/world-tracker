@@ -314,17 +314,17 @@ async def get_all_visited(
     for r in records:
         regions_data[r.country_id] = {
             "country_id": r.country_id,
-            "regions": r.regions or [],
-            "dates": r.dates or {},
-            "notes": r.notes or {},
-            "wishlist": r.wishlist or [],
+            "regions": dec_json_safe(user.id, r.regions) or [],
+            "dates": dec_json_safe(user.id, r.dates) or {},
+            "notes": dec_json_safe(user.id, r.notes) or {},
+            "wishlist": dec_json_safe(user.id, r.wishlist) or [],
         }
 
     result = await db.execute(
         select(VisitedWorld).where(VisitedWorld.user_id == user.id)
     )
     world_record = result.scalar_one_or_none()
-    world_countries = world_record.countries if world_record else []
+    world_countries = dec_json_safe(user.id, world_record.countries) if world_record and world_record.countries else []
 
     return {"regions": regions_data, "world": world_countries}
 
@@ -361,10 +361,10 @@ async def get_visited(
         )
     )
     record = result.scalar_one_or_none()
-    regions = record.regions if record else []
-    dates = record.dates if record and record.dates else {}
-    notes = record.notes if record and record.notes else {}
-    wishlist = record.wishlist if record and record.wishlist else []
+    regions = dec_json_safe(user.id, record.regions) if record else []
+    dates = (dec_json_safe(user.id, record.dates) or {}) if record else {}
+    notes = (dec_json_safe(user.id, record.notes) or {}) if record else {}
+    wishlist = (dec_json_safe(user.id, record.wishlist) or []) if record else []
     return VisitedResponse(country_id=country_id, regions=regions, dates=dates, notes=notes, wishlist=wishlist)
 
 
@@ -706,7 +706,7 @@ async def get_visited_world(
         select(VisitedWorld).where(VisitedWorld.user_id == user.id)
     )
     record = result.scalar_one_or_none()
-    countries = record.countries if record else []
+    countries = dec_json_safe(user.id, record.countries) if record and record.countries else []
     return WorldVisitedResponse(countries=countries)
 
 
@@ -750,12 +750,12 @@ async def get_me(user: CurrentUser = Depends(get_current_user), db: AsyncSession
     # Count stats
     world = await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == user.id))
     world_row = world.scalar_one_or_none()
-    countries_count = len(world_row.countries) if world_row else 0
+    countries_count = len(dec_json_safe(db_user.id, world_row.countries) or []) if world_row and world_row.countries else 0
 
     return {
         "id": db_user.id,
-        "name": db_user.name,
-        "picture": db_user.picture,
+        "name": dec_str_safe(db_user.id, db_user.name),
+        "picture": dec_str_safe(db_user.id, db_user.picture),
         "email": db_user.email,
         "friend_code": db_user.friend_code,
         "countries_count": countries_count,
@@ -1462,14 +1462,15 @@ async def get_all_wishlist(
         .order_by(WishlistItem.created_at.desc())
     )
     items = result.scalars().all()
+    uid = user.id
     return [
         {
             "tracker_id": item.tracker_id,
             "region_id": item.region_id,
-            "priority": item.priority,
-            "target_date": item.target_date,
-            "notes": item.notes,
-            "category": item.category,
+            "priority": dec_str_safe(uid, item.priority),
+            "target_date": dec_str_safe(uid, item.target_date),
+            "notes": dec_str_safe(uid, item.notes),
+            "category": dec_str_safe(uid, item.category),
             "created_at": item.created_at.isoformat() if item.created_at else None,
         }
         for item in items
@@ -1489,14 +1490,15 @@ async def get_wishlist_for_tracker(
         .order_by(WishlistItem.created_at.desc())
     )
     items = result.scalars().all()
+    uid = user.id
     return [
         {
             "tracker_id": item.tracker_id,
             "region_id": item.region_id,
-            "priority": item.priority,
-            "target_date": item.target_date,
-            "notes": item.notes,
-            "category": item.category,
+            "priority": dec_str_safe(uid, item.priority),
+            "target_date": dec_str_safe(uid, item.target_date),
+            "notes": dec_str_safe(uid, item.notes),
+            "category": dec_str_safe(uid, item.category),
             "created_at": item.created_at.isoformat() if item.created_at else None,
         }
         for item in items
