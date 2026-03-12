@@ -15,6 +15,7 @@ import AddToBucketListModal from './AddToBucketListModal';
 import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 import { useAuth } from '../context/AuthContext';
+import { ADMIN_EMAIL } from '../utils/adminConfig';
 import SwipeableModal from './SwipeableModal';
 import AdminPanel from './AdminPanel';
 
@@ -54,7 +55,7 @@ export default function Sidebar({
   const [showAvatar, setShowAvatar] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
-  const isAdmin = user?.email === 'dankadr100@gmail.com';
+  const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 

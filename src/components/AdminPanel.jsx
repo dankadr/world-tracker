@@ -15,7 +15,8 @@ export default function AdminPanel() {
     setResult(null);
     try {
       const data = await triggerEncrypt(token);
-      setResult({ type: 'success', message: `Done — ${data.encrypted} rows encrypted, ${data.skipped} skipped.` });
+      const msg = `Done — ${data.encrypted} rows encrypted, ${data.skipped} skipped${data.errors > 0 ? `, ${data.errors} errors` : ''}.`;
+      setResult({ type: data.errors > 0 ? 'error' : 'success', message: msg });
     } catch (err) {
       setResult({ type: 'error', message: `Failed: ${err.message}` });
     } finally {
@@ -29,7 +30,8 @@ export default function AdminPanel() {
     setResult(null);
     try {
       const data = await triggerDecrypt(token);
-      setResult({ type: 'success', message: `Done — ${data.decrypted} rows decrypted, ${data.skipped} skipped.` });
+      const msg = `Done — ${data.decrypted} rows decrypted, ${data.skipped} skipped${data.errors > 0 ? `, ${data.errors} errors` : ''}.`;
+      setResult({ type: data.errors > 0 ? 'error' : 'success', message: msg });
     } catch (err) {
       setResult({ type: 'error', message: `Failed: ${err.message}` });
     } finally {

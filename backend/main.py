@@ -267,8 +267,10 @@ async def require_admin(user: CurrentUser = Depends(get_current_user)):
 async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
     """Encrypt all sensitive DB columns. Idempotent — skips already-encrypted rows."""
     import asyncio
-    db_url = os.environ["DATABASE_URL"]
-    master_key = os.environ["ENCRYPTION_MASTER_KEY"]
+    db_url = os.environ.get("DATABASE_URL")
+    master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
+    if not db_url or not master_key:
+        raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
     result = await asyncio.to_thread(encrypt_all, db_url, master_key)
     return result
 
@@ -277,8 +279,10 @@ async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
 async def admin_decrypt(admin: CurrentUser = Depends(require_admin)):
     """Decrypt all sensitive DB columns back to plaintext."""
     import asyncio
-    db_url = os.environ["DATABASE_URL"]
-    master_key = os.environ["ENCRYPTION_MASTER_KEY"]
+    db_url = os.environ.get("DATABASE_URL")
+    master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
+    if not db_url or not master_key:
+        raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
     result = await asyncio.to_thread(decrypt_all, db_url, master_key)
     return result
 

@@ -46,6 +46,7 @@ import AdminPanel from './components/AdminPanel';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
+import { ADMIN_EMAIL } from './utils/adminConfig';
 
 function parseShareHash() {
   try {
@@ -901,7 +902,7 @@ export default function App() {
           activeTab={activeTab}
           onTabChange={switchTab}
           socialBadge={pendingCount}
-          isAdmin={user?.email === 'dankadr100@gmail.com'}
+          isAdmin={user?.email === ADMIN_EMAIL}
         />
       )}
 
