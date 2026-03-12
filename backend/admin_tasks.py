@@ -51,15 +51,19 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
     with engine.begin() as conn:
         batch = []
         for rid, uid, val in conn.execute(text("SELECT id, user_id, countries FROM visited_world")):
-            if val and not is_encrypted(val):
+            if val is not None and not is_encrypted(val):
                 try:
                     obj = json.loads(val) if isinstance(val, str) else val
-                    batch.append({"v": enc_json(uid, obj), "id": rid})
+                    token = enc_json(uid, obj)
+                    # psycopg3 returns a Python object (not str) for JSONB columns.
+                    # PostgreSQL requires valid JSON, so wrap the token as a JSON string.
+                    stored = json.dumps(token) if not isinstance(val, str) else token
+                    batch.append({"v": stored, "id": rid})
                     encrypted += 1
                 except Exception as e:
                     print(f"  ERROR visited_world id={rid}: {e!r}")
                     errors += 1
-            elif val:
+            elif val is not None:
                 skipped += 1
         if batch:
             conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"), batch)
@@ -72,15 +76,17 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             row_errors = 0
             updates = {}
             for col, val in [("regions", regions), ("dates", dates), ("notes", notes), ("wishlist", wishlist)]:
-                if val and not is_encrypted(val):
+                if val is not None and not is_encrypted(val):
                     try:
-                        updates[col] = enc_json(uid, json.loads(val) if isinstance(val, str) else val)
+                        obj = json.loads(val) if isinstance(val, str) else val
+                        token = enc_json(uid, obj)
+                        updates[col] = json.dumps(token) if not isinstance(val, str) else token
                         encrypted += 1
                     except Exception as e:
                         print(f"  ERROR visited_regions id={rid} col={col}: {e!r}")
                         errors += 1
                         row_errors += 1
-                elif val:
+                elif val is not None:
                     skipped += 1
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
