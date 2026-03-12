@@ -39,17 +39,30 @@ function ProfileIcon() {
   );
 }
 
-const TABS = [
+function WrenchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+// BASE_TABS is module-level (outside the component) so it is stable across renders.
+const BASE_TABS = [
   { id: 'map', label: 'Map', Icon: MapIcon },
   { id: 'explore', label: 'Explore', Icon: ExploreIcon },
   { id: 'social', label: 'Social', Icon: SocialIcon },
   { id: 'profile', label: 'Profile', Icon: ProfileIcon },
 ];
 
-export default function BottomTabBar({ activeTab, onTabChange, socialBadge = 0 }) {
+export default function BottomTabBar({ activeTab, onTabChange, socialBadge = 0, isAdmin = false }) {
+  const tabs = isAdmin
+    ? [...BASE_TABS, { id: 'admin', label: 'Admin', Icon: WrenchIcon }]
+    : BASE_TABS;
+
   return (
     <nav className="bottom-tab-bar" role="tablist" aria-label="Main navigation">
-      {TABS.map(({ id, label, Icon }) => (
+      {tabs.map(({ id, label, Icon }) => (
         <button
           key={id}
           role="tab"
