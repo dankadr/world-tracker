@@ -970,7 +970,7 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
         regions_count = sum(len(dec_json_safe(uid, r.regions) or []) for r in regions_result.scalars().all())
 
         entries.append({
-            "user_id": u.id, "name": dec_str_safe(uid, u.name), "picture": dec_str_safe(uid, u.picture),
+            "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
             "countries_count": countries_count, "regions_count": regions_count,
             "is_self": u.id == user.id,
         })
