@@ -47,7 +47,8 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if val and not is_encrypted(val):
                 try:
                     obj = json.loads(val) if isinstance(val, str) else val
-                    conn.execute(text('UPDATE visited_world SET countries = :v WHERE id = :id'), {"v": enc_json(uid, obj), "id": rid})
+                    with conn.begin_nested():
+                        conn.execute(text('UPDATE visited_world SET countries = :v WHERE id = :id'), {"v": enc_json(uid, obj), "id": rid})
                     encrypted += 1
                 except Exception as e:
                     print(f"  ERROR visited_world id={rid} col=countries: {e!r}")
@@ -75,7 +76,12 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR visited_regions id={rid} update: {e!r}")
+                    errors += 1
 
         # wishlist (4 string columns per row)
         for rid, uid, priority, target_date, notes, category in conn.execute(
@@ -97,13 +103,19 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR wishlist id={rid} update: {e!r}")
+                    errors += 1
 
         # xp_log.reason
         for rid, uid, reason in conn.execute(text("SELECT id, user_id, reason FROM xp_log")):
             if reason and not is_encrypted(reason):
                 try:
-                    conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": enc(uid, reason), "id": rid})
+                    with conn.begin_nested():
+                        conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": enc(uid, reason), "id": rid})
                     encrypted += 1
                 except Exception as e:
                     print(f"  ERROR xp_log id={rid} col=reason: {e!r}")
@@ -129,7 +141,12 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = uid
-                conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR users id={uid} update: {e!r}")
+                    errors += 1
 
     return {"encrypted": encrypted, "skipped": skipped, "errors": errors}
 
@@ -147,8 +164,9 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
         for rid, uid, val in conn.execute(text("SELECT id, user_id, countries FROM visited_world")):
             if val and is_encrypted(val):
                 try:
-                    conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"),
-                                 {"v": json.dumps(dec_json(uid, val)), "id": rid})
+                    with conn.begin_nested():
+                        conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"),
+                                     {"v": json.dumps(dec_json(uid, val)), "id": rid})
                     decrypted += 1
                 except Exception as e:
                     print(f"  ERROR visited_world id={rid} col=countries: {e!r}")
@@ -176,7 +194,12 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR visited_regions id={rid} update: {e!r}")
+                    errors += 1
 
         # wishlist
         for rid, uid, priority, target_date, notes, category in conn.execute(
@@ -198,13 +221,19 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR wishlist id={rid} update: {e!r}")
+                    errors += 1
 
         # xp_log.reason
         for rid, uid, reason in conn.execute(text("SELECT id, user_id, reason FROM xp_log")):
             if reason and is_encrypted(reason):
                 try:
-                    conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": dec(uid, reason), "id": rid})
+                    with conn.begin_nested():
+                        conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": dec(uid, reason), "id": rid})
                     decrypted += 1
                 except Exception as e:
                     print(f"  ERROR xp_log id={rid} col=reason: {e!r}")
@@ -230,6 +259,11 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = uid
-                conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
+                try:
+                    with conn.begin_nested():
+                        conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
+                except Exception as e:
+                    print(f"  ERROR users id={uid} update: {e!r}")
+                    errors += 1
 
     return {"decrypted": decrypted, "skipped": skipped, "errors": errors}
