@@ -964,10 +964,10 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
         if not u:
             continue
         world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == uid))).scalar_one_or_none()
-        countries_count = len(dec_json_safe(uid, world.countries) or []) if world and world.countries else 0
+        countries_count = len(dec_json_safe(u.id, world.countries) or []) if world and world.countries else 0
 
         regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id == uid))
-        regions_count = sum(len(dec_json_safe(uid, r.regions) or []) for r in regions_result.scalars().all())
+        regions_count = sum(len(dec_json_safe(u.id, r.regions) or []) for r in regions_result.scalars().all())
 
         entries.append({
             "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
