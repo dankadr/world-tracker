@@ -10,6 +10,7 @@ export function NavigationProvider({ children }) {
     explore: [],
     social: [],
     profile: [],
+    admin: [],
   });
 
   const push = useCallback((screen, props = {}) => {

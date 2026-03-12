@@ -26,14 +26,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
 try:
-    from backend.database import get_db, init_db, engine
+    from backend.database import get_db, init_db, engine, DATABASE_URL as _DATABASE_URL
     from backend.models import (
         User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
         Challenge, ChallengeParticipant, WishlistItem, XpLog,
         generate_friend_code, generate_challenge_id,
     )
 except ImportError:
-    from database import get_db, init_db, engine
+    from database import get_db, init_db, engine, DATABASE_URL as _DATABASE_URL
     from models import (
         User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
         Challenge, ChallengeParticipant, WishlistItem, XpLog,
@@ -267,11 +267,10 @@ async def require_admin(user: CurrentUser = Depends(get_current_user)):
 async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
     """Encrypt all sensitive DB columns. Idempotent — skips already-encrypted rows."""
     import asyncio
-    db_url = os.environ.get("DATABASE_URL")
     master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
-    if not db_url or not master_key:
+    if not _DATABASE_URL or not master_key:
         raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
-    result = await asyncio.to_thread(encrypt_all, db_url, master_key)
+    result = await asyncio.to_thread(encrypt_all, _DATABASE_URL, master_key)
     return result
 
 
@@ -279,11 +278,10 @@ async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
 async def admin_decrypt(admin: CurrentUser = Depends(require_admin)):
     """Decrypt all sensitive DB columns back to plaintext."""
     import asyncio
-    db_url = os.environ.get("DATABASE_URL")
     master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
-    if not db_url or not master_key:
+    if not _DATABASE_URL or not master_key:
         raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
-    result = await asyncio.to_thread(decrypt_all, db_url, master_key)
+    result = await asyncio.to_thread(decrypt_all, _DATABASE_URL, master_key)
     return result
 
 
