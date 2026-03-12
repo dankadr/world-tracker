@@ -45,6 +45,11 @@ try:
 except ImportError:
     from crypto import enc, enc_json, dec_json_safe, dec_str_safe
 
+try:
+    from backend.admin_tasks import encrypt_all, decrypt_all
+except ImportError:
+    from admin_tasks import encrypt_all, decrypt_all
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -246,6 +251,36 @@ async def get_current_user(
     except (JWTError, KeyError, ValueError):
         raise HTTPException(status_code=401, detail="Invalid token")
     return CurrentUser(id=user_id, email=email)
+
+
+ADMIN_EMAIL = "dankadr100@gmail.com"
+
+
+async def require_admin(user: CurrentUser = Depends(get_current_user)):
+    """Dependency: raises 403 unless the caller is the admin user."""
+    if user.email != ADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
+@app.post("/admin/encrypt")
+async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
+    """Encrypt all sensitive DB columns. Idempotent — skips already-encrypted rows."""
+    import asyncio
+    db_url = os.environ["DATABASE_URL"]
+    master_key = os.environ["ENCRYPTION_MASTER_KEY"]
+    result = await asyncio.to_thread(encrypt_all, db_url, master_key)
+    return result
+
+
+@app.post("/admin/decrypt")
+async def admin_decrypt(admin: CurrentUser = Depends(require_admin)):
+    """Decrypt all sensitive DB columns back to plaintext."""
+    import asyncio
+    db_url = os.environ["DATABASE_URL"]
+    master_key = os.environ["ENCRYPTION_MASTER_KEY"]
+    result = await asyncio.to_thread(decrypt_all, db_url, master_key)
+    return result
 
 
 # --------------- Auth endpoint ---------------
