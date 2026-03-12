@@ -34,29 +34,38 @@ def _make_engine(db_url: str):
 
 
 def encrypt_all(db_url: str, master_key: str) -> dict:
-    """Encrypt all sensitive columns. Idempotent — skips already-encrypted rows."""
+    """Encrypt all sensitive columns. Idempotent — skips already-encrypted rows.
+
+    Strategy: read all rows, compute all ciphertext in Python, then write each
+    table in a single batch. This avoids per-row DB round-trips (SAVEPOINTs or
+    individual UPDATEs) which are too slow on serverless+Neon.
+    Each table runs in its own transaction so a failure in one doesn't block others.
+    """
     os.environ["ENCRYPTION_MASTER_KEY"] = master_key
     engine = _make_engine(db_url)
     encrypted = 0
     skipped = 0
     errors = 0
 
+    # --- visited_world.countries ---
     with engine.begin() as conn:
-        # visited_world.countries
+        batch = []
         for rid, uid, val in conn.execute(text("SELECT id, user_id, countries FROM visited_world")):
             if val and not is_encrypted(val):
                 try:
                     obj = json.loads(val) if isinstance(val, str) else val
-                    with conn.begin_nested():
-                        conn.execute(text('UPDATE visited_world SET countries = :v WHERE id = :id'), {"v": enc_json(uid, obj), "id": rid})
+                    batch.append({"v": enc_json(uid, obj), "id": rid})
                     encrypted += 1
                 except Exception as e:
-                    print(f"  ERROR visited_world id={rid} col=countries: {e!r}")
+                    print(f"  ERROR visited_world id={rid}: {e!r}")
                     errors += 1
             elif val:
                 skipped += 1
+        if batch:
+            conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"), batch)
 
-        # visited_regions (4 columns per row)
+    # --- visited_regions (4 text columns) ---
+    with engine.begin() as conn:
         for rid, uid, regions, dates, notes, wishlist in conn.execute(
             text("SELECT id, user_id, regions, dates, notes, wishlist FROM visited_regions")
         ):
@@ -76,14 +85,10 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR visited_regions id={rid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
 
-        # wishlist (4 string columns per row)
+    # --- wishlist (4 string columns) ---
+    with engine.begin() as conn:
         for rid, uid, priority, target_date, notes, category in conn.execute(
             text("SELECT id, user_id, priority, target_date, notes, category FROM wishlist")
         ):
@@ -103,27 +108,26 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR wishlist id={rid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
 
-        # xp_log.reason
+    # --- xp_log.reason ---
+    with engine.begin() as conn:
+        batch = []
         for rid, uid, reason in conn.execute(text("SELECT id, user_id, reason FROM xp_log")):
             if reason and not is_encrypted(reason):
                 try:
-                    with conn.begin_nested():
-                        conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": enc(uid, reason), "id": rid})
+                    batch.append({"v": enc(uid, reason), "id": rid})
                     encrypted += 1
                 except Exception as e:
-                    print(f"  ERROR xp_log id={rid} col=reason: {e!r}")
+                    print(f"  ERROR xp_log id={rid}: {e!r}")
                     errors += 1
             elif reason:
                 skipped += 1
+        if batch:
+            conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), batch)
 
-        # users.name + picture
+    # --- users.name + picture ---
+    with engine.begin() as conn:
         for uid, name, picture in conn.execute(text("SELECT id, name, picture FROM users")):
             row_errors = 0
             updates = {}
@@ -141,12 +145,7 @@ def encrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = uid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR users id={uid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
 
     return {"encrypted": encrypted, "skipped": skipped, "errors": errors}
 
@@ -159,22 +158,24 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
     skipped = 0
     errors = 0
 
+    # --- visited_world.countries ---
     with engine.begin() as conn:
-        # visited_world.countries
+        batch = []
         for rid, uid, val in conn.execute(text("SELECT id, user_id, countries FROM visited_world")):
             if val and is_encrypted(val):
                 try:
-                    with conn.begin_nested():
-                        conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"),
-                                     {"v": json.dumps(dec_json(uid, val)), "id": rid})
+                    batch.append({"v": json.dumps(dec_json(uid, val)), "id": rid})
                     decrypted += 1
                 except Exception as e:
-                    print(f"  ERROR visited_world id={rid} col=countries: {e!r}")
+                    print(f"  ERROR visited_world id={rid}: {e!r}")
                     errors += 1
             elif val:
                 skipped += 1
+        if batch:
+            conn.execute(text("UPDATE visited_world SET countries = :v WHERE id = :id"), batch)
 
-        # visited_regions
+    # --- visited_regions ---
+    with engine.begin() as conn:
         for rid, uid, regions, dates, notes, wishlist in conn.execute(
             text("SELECT id, user_id, regions, dates, notes, wishlist FROM visited_regions")
         ):
@@ -194,14 +195,10 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR visited_regions id={rid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE visited_regions SET {set_clause} WHERE id = :id"), updates)
 
-        # wishlist
+    # --- wishlist ---
+    with engine.begin() as conn:
         for rid, uid, priority, target_date, notes, category in conn.execute(
             text("SELECT id, user_id, priority, target_date, notes, category FROM wishlist")
         ):
@@ -221,27 +218,26 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = rid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR wishlist id={rid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE wishlist SET {set_clause} WHERE id = :id"), updates)
 
-        # xp_log.reason
+    # --- xp_log.reason ---
+    with engine.begin() as conn:
+        batch = []
         for rid, uid, reason in conn.execute(text("SELECT id, user_id, reason FROM xp_log")):
             if reason and is_encrypted(reason):
                 try:
-                    with conn.begin_nested():
-                        conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), {"v": dec(uid, reason), "id": rid})
+                    batch.append({"v": dec(uid, reason), "id": rid})
                     decrypted += 1
                 except Exception as e:
-                    print(f"  ERROR xp_log id={rid} col=reason: {e!r}")
+                    print(f"  ERROR xp_log id={rid}: {e!r}")
                     errors += 1
             elif reason:
                 skipped += 1
+        if batch:
+            conn.execute(text("UPDATE xp_log SET reason = :v WHERE id = :id"), batch)
 
-        # users
+    # --- users ---
+    with engine.begin() as conn:
         for uid, name, picture in conn.execute(text("SELECT id, name, picture FROM users")):
             row_errors = 0
             updates = {}
@@ -259,11 +255,6 @@ def decrypt_all(db_url: str, master_key: str) -> dict:
             if updates and row_errors == 0:
                 set_clause = ", ".join(f'"{k}" = :{k}' for k in updates)
                 updates["id"] = uid
-                try:
-                    with conn.begin_nested():
-                        conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
-                except Exception as e:
-                    print(f"  ERROR users id={uid} update: {e!r}")
-                    errors += 1
+                conn.execute(text(f"UPDATE users SET {set_clause} WHERE id = :id"), updates)
 
     return {"decrypted": decrypted, "skipped": skipped, "errors": errors}
