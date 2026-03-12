@@ -363,7 +363,7 @@ async def get_visited(
     )
     record = result.scalar_one_or_none()
     uid = user.id
-    regions = dec_json_safe(uid, record.regions) if record else []
+    regions = (dec_json_safe(uid, record.regions) or []) if record else []
     dates = (dec_json_safe(uid, record.dates) or {}) if record else {}
     notes = (dec_json_safe(uid, record.notes) or {}) if record else {}
     wishlist = (dec_json_safe(uid, record.wishlist) or []) if record else []
