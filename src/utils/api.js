@@ -303,3 +303,27 @@ export async function deleteChallenge(token, challengeId) {
   if (!res.ok) throw new Error('Failed to delete challenge');
   return res.json();
 }
+
+export async function triggerEncrypt(token) {
+  const res = await fetch('/admin/encrypt', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Encrypt failed');
+  }
+  return res.json(); // { encrypted: N, skipped: N, errors: N }
+}
+
+export async function triggerDecrypt(token) {
+  const res = await fetch('/admin/decrypt', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Decrypt failed');
+  }
+  return res.json(); // { decrypted: N, skipped: N, errors: N }
+}

@@ -3,7 +3,7 @@ import './SettingsPanel.css';
 
 const APP_VERSION = '1.0.0';
 
-export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding }) {
+export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, onOpenAdmin }) {
   const { dark, toggle: toggleTheme } = useTheme();
 
   return (
@@ -65,6 +65,21 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding })
           )}
         </div>
       </div>
+
+      {onOpenAdmin && (
+        <div className="settings-section">
+          <p className="settings-section-label">Admin</p>
+          <div className="settings-group">
+            <button className="settings-row settings-row-btn" onClick={onOpenAdmin}>
+              <div className="settings-row-left">
+                <span className="settings-row-icon">⚙️</span>
+                <span className="settings-row-title">Admin Panel</span>
+              </div>
+              <span className="settings-row-chevron">›</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="settings-section">
         <p className="settings-section-label">About</p>

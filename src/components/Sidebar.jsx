@@ -14,6 +14,10 @@ import ConfirmDialog from './ConfirmDialog';
 import AddToBucketListModal from './AddToBucketListModal';
 import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
+import { useAuth } from '../context/AuthContext';
+import { ADMIN_EMAIL } from '../utils/adminConfig';
+import SwipeableModal from './SwipeableModal';
+import AdminPanel from './AdminPanel';
 
 export default function Sidebar({
   country,
@@ -44,11 +48,14 @@ export default function Sidebar({
   onShowOnboarding,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [editingDate, setEditingDate] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -290,7 +297,13 @@ export default function Sidebar({
           onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
           onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
           onShowOnboarding={onShowOnboarding}
+          onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
         />
+      )}
+      {showAdmin && (
+        <SwipeableModal onClose={() => setShowAdmin(false)} maxWidth={480}>
+          <AdminPanel />
+        </SwipeableModal>
       )}
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}

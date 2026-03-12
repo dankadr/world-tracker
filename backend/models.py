@@ -2,7 +2,7 @@ import random
 import string
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, UniqueConstraint, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 try:
@@ -42,10 +42,10 @@ class VisitedRegions(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     country_id = Column(String(10), nullable=False)
-    regions = Column(JSONB, nullable=False, default=list)
-    dates = Column(JSONB, nullable=False, server_default="{}", default=dict)
-    notes = Column(JSONB, nullable=False, server_default="{}", default=dict)
-    wishlist = Column(JSONB, nullable=False, server_default="[]", default=list)
+    regions = Column(Text, nullable=False, default="[]")
+    dates = Column(Text, nullable=False, default="{}")
+    notes = Column(Text, nullable=False, default="{}")
+    wishlist = Column(Text, nullable=False, default="[]")
     updated_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="visited_regions")
@@ -61,7 +61,7 @@ class VisitedWorld(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
-    countries = Column(JSONB, nullable=False, default=list)
+    countries = Column(Text, nullable=False, default="[]")
     updated_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="visited_world")

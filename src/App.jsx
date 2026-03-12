@@ -42,9 +42,11 @@ import GamesPanel from './components/GamesPanel';
 import SocialScreen from './components/SocialScreen';
 import ProfileScreen from './components/ProfileScreen';
 import ExploreScreen from './components/ExploreScreen';
+import AdminPanel from './components/AdminPanel';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
+import { ADMIN_EMAIL } from './utils/adminConfig';
 
 function parseShareHash() {
   try {
@@ -870,6 +872,9 @@ export default function App() {
       {isMobile && !isShareMode && activeTab === 'profile' && (
         <ProfileScreen onReset={reset} onResetAll={resetAll} />
       )}
+      {isMobile && !isShareMode && activeTab === 'admin' && (
+        <AdminPanel />
+      )}
 
       {/* Pushed screens — rendered on top of whatever tab is active */}
       {isMobile && !isShareMode && <NavigationStack />}
@@ -893,7 +898,12 @@ export default function App() {
 
       {/* Bottom tab bar (mobile only, not in share mode) */}
       {isMobile && !isShareMode && (
-        <BottomTabBar activeTab={activeTab} onTabChange={switchTab} socialBadge={pendingCount} />
+        <BottomTabBar
+          activeTab={activeTab}
+          onTabChange={switchTab}
+          socialBadge={pendingCount}
+          isAdmin={user?.email === ADMIN_EMAIL}
+        />
       )}
 
       {showBucketList && (
