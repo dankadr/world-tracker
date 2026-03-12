@@ -41,9 +41,9 @@ except ImportError:
     )
 
 try:
-    from backend.crypto import enc, enc_json, dec_json_safe, dec_str_safe, is_encrypted
+    from backend.crypto import enc, enc_json, dec_json_safe, dec_str_safe
 except ImportError:
-    from crypto import enc, enc_json, dec_json_safe, dec_str_safe, is_encrypted
+    from crypto import enc, enc_json, dec_json_safe, dec_str_safe
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -1597,10 +1597,10 @@ async def patch_wishlist_item(
     return {
         "tracker_id": item.tracker_id,
         "region_id": item.region_id,
-        "priority": dec_str_safe(uid, item.priority),
-        "target_date": dec_str_safe(uid, item.target_date),
-        "notes": dec_str_safe(uid, item.notes),
-        "category": dec_str_safe(uid, item.category),
+        "priority": body.priority if body.priority is not None else dec_str_safe(uid, item.priority),
+        "target_date": body.target_date if body.target_date is not None else dec_str_safe(uid, item.target_date),
+        "notes": body.notes if body.notes is not None else dec_str_safe(uid, item.notes),
+        "category": body.category if body.category is not None else dec_str_safe(uid, item.category),
         "created_at": item.created_at.isoformat() if item.created_at else None,
     }
 
