@@ -44,7 +44,7 @@ def dec_json_safe(user_id: int, value):
     Decrypt an encrypted JSON value, or parse a legacy plaintext JSON string.
     Handles: Fernet token, JSON string (pre-migration), Python object (JSONB), None.
     """
-    if not value:
+    if value is None:
         return None
     if is_encrypted(value):
         return dec_json(user_id, value)
@@ -56,9 +56,9 @@ def dec_json_safe(user_id: int, value):
 def dec_str_safe(user_id: int, value):
     """
     Decrypt an encrypted string, or return the plaintext value as-is.
-    Returns None if value is falsy.
+    Returns None if value is None.
     """
-    if not value:
+    if value is None:
         return None
     if is_encrypted(value):
         return dec(user_id, value)

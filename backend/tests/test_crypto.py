@@ -3,6 +3,7 @@ import json
 import pytest
 import secrets
 from unittest.mock import patch
+from cryptography.fernet import InvalidToken
 
 FAKE_KEY = secrets.token_hex(32)
 
@@ -22,7 +23,7 @@ def test_enc_dec_roundtrip():
 def test_different_users_cannot_decrypt_each_other():
     from backend.crypto import enc, dec
     token = enc(1, "secret")
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidToken):
         dec(2, token)
 
 
