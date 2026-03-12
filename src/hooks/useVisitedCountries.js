@@ -68,14 +68,15 @@ export default function useVisitedCountries() {
   visitedRef.current = visited;
 
   // When user changes, reload from correct localStorage keys
-  if (userId !== currentUserId) {
+  useEffect(() => {
+    if (userId === currentUserId) return;
     setCurrentUserId(userId);
     if (userId) {
       setVisited(loadVisitedWorld(userId));
-    } else {
-      setVisited(new Set());
+      return;
     }
-  }
+    setVisited(new Set());
+  }, [userId, currentUserId]);
 
   // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
