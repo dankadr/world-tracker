@@ -873,7 +873,9 @@ export default function App() {
         <ProfileScreen onReset={reset} onResetAll={resetAll} />
       )}
       {isMobile && !isShareMode && activeTab === 'admin' && (
-        <AdminPanel />
+        <div className="tab-screen">
+          <AdminPanel />
+        </div>
       )}
 
       {/* Pushed screens — rendered on top of whatever tab is active */}
