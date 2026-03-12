@@ -270,7 +270,11 @@ async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
     master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
     if not _DATABASE_URL or not master_key:
         raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
-    result = await asyncio.to_thread(encrypt_all, _DATABASE_URL, master_key)
+    try:
+        result = await asyncio.to_thread(encrypt_all, _DATABASE_URL, master_key)
+    except Exception as exc:
+        logger.error("admin_encrypt failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"encrypt_all failed: {exc!r}")
     return result
 
 
@@ -281,7 +285,11 @@ async def admin_decrypt(admin: CurrentUser = Depends(require_admin)):
     master_key = os.environ.get("ENCRYPTION_MASTER_KEY")
     if not _DATABASE_URL or not master_key:
         raise HTTPException(status_code=500, detail="Server misconfigured: missing DATABASE_URL or ENCRYPTION_MASTER_KEY")
-    result = await asyncio.to_thread(decrypt_all, _DATABASE_URL, master_key)
+    try:
+        result = await asyncio.to_thread(decrypt_all, _DATABASE_URL, master_key)
+    except Exception as exc:
+        logger.error("admin_decrypt failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"decrypt_all failed: {exc!r}")
     return result
 
 
