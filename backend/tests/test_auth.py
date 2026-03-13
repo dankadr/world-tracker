@@ -49,6 +49,7 @@ async def test_google_login_new_user(client, mock_db):
     assert "jwt_token" in data
     assert data["user"]["email"] == "newuser@example.com"
     assert data["user"]["name"] == "New User"
+    assert data["user"]["sub"] == "google-uid-123"
 
 
 async def test_google_login_existing_user(client, mock_db):
@@ -80,3 +81,4 @@ async def test_google_login_existing_user(client, mock_db):
     assert "jwt_token" in data
     assert data["user"]["id"] == 42
     assert data["user"]["email"] == "existing@example.com"
+    assert data["user"]["sub"] == "google-uid-42"
