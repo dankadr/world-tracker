@@ -13,6 +13,46 @@ Document known issues, establish a bug triage process, and systematically fix ex
 
 ## Known Issues to Investigate
 
+### Newly Reported Mini-Game Bugs
+
+#### A. Guess the Country: Wrong answer feedback is missing
+- **Severity:** High
+- **Component:** Geography mini-game (guess country name flow)
+- **Issue:** When users submit a wrong answer, the game immediately moves on without showing enough feedback.
+- **Required behavior:**
+  - Show the correct answer for at least 2-3 seconds
+  - Tell users how far their guess was from the correct location
+  - Optionally pan/zoom the map to the correct country for clearer feedback
+- **Status:** Open
+
+#### B. XP/Achievement popups on mobile cover the full screen
+- **Severity:** High
+- **Component:** XP + achievement popup UI (mobile)
+- **Issue:** Popups take over the entire mobile viewport, blocking usability.
+- **Required behavior:** Use compact, non-blocking popup/toast sizing on small screens.
+- **Status:** Open
+
+#### C. Mini-game map does not fully cover the screen
+- **Severity:** Medium
+- **Component:** Mini-game map layout
+- **Issue:** The mini-game map leaves visible space showing the background map behind it.
+- **Required behavior:** Mini-game map container should fully cover intended viewport area.
+- **Status:** Open
+
+#### D. Quit button in mini-game leads to blank screen
+- **Severity:** Critical
+- **Component:** Mini-game quit/exit navigation
+- **Issue:** Pressing quit exits to a blank screen instead of returning to the expected app view.
+- **Required behavior:** Route/state should return users to the previous screen (e.g., main map/dashboard) reliably.
+- **Status:** Open
+
+#### E. Flag mini-game missing nearby flag display
+- **Severity:** Medium
+- **Component:** Flag mini-game UI
+- **Issue:** The flag is not shown near the country name as expected.
+- **Required behavior:** Display flag in close visual proximity to country label/prompt.
+- **Status:** Open
+
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
