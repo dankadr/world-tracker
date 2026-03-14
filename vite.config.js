@@ -64,11 +64,15 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    // Use Terser instead of esbuild for minification.
+    // esbuild's minifier can produce `const` bindings in an order that
+    // triggers Firefox's strict TDZ check ("can't access lexical declaration
+    // before initialization"). Terser emits `var` for module-level bindings
+    // and does not have this problem.
+    minify: 'terser',
     rollupOptions: {
       output: {
-        // Fix: Firefox strictly enforces TDZ for `const` in bundled output.
-        // Using `var` for Rollup-generated bindings prevents the
-        // "can't access lexical declaration before initialization" error.
+        // Also keep Rollup-generated bindings as `var` (belt-and-suspenders).
         generatedCode: { constBindings: false },
       },
     },
