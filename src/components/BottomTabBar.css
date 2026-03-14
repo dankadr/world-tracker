@@ -37,11 +37,7 @@
   position: relative;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 100ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.tab-bar-item:active {
-  transform: scale(0.92);
+  transition: color 160ms ease;
 }
 
 .tab-bar-icon {

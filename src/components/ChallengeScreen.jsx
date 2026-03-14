@@ -4,6 +4,7 @@ import Screen from './Screen';
 import ConfirmDialog from './ConfirmDialog';
 import useChallenges from '../hooks/useChallenges';
 import countries from '../data/countries';
+import ChallengeDetailSkeleton from './ChallengeDetailSkeleton';
 import './ChallengesPanel.css';
 
 const TRACKER_LABELS = {
@@ -161,7 +162,7 @@ export default function ChallengeScreen({ challenge: initialChallenge, onBack })
         </div>
 
         {loading ? (
-          <p className="ch-loading">Loading challenge details...</p>
+          <ChallengeDetailSkeleton />
         ) : (
           <>
             {challenge.description && (

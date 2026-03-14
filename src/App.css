@@ -1719,6 +1719,28 @@ body {
   box-shadow: var(--glass-specular-strong), var(--glass-shadow-elevated);
 }
 
+.stats-modal-embedded {
+  max-width: none;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.stats-modal-embedded .yir-button-row {
+  padding: 16px 16px 0;
+  margin-bottom: 0;
+}
+
+.stats-modal-embedded .stats-section {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -4693,6 +4715,8 @@ body {
 /* Bottom sheet sits above the tab bar */
 .app.is-mobile .mobile-bottom-sheet {
   bottom: var(--tab-bar-safe-height);
+  /* Cap so the sheet never overflows above the safe area regardless of vh% set by JS */
+  max-height: calc(100dvh - var(--tab-bar-safe-height) - env(safe-area-inset-top, 44px) - 8px);
 }
 
 /* Map controls shift up to stay above the tab bar on mobile */

@@ -1,4 +1,7 @@
 import './BottomTabBar.css';
+import './iosPrimitives.css';
+import useTouchFeedback from '../hooks/useTouchFeedback';
+import { haptics } from '../utils/haptics';
 
 function MapIcon() {
   return (
@@ -63,23 +66,42 @@ export default function BottomTabBar({ activeTab, onTabChange, socialBadge = 0, 
   return (
     <nav className="bottom-tab-bar" role="tablist" aria-label="Main navigation">
       {tabs.map(({ id, label, Icon }) => (
-        <button
+        <TabBarButton
           key={id}
-          role="tab"
-          aria-selected={activeTab === id}
-          aria-label={label}
-          className={`tab-bar-item${activeTab === id ? ' active' : ''}`}
-          onClick={() => { navigator.vibrate?.(8); onTabChange(id); }}
-        >
-          <span className="tab-bar-icon">
-            <Icon />
-            {id === 'social' && socialBadge > 0 && (
-              <span className="tab-bar-badge">{socialBadge > 9 ? '9+' : socialBadge}</span>
-            )}
-          </span>
-          <span className="tab-bar-label">{label}</span>
-        </button>
+          id={id}
+          label={label}
+          Icon={Icon}
+          active={activeTab === id}
+          socialBadge={socialBadge}
+          onTabChange={onTabChange}
+        />
       ))}
     </nav>
+  );
+}
+
+function TabBarButton({ id, label, Icon, active, socialBadge, onTabChange }) {
+  const { touchClassName, touchHandlers } = useTouchFeedback();
+
+  return (
+    <button
+      role="tab"
+      aria-selected={active}
+      aria-label={label}
+      className={`tab-bar-item ${touchClassName}${active ? ' active' : ''}`}
+      onClick={() => {
+        haptics.selection();
+        onTabChange(id);
+      }}
+      {...touchHandlers}
+    >
+      <span className="tab-bar-icon">
+        <Icon />
+        {id === 'social' && socialBadge > 0 && (
+          <span className="tab-bar-badge">{socialBadge > 9 ? '9+' : socialBadge}</span>
+        )}
+      </span>
+      <span className="tab-bar-label">{label}</span>
+    </button>
   );
 }
