@@ -38,10 +38,7 @@ export default function InstallPrompt() {
   return (
     <div className="install-prompt" role="dialog" aria-label="Install app">
       <div className="install-prompt-content">
-        <picture>
-          <source srcSet="/logo.webp" type="image/webp" />
-          <img src="/logo.png" alt="" className="install-prompt-icon" />
-        </picture>
+        <img src="/logo.png" alt="" className="install-prompt-icon" />
         <div className="install-prompt-text">
           <strong>Add to Home Screen</strong>
           <span>Install Right World Tracker for quick access</span>

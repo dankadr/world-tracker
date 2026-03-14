@@ -12,7 +12,12 @@ import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
 import EasterEggPrompt from './components/EasterEggPrompt';
+import StatsModal from './components/StatsModal';
+import FriendsPanel from './components/FriendsPanel';
+import ComparisonStats from './components/ComparisonStats';
+import './components/ComparisonView.css';
 import XpNotification from './components/XpNotification';
+import BucketListPanel from './components/BucketListPanel';
 import MapSkeleton from './components/MapSkeleton';
 import { useFriends } from './context/FriendsContext';
 import { useFriendsData } from './hooks/useFriendsData';
@@ -33,25 +38,17 @@ import './xp-styles.css';
 import SwipeableModal from './components/SwipeableModal';
 import BottomTabBar from './components/BottomTabBar';
 import NavigationStack from './components/NavigationStack';
-import OfflineIndicator from './components/OfflineIndicator';
-import InstallPrompt from './components/InstallPrompt';
-import './components/ComparisonView.css';
-
-import StatsModal from './components/StatsModal';
-import BucketListPanel from './components/BucketListPanel';
-import ComparisonStats from './components/ComparisonStats';
-import AdminPanel from './components/AdminPanel';
-import FriendsPanel from './components/FriendsPanel';
 import GamesPanel from './components/GamesPanel';
 import SocialScreen from './components/SocialScreen';
 import ProfileScreen from './components/ProfileScreen';
 import ExploreScreen from './components/ExploreScreen';
+import AdminPanel from './components/AdminPanel';
+import OfflineIndicator from './components/OfflineIndicator';
+import InstallPrompt from './components/InstallPrompt';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
-import { invalidateBulkCache } from './utils/api';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
-import { hapticSelection, hapticWarning } from './utils/haptics';
 
 function parseShareHash() {
   try {
@@ -191,7 +188,7 @@ export default function App() {
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
-    (wasVisited ? hapticWarning : hapticSelection)();
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggle(regionId);
     if (!wasVisited) {
       grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
@@ -294,7 +291,7 @@ export default function App() {
 
   const handleToggleWorldCountry = useCallback((countryCode) => {
     const wasVisited = worldVisited.has(countryCode);
-    (wasVisited ? hapticWarning : hapticSelection)();
+    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
@@ -326,7 +323,7 @@ export default function App() {
   }, [friendsActive, friends]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
-  const { activeTab, switchTab, push } = useNavigation();
+  const { activeTab, switchTab } = useNavigation();
 
   const handleFriendsToggle = useCallback((active) => {
     setFriendsActive(active);
@@ -349,47 +346,6 @@ export default function App() {
   }, [isMobile, switchTab]);
   const handleCloseBucketList = useCallback(() => setShowBucketList(false), []);
   const handleCloseComparisonStats = useCallback(() => setShowComparisonStats(false), []);
-  const handleRefreshMobileData = useCallback(async () => {
-    if (token) invalidateBulkCache(token);
-    window.dispatchEvent(new Event('focus'));
-  }, [token]);
-
-  const handleOpenStats = useCallback(() => {
-    if (isMobile) {
-      push('stats');
-      return;
-    }
-    setPeekStatsOpen(true);
-  }, [isMobile, push]);
-
-  const handleOpenBucketList = useCallback(() => {
-    if (isMobile) {
-      push('bucketList', {
-        items: bucketListItems,
-        onUpdate: updateBucketItem,
-        onDelete: handleDeleteBucketItem,
-        onMarkVisited: handleMarkVisitedBucketList,
-      });
-      return;
-    }
-    setShowBucketList(true);
-  }, [isMobile, push, bucketListItems, updateBucketItem, handleDeleteBucketItem, handleMarkVisitedBucketList]);
-
-  const handleOpenComparisonStats = useCallback(() => {
-    if (!comparisonFriend) return;
-    if (isMobile) {
-      push('comparisonStats', {
-        myVisited: isWorldView ? worldVisited : visited,
-        friendVisited: isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || []),
-        total: isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length,
-        friendName: comparisonFriend.name,
-        friendPicture: comparisonFriend.picture,
-        regionLabel: isWorldView ? 'Countries' : country.regionLabel,
-      });
-      return;
-    }
-    setShowComparisonStats(true);
-  }, [comparisonFriend, country, isMobile, isWorldView, push, visited, worldVisited]);
 
   // Comparison handlers
   const handleCompare = useCallback(async (friend) => {
@@ -627,8 +583,8 @@ export default function App() {
                       />
                     </div>
                     <div className="sheet-peek-pills">
-                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>Search</button>
-                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handleOpenStats(); }}>Stats</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
                     </div>
                   </div>
                 }
@@ -714,8 +670,8 @@ export default function App() {
               </div>
             )}
             {comparisonFriend && (
-              <button className="comparison-stats-trigger" onClick={handleOpenComparisonStats}>
-                Compare stats
+              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+                📊 Compare Stats
               </button>
             )}
           </main>
@@ -746,8 +702,8 @@ export default function App() {
                     />
                   </div>
                   <div className="sheet-peek-pills">
-                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>Search</button>
-                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handleOpenStats(); }}>Stats</button>
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
                   </div>
                 </div>
               }
@@ -769,7 +725,7 @@ export default function App() {
                 collapsed={false}
                 wishlist={isShareMode ? new Set() : wishlist}
                 onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
-                onOpenBucketList={isShareMode ? null : handleOpenBucketList}
+                onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
                 bucketListItems={isShareMode ? [] : bucketListItems}
                 onAddToBucketList={isShareMode ? null : handleAddToBucketList}
                 searchRef={searchRef}
@@ -803,7 +759,7 @@ export default function App() {
               collapsed={sidebarCollapsed}
               wishlist={isShareMode ? new Set() : wishlist}
               onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
-              onOpenBucketList={isShareMode ? null : handleOpenBucketList}
+              onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
               bucketListItems={isShareMode ? [] : bucketListItems}
               onAddToBucketList={isShareMode ? null : handleAddToBucketList}
               searchRef={searchRef}
@@ -897,14 +853,14 @@ export default function App() {
               </div>
             )}
             {comparisonFriend && (
-              <button className="comparison-stats-trigger" onClick={handleOpenComparisonStats}>
-                Compare stats
+              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+                📊 Compare Stats
               </button>
             )}
           </main>
         </>
       )}
-      {peekStatsOpen && !isMobile && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
+      {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
 
       {/* Mobile tab screens — full-screen overlays over the map */}
       {isMobile && !isShareMode && activeTab === 'social' && (
@@ -915,15 +871,10 @@ export default function App() {
           worldVisited={worldVisited}
           onToggleWorld={handleToggleWorldCountry}
           onExploreCountry={handleExploreCountry}
-          country={country}
-          visitedRegions={displayVisited}
-          onToggleRegion={handleToggle}
-          dates={dates}
-          onRefresh={handleRefreshMobileData}
         />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <ProfileScreen onReset={reset} onResetAll={resetAll} onOpenStats={handleOpenStats} />
+        <ProfileScreen onReset={reset} onResetAll={resetAll} />
       )}
       {isMobile && !isShareMode && activeTab === 'admin' && (
         <div className="tab-screen">
@@ -961,7 +912,7 @@ export default function App() {
         />
       )}
 
-      {!isMobile && showBucketList && (
+      {showBucketList && (
         <SwipeableModal
           onClose={handleCloseBucketList}
           className="bucket-panel-modal"
@@ -977,7 +928,7 @@ export default function App() {
           />
         </SwipeableModal>
       )}
-      {!isMobile && showComparisonStats && comparisonFriend && (
+      {showComparisonStats && comparisonFriend && (
         <SwipeableModal onClose={handleCloseComparisonStats} height="90vh">
           <ComparisonStats
             myVisited={isWorldView ? worldVisited : visited}
