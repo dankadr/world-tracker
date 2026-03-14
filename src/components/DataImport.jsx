@@ -195,7 +195,13 @@ async function importAuthenticated(data, token, mode) {
       await fetch(`/api/visited/${trackerId}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ regions: toSave, dates: {}, notes: {}, wishlist: [] }),
+        body: JSON.stringify({
+          regions: toSave,
+          ...(data.dates?.[trackerId] && Object.keys(data.dates[trackerId]).length
+            ? { dates: data.dates[trackerId] } : {}),
+          ...(data.notes?.[trackerId] && Object.keys(data.notes[trackerId]).length
+            ? { notes: data.notes[trackerId] } : {}),
+        }),
       });
     }
   }
