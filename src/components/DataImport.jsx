@@ -205,6 +205,27 @@ async function importAuthenticated(data, token, mode) {
       });
     }
   }
+
+  // Import wishlist items
+  if (Array.isArray(data.wishlist) && data.wishlist.length > 0) {
+    let itemsToImport = data.wishlist;
+    if (mode === 'merge') {
+      const existingRes = await fetch('/api/wishlist', { headers: { Authorization: `Bearer ${token}` } });
+      if (existingRes.ok) {
+        const existing = await existingRes.json();
+        const existingKeys = new Set(existing.map((i) => `${i.tracker_id}:${i.region_id}`));
+        itemsToImport = data.wishlist.filter((i) => !existingKeys.has(`${i.tracker_id}:${i.region_id}`));
+      }
+    }
+    for (const item of itemsToImport) {
+      if (!item.tracker_id || !item.region_id) continue;
+      await fetch(`/api/wishlist/${item.tracker_id}/${item.region_id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(item),
+      });
+    }
+  }
 }
 
 // ── Guest mode import (localStorage) ──
