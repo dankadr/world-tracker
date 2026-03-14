@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -41,11 +41,11 @@ import StatsModal from './components/StatsModal';
 import BucketListPanel from './components/BucketListPanel';
 import ComparisonStats from './components/ComparisonStats';
 import AdminPanel from './components/AdminPanel';
-const FriendsPanel = lazy(() => import('./components/FriendsPanel'));
-const GamesPanel = lazy(() => import('./components/GamesPanel'));
-const SocialScreen = lazy(() => import('./components/SocialScreen'));
-const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
-const ExploreScreen = lazy(() => import('./components/ExploreScreen'));
+import FriendsPanel from './components/FriendsPanel';
+import GamesPanel from './components/GamesPanel';
+import SocialScreen from './components/SocialScreen';
+import ProfileScreen from './components/ProfileScreen';
+import ExploreScreen from './components/ExploreScreen';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { invalidateBulkCache } from './utils/api';
@@ -908,28 +908,22 @@ export default function App() {
 
       {/* Mobile tab screens — full-screen overlays over the map */}
       {isMobile && !isShareMode && activeTab === 'social' && (
-        <Suspense fallback={null}>
-          <SocialScreen onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-        </Suspense>
+        <SocialScreen onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
       )}
       {isMobile && !isShareMode && activeTab === 'explore' && (
-        <Suspense fallback={null}>
-          <ExploreScreen
-            worldVisited={worldVisited}
-            onToggleWorld={handleToggleWorldCountry}
-            onExploreCountry={handleExploreCountry}
-            country={country}
-            visitedRegions={displayVisited}
-            onToggleRegion={handleToggle}
-            dates={dates}
-            onRefresh={handleRefreshMobileData}
-          />
-        </Suspense>
+        <ExploreScreen
+          worldVisited={worldVisited}
+          onToggleWorld={handleToggleWorldCountry}
+          onExploreCountry={handleExploreCountry}
+          country={country}
+          visitedRegions={displayVisited}
+          onToggleRegion={handleToggle}
+          dates={dates}
+          onRefresh={handleRefreshMobileData}
+        />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
-        <Suspense fallback={null}>
-          <ProfileScreen onReset={reset} onResetAll={resetAll} onOpenStats={handleOpenStats} />
-        </Suspense>
+        <ProfileScreen onReset={reset} onResetAll={resetAll} onOpenStats={handleOpenStats} />
       )}
       {isMobile && !isShareMode && activeTab === 'admin' && (
         <div className="tab-screen">
@@ -942,9 +936,7 @@ export default function App() {
 
       {!isMobile && gamesOpen && (
         <div className="tab-screen" style={{ zIndex: 1300 }}>
-          <Suspense fallback={null}>
-            <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
-          </Suspense>
+          <GamesPanel worldVisited={worldVisited} onClose={() => setGamesOpen(false)} />
         </div>
       )}
 
@@ -955,9 +947,7 @@ export default function App() {
           className="friends-modal"
           height="70vh"
         >
-          <Suspense fallback={null}>
-            <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
-          </Suspense>
+          <FriendsPanel onClose={handleCloseFriends} onCompare={handleCompare} comparisonFriendId={comparisonFriend?.id} />
         </SwipeableModal>
       )}
 
