@@ -1,15 +1,6 @@
 import './ComparisonView.css';
 
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-export default function ComparisonStats({ myVisited, friendVisited, total, friendName, friendPicture, regionLabel, onClose, embedded = false }) {
+export default function ComparisonStats({ myVisited, friendVisited, total, friendName, friendPicture, regionLabel, onClose }) {
   const mySet = myVisited instanceof Set ? myVisited : new Set(myVisited || []);
   const friendSet = friendVisited instanceof Set ? friendVisited : new Set(friendVisited || []);
 
@@ -21,16 +12,17 @@ export default function ComparisonStats({ myVisited, friendVisited, total, frien
   const friendPct = total > 0 ? Math.round((friendSet.size / total) * 100) : 0;
   const firstName = friendName?.split(' ')[0] || 'Friend';
 
-  const body = (
-      <div className={`comparison-stats-modal${embedded ? ' comparison-stats-modal-embedded' : ''}`} onClick={(e) => !embedded && e.stopPropagation()}>
+  return (
+    <div className="comparison-stats-overlay" onClick={onClose}>
+      <div className="comparison-stats-modal" onClick={(e) => e.stopPropagation()}>
         <div className="comparison-stats-header">
-          <h3>Comparison</h3>
+          <h3>📊 Comparison</h3>
           <button className="comparison-stats-close" onClick={onClose}>&times;</button>
         </div>
 
         <div className="comparison-stats-versus">
           <div className="comparison-stats-user">
-            <span className="comparison-stats-user-icon"><UserIcon /></span>
+            <span className="comparison-stats-emoji">🧑</span>
             <span className="comparison-stats-user-label">You</span>
           </div>
           <span className="comparison-stats-vs">VS</span>
@@ -38,7 +30,7 @@ export default function ComparisonStats({ myVisited, friendVisited, total, frien
             {friendPicture ? (
               <img className="comparison-stats-avatar" src={friendPicture} alt={friendName} referrerPolicy="no-referrer" />
             ) : (
-              <span className="comparison-stats-user-icon"><UserIcon /></span>
+              <span className="comparison-stats-emoji">👤</span>
             )}
             <span className="comparison-stats-user-label">{firstName}</span>
           </div>
@@ -80,13 +72,6 @@ export default function ComparisonStats({ myVisited, friendVisited, total, frien
           <p className="comparison-stats-footer">{regionLabel}</p>
         )}
       </div>
-  );
-
-  if (embedded) return body;
-
-  return (
-    <div className="comparison-stats-overlay" onClick={onClose}>
-      {body}
     </div>
   );
 }

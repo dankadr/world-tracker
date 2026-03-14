@@ -47,7 +47,7 @@ function MapConfig({ onStart, onBack, title = '🗺️ Map Quiz' }) {
           </button>
         ))}
       </div>
-      <button className="game-config-start" data-testid="map-config-start" onClick={() => onStart(filter)}>Start Quiz</button>
+      <button className="game-config-start" onClick={() => onStart(filter)}>Start Quiz</button>
     </div>
   );
 }
@@ -94,7 +94,7 @@ export default function GamesPanel({ worldVisited, onClose }) {
   if (screen === 'shape') return <ShapeQuiz key={gameKey} filter={shapeFilter} worldVisited={worldVisited} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
 
   return (
-    <div className="games-panel" data-testid="games-panel">
+    <div className="games-panel">
       {onClose && (
         <button className="games-panel-close" onClick={onClose}>✕</button>
       )}
@@ -106,7 +106,7 @@ export default function GamesPanel({ worldVisited, onClose }) {
           <span className="game-card-title">Map Quiz</span>
           <span className="game-card-desc">Click the highlighted country on a blank map</span>
           <span className="game-card-best">{bestLabel('map_all')}</span>
-          <button className="game-card-play" data-testid="play-map-quiz" onClick={() => setScreen('map-config')}>Play</button>
+          <button className="game-card-play" onClick={() => setScreen('map-config')}>Play</button>
         </div>
         <div className="game-card">
           <span className="game-card-icon">🏳️</span>

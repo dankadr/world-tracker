@@ -53,8 +53,6 @@ yarn-error.log*
 htmlcov/
 .pytest_cache/
 .mypy_cache/
-playwright-report/
-test-results/
 
 # Claude / GitHub prompts
 .claude/
