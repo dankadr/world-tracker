@@ -4715,6 +4715,8 @@ body {
 /* Bottom sheet sits above the tab bar */
 .app.is-mobile .mobile-bottom-sheet {
   bottom: var(--tab-bar-safe-height);
+  /* Cap so the sheet never overflows above the safe area regardless of vh% set by JS */
+  max-height: calc(100dvh - var(--tab-bar-safe-height) - env(safe-area-inset-top, 44px) - 8px);
 }
 
 /* Map controls shift up to stay above the tab bar on mobile */
