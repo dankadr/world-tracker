@@ -417,7 +417,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     <MapContainer
       center={[20, 0]}
       zoom={2}
-      className="swiss-map world-map"
+      className="swiss-map world-map" data-testid="world-map-container"
       zoomControl={true}
       scrollWheelZoom={true}
       minZoom={2}

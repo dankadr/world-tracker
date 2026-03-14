@@ -144,6 +144,29 @@ Open [http://localhost:8088](http://localhost:8088) in your browser.
 npm test
 ```
 
+### QA smoke tests (UI + logic)
+
+```bash
+npm test
+```
+
+Includes lightweight UI smoke coverage for map click interaction and Geography Games flow. See `docs/qa/production-qa-team.md` for the full production QA blueprint.
+
+### Selenium browser smoke tests (real UI)
+
+```bash
+# app stack
+docker compose up -d --build
+
+# selenium grid
+docker run --rm -d --name world-tracker-selenium -p 4444:4444 selenium/standalone-chrome:latest
+
+# run smoke tests
+python -m venv .venv-qa && source .venv-qa/bin/activate
+pip install -r qa/selenium/requirements.txt
+APP_URL=http://localhost:8088 SELENIUM_REMOTE_URL=http://localhost:4444/wd/hub pytest -q qa/selenium/test_ui_smoke.py
+```
+
 ### Backend (pytest)
 
 ```bash

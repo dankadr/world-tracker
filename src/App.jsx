@@ -660,7 +660,7 @@ export default function App() {
             )}
             {!isShareMode && !isMobile && (
               <div className="map-action-buttons">
-                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games" aria-label="Open geography games" data-testid="open-geography-games">
                   🎮
                 </button>
               </div>
@@ -796,7 +796,7 @@ export default function App() {
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {!isMobile && !isShareMode && (
               <div className="map-action-buttons">
-                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games" aria-label="Open geography games" data-testid="open-geography-games">
                   🎮
                 </button>
               </div>
