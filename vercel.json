@@ -29,7 +29,7 @@
   "functions": {
     "api/**/*.py": {
       "maxDuration": 300,
-      "excludeFiles": "node_modules/**"
+      "excludeFiles": "{node_modules,dist,src,public,scripts,e2e,docs,.superpowers}/**"
     }
   }
 }
