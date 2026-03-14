@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef, createContext, useContext } f
 import { useAuth } from '../context/AuthContext';
 import { XP_RULES, levelFromXp } from '../utils/xpSystem';
 import { secureStorage } from '../utils/secureStorage';
+import { haptics } from '../utils/haptics';
 
 const LEGACY_AWARDED_KEY = 'swiss-tracker-xp-awarded';
 
@@ -257,6 +258,11 @@ export function XpProvider({ children }) {
 
     const newTotal = totalXp + amount;
     const newLevel = levelFromXp(newTotal).level;
+    const didLevelUp = newLevel > oldLevel;
+
+    if (didLevelUp) {
+      haptics.levelUp();
+    }
 
     // Show XP notification
     const notifId = Date.now() + Math.random();
@@ -264,7 +270,7 @@ export function XpProvider({ children }) {
       id: notifId,
       amount,
       reason,
-      levelUp: newLevel > oldLevel ? newLevel : null,
+      levelUp: didLevelUp ? newLevel : null,
     }]);
 
     setTimeout(() => {

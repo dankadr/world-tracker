@@ -1,8 +1,16 @@
 import { useNavigation } from '../context/NavigationContext';
 import ChallengeScreen from './ChallengeScreen';
+import StatsScreen from './StatsScreen';
+import YearInReviewScreen from './YearInReviewScreen';
+import BucketListScreen from './BucketListScreen';
+import ComparisonStatsScreen from './ComparisonStatsScreen';
 
 const SCREEN_REGISTRY = {
   challenge: ChallengeScreen,
+  stats: StatsScreen,
+  yearInReview: YearInReviewScreen,
+  bucketList: BucketListScreen,
+  comparisonStats: ComparisonStatsScreen,
 };
 
 /**
