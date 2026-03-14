@@ -4699,11 +4699,17 @@ body {
 /* CSS custom property for tab bar height (used by map controls) */
 :root {
   --tab-bar-height: 56px;
-  --tab-bar-safe-height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  /* Desktop has no tab bar — 0px so full-screen overlays (e.g. games) cover the viewport */
+  --tab-bar-safe-height: 0px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Mobile: tab bar exists — reserve 56px + safe-area at the bottom */
+.app.is-mobile {
+  --tab-bar-safe-height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
 }
 
 /* Bottom sheet sits above the tab bar */

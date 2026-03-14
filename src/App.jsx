@@ -524,7 +524,6 @@ export default function App() {
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
-  const isWorldView = view === 'world' && !isShareMode;
   const longPressTimerRef = useRef(null);
   const longPressStartRef = useRef(null);
 
