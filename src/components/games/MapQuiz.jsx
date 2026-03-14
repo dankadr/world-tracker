@@ -81,6 +81,14 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
     sub(clickedId);
   }, []); // empty deps — stable reference, reads live state via ref
 
+  // Must be declared before any conditional returns to satisfy Rules of Hooks.
+  const gameMode = useMemo(() => ({
+    onCountryClick: handleCountryClick,
+    targetId: question?.id,
+    correctId,
+    incorrectId,
+  }), [handleCountryClick, question?.id, correctId, incorrectId]);
+
   if (status === 'finished') {
     return (
       <GameResultScreen
@@ -96,13 +104,6 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
 
   if (!question) return null;
 
-  const gameMode = useMemo(() => ({
-    onCountryClick: handleCountryClick,
-    targetId: question.id,
-    correctId,
-    incorrectId,
-  }), [handleCountryClick, question.id, correctId, incorrectId]);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       <GameTopBar
@@ -110,7 +111,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={finish}
+        onQuit={onBack}
       />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',
