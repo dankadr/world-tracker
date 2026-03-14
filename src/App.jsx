@@ -624,6 +624,7 @@ export default function App() {
                     <div className="sheet-peek-pills">
                       <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
                       <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handleOpenStats(); }}>📊 Stats</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); push('games', { worldVisited }); }}>🎮 Games</button>
                     </div>
                   </div>
                 }
@@ -847,6 +848,15 @@ export default function App() {
             {isMobile && !isShareMode && (
               <div className="map-controls-cluster">
                 <ExportButton country={country} />
+                <button
+                  className="map-action-btn"
+                  onClick={() => push('games', { worldVisited })}
+                  title="Geography Games"
+                  aria-label="Open geography games"
+                  data-testid="open-geography-games"
+                >
+                  🎮
+                </button>
               </div>
             )}
 
