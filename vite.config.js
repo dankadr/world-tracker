@@ -15,11 +15,20 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // cover the 17 MB JS bundle
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/(a|b|c)\.(tile\.openstreetmap|basemaps\.cartocdn)\.org\/.*/,
+            urlPattern: /^https:\/\/(a|b|c)\.tile\.openstreetmap\.org\/.*/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'map-tiles',
-              expiration: { maxEntries: 3000, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheName: 'osm-tiles',
+              expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/(a|b|c|d)\.basemaps\.cartocdn\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'carto-tiles',
+              expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
