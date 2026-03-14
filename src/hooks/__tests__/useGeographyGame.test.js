@@ -37,11 +37,11 @@ describe('useGeographyGame', () => {
     expect(result.current.status).toBe('reviewing');
   });
 
-  it('wrong submit auto-advances after 1200ms reviewing', () => {
+  it('wrong submit auto-advances after 2500ms reviewing', () => {
     const { result } = renderHook(() => useGeographyGame(POOL, {}));
     act(() => { result.current.submit('xx'); });
     expect(result.current.questionIndex).toBe(0);
-    act(() => { vi.advanceTimersByTime(1200); });
+    act(() => { vi.advanceTimersByTime(2500); });
     expect(result.current.questionIndex).toBe(1);
     expect(result.current.status).toBe('playing');
     expect(result.current.isCorrect).toBeNull();
@@ -136,7 +136,7 @@ describe('useGeographyGame', () => {
 
     // answer second question incorrectly
     act(() => { result.current.submit('xx'); });
-    act(() => { vi.advanceTimersByTime(1200); });
+    act(() => { vi.advanceTimersByTime(2500); });
 
     // answer third question correctly
     act(() => { result.current.submit(result.current.question.id); });

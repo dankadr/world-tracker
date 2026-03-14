@@ -95,6 +95,13 @@
   margin-left: 44px;
 }
 
+.settings-inline-panel {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.02));
+}
+
 .settings-toggle {
   position: relative;
   width: 51px;

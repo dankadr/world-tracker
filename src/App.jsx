@@ -43,6 +43,8 @@ import SocialScreen from './components/SocialScreen';
 import ProfileScreen from './components/ProfileScreen';
 import ExploreScreen from './components/ExploreScreen';
 import AdminPanel from './components/AdminPanel';
+import OfflineIndicator from './components/OfflineIndicator';
+import InstallPrompt from './components/InstallPrompt';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
@@ -537,6 +539,8 @@ export default function App() {
 
   return (
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
+      <OfflineIndicator />
+      {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
       {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
@@ -660,7 +664,7 @@ export default function App() {
             )}
             {!isShareMode && !isMobile && (
               <div className="map-action-buttons">
-                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games" aria-label="Open geography games" data-testid="open-geography-games">
                   🎮
                 </button>
               </div>
@@ -796,7 +800,7 @@ export default function App() {
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {!isMobile && !isShareMode && (
               <div className="map-action-buttons">
-                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games">
+                <button className="map-action-btn" onClick={() => setGamesOpen(true)} title="Geography Games" aria-label="Open geography games" data-testid="open-geography-games">
                   🎮
                 </button>
               </div>

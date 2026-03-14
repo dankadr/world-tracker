@@ -115,9 +115,9 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={finish}
+        onQuit={onBack}
       />
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
         <WorldMap
           visited={EMPTY_VISITED}
           onToggle={() => {}}
