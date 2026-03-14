@@ -98,10 +98,11 @@ export default function useGeographyGame(pool, { timeLimit = null, onFinish } = 
     setLastCorrectAnswer(correct ? null : question);
     setStatus('reviewing');
     // Fix 1: store timeout ref so it can be cleared on unmount
+    // Give more time on wrong answers so user can read the correct answer
     reviewTimeoutRef.current = setTimeout(() => {
       isSubmittingRef.current = false;
       advance(nextScore);
-    }, 1200);
+    }, correct ? 1200 : 2500);
   }, [questions, questionIndex, score, advance]);
 
   const skip = useCallback(() => {

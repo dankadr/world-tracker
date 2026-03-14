@@ -9,6 +9,34 @@ import worldData from '../../data/world.json';
 import continentMap from '../../config/continents.json';
 import './games.css';
 
+function getBboxCentroid(feature) {
+  const coords = [];
+  function collect(c) {
+    if (typeof c[0] === 'number') coords.push(c);
+    else c.forEach(collect);
+  }
+  collect(feature.geometry.coordinates);
+  if (!coords.length) return null;
+  const lngs = coords.map(c => c[0]);
+  const lats = coords.map(c => c[1]);
+  return { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lng: (Math.min(...lngs) + Math.max(...lngs)) / 2 };
+}
+
+function haversineKm(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const x = Math.sin(dLat / 2) ** 2 +
+    Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(x));
+}
+
+const CENTROIDS = {};
+worldData.features.forEach(f => {
+  const c = getBboxCentroid(f);
+  if (c) CENTROIDS[f.properties.id] = c;
+});
+
 const CONTINENT_FILTER_KEYS = {
   africa: 'Africa',
   asia: 'Asia',
@@ -109,7 +137,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={finish}
+        onQuit={onBack}
       />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',
@@ -119,7 +147,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
       }}>
         Find: {question.name}
       </div>
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
         <WorldMap
           visited={new Set()}
           onToggle={() => {}}
@@ -133,8 +161,18 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
           position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
           background: isCorrect ? '#22c55e' : '#ef4444', color: '#fff',
           borderRadius: 10, padding: '10px 24px', fontWeight: 700, fontSize: '1rem', zIndex: 500,
+          textAlign: 'center', whiteSpace: 'nowrap',
         }}>
-          {isCorrect ? '✓ Correct!' : `✗ ${question.name}`}
+          {isCorrect ? '✓ Correct!' : (
+            <>
+              <div>✗ {question.name}</div>
+              {incorrectId && CENTROIDS[incorrectId] && CENTROIDS[question.id] && (
+                <div style={{ fontSize: '0.8rem', fontWeight: 500, marginTop: 4, opacity: 0.9 }}>
+                  {Math.round(haversineKm(CENTROIDS[incorrectId], CENTROIDS[question.id])).toLocaleString()} km away
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

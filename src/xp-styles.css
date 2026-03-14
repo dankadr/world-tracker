@@ -286,6 +286,29 @@
   }
 }
 
+/* Mobile — compact non-blocking toasts */
+@media (max-width: 768px) {
+  .xp-toast-container {
+    top: auto;
+    bottom: calc(var(--tab-bar-safe-height, 80px) + 12px);
+    right: 12px;
+    max-width: 240px;
+  }
+
+  .xp-toast-levelup {
+    padding: 10px 12px;
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  .xp-toast-levelup .xp-toast-title {
+    font-size: 0.85rem;
+  }
+
+  .xp-toast-levelup-icon {
+    font-size: 1.2rem;
+  }
+}
+
 /* Dark mode adjustments */
 .dark .xp-toast {
   background: rgba(30, 30, 40, 0.95);

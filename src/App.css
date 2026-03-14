@@ -4756,9 +4756,30 @@ body {
   }
 }
 
-/* Toast container — shift up above tab bar on mobile */
+/* Toast container — compact, bottom-anchored above tab bar on mobile */
 @media (max-width: 768px) {
   .toast-container {
-    bottom: calc(var(--tab-bar-safe-height) + 16px);
+    top: auto;
+    left: auto;
+    right: 12px;
+    bottom: calc(var(--tab-bar-safe-height) + 12px);
+    max-width: 280px;
+  }
+
+  .toast-achievement {
+    width: 280px;
+    padding: 10px 36px 10px 12px;
+  }
+
+  .toast-icon {
+    font-size: 1.5rem;
+  }
+
+  .toast-title {
+    font-size: 0.82rem;
+  }
+
+  .toast-desc {
+    font-size: 0.68rem;
   }
 }

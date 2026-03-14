@@ -69,18 +69,19 @@ export default function FlagQuiz({ onBack, onPlayAgain }) {
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={finish}
+        onQuit={onBack}
       />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 24 }}>
-        <div style={{ fontSize: '6rem', lineHeight: 1 }}>{question.flag}</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 20 }}>
+        <div style={{ fontSize: '5rem', lineHeight: 1 }}>{question.flag}</div>
         {status === 'reviewing' && (
-          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: isCorrect ? '#22c55e' : '#ef4444', textAlign: 'center' }}>
-            {isCorrect ? '✓ Correct!' : `✗ ${question.name}`}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.1rem', fontWeight: 600, color: isCorrect ? '#22c55e' : '#ef4444', textAlign: 'center' }}>
+            {!isCorrect && <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{question.flag}</span>}
+            <span>{isCorrect ? '✓ Correct!' : `✗ ${question.name}`}</span>
           </div>
         )}
         <div style={{ width: '100%', maxWidth: 400 }}>
           <AnswerInput
-            candidates={pool}
+            candidates={pool.map(({ id, name }) => ({ id, name }))}
             nameKey="name"
             onSubmit={handleTextSubmit}
             onSkip={skip}

@@ -96,7 +96,7 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack, on
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={finish}
+        onQuit={onBack}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 24 }}>
         <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem', margin: 0 }}>{promptLabel}</p>
