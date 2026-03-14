@@ -6,12 +6,10 @@ Works in two modes:
 - Vercel serverless:  imported by ``api/index.py``
 """
 
-import json
 import logging
 import os
 import sys
 import time
-import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -55,67 +53,21 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
-class _JsonFormatter(logging.Formatter):
-    def format(self, record):
-        return json.dumps({
-            "level": record.levelname,
-            "logger": record.name,
-            "message": record.getMessage(),
-            "request_id": getattr(record, "request_id", None),
-        })
-
-
-_handler = logging.StreamHandler(sys.stdout)
-if os.getenv("VERCEL"):
-    _handler.setFormatter(_JsonFormatter())
-else:
-    _handler.setFormatter(logging.Formatter("%(levelname)s  %(name)s  %(message)s"))
-
-logging.basicConfig(level=logging.INFO, handlers=[_handler], force=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s  %(name)s  %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
 logger = logging.getLogger("travel-tracker.api")
-
-# ---------------------------------------------------------------------------
-# Sentry (optional — only initialised when SENTRY_DSN is set)
-# ---------------------------------------------------------------------------
-SENTRY_DSN = os.getenv("SENTRY_DSN")
-if SENTRY_DSN:
-    try:
-        import sentry_sdk  # type: ignore
-        sentry_sdk.init(dsn=SENTRY_DSN)
-    except ImportError:
-        logger.warning("sentry-sdk not installed; skipping Sentry initialisation")
 
 # --------------- Config ---------------
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-please")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 30
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco"}
-
-
-# ---------------------------------------------------------------------------
-# Secrets validation (enforced on Vercel or when ENFORCE_SECRETS=true)
-# ---------------------------------------------------------------------------
-def _validate_secrets() -> None:
-    if JWT_SECRET == "change-me-in-production-please":
-        raise RuntimeError("JWT_SECRET is set to the default placeholder. Set a strong secret.")
-    if not JWT_SECRET:
-        raise RuntimeError("JWT_SECRET env var is required.")
-    if not ADMIN_EMAIL:
-        raise RuntimeError("ADMIN_EMAIL env var is required.")
-    enc_key = os.getenv("ENCRYPTION_MASTER_KEY", "")
-    if enc_key in ("", "change-me-generate-with-openssl-rand-hex-32"):
-        raise RuntimeError(
-            "ENCRYPTION_MASTER_KEY is not set or is the default placeholder. "
-            "Generate one with: openssl rand -hex 32"
-        )
-
-
-if os.getenv("VERCEL") or os.getenv("ENFORCE_SECRETS"):
-    _validate_secrets()
 
 
 # --------------- Lifespan ---------------
@@ -132,7 +84,7 @@ app = FastAPI(title="Travel Tracker API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -144,15 +96,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    request_id = str(uuid.uuid4())
     start = time.time()
     try:
         response = await call_next(request)
     except Exception:
         duration_ms = (time.time() - start) * 1000
         logger.exception(
-            "UNHANDLED  %s %s  %.0fms  request_id=%s",
-            request.method, request.url.path, duration_ms, request_id,
+            "UNHANDLED  %s %s  %.0fms", request.method, request.url.path, duration_ms
         )
         return JSONResponse(
             status_code=500,
@@ -160,14 +110,12 @@ async def log_requests(request: Request, call_next):
         )
     duration_ms = (time.time() - start) * 1000
     logger.info(
-        "%s  %s %s  %.0fms  request_id=%s",
+        "%s  %s %s  %.0fms",
         response.status_code,
         request.method,
         request.url.path,
         duration_ms,
-        request_id,
     )
-    response.headers["X-Request-Id"] = request_id
     return response
 
 
@@ -305,9 +253,12 @@ async def get_current_user(
     return CurrentUser(id=user_id, email=email)
 
 
+ADMIN_EMAIL = "dankadr100@gmail.com"
+
+
 async def require_admin(user: CurrentUser = Depends(get_current_user)):
     """Dependency: raises 403 unless the caller is the admin user."""
-    if not ADMIN_EMAIL or user.email != ADMIN_EMAIL:
+    if user.email != ADMIN_EMAIL:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
@@ -786,11 +737,7 @@ async def batch_actions(
         else:
             results.append({"action": action, "ok": False, "error": "unknown action"})
 
-    try:
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+    await db.commit()
     return {"results": results}
 
 
@@ -950,11 +897,7 @@ async def accept_friend_request(request_id: int, user: CurrentUser = Depends(get
     # Create bidirectional friendship
     db.add(Friendship(user_id=req.from_user_id, friend_id=req.to_user_id))
     db.add(Friendship(user_id=req.to_user_id, friend_id=req.from_user_id))
-    try:
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+    await db.commit()
 
     # Count friends
     count = (await db.execute(
@@ -1398,11 +1341,7 @@ async def create_challenge(body: ChallengeCreate, user: CurrentUser = Depends(ge
         for fid in valid_friend_ids:
             db.add(ChallengeParticipant(challenge_id=challenge.id, user_id=fid))
 
-    try:
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
+    await db.commit()
 
     return {
         "id": challenge.id,
@@ -1859,9 +1798,7 @@ async def health():
     except Exception as exc:
         logger.warning("Health check DB ping failed: %s", exc)
 
-    if db_ok:
-        return JSONResponse({"status": "ok", "database": "connected"})
-    return JSONResponse(
-        {"status": "degraded", "database": "unreachable", "reason": "database unreachable"},
-        status_code=503,
-    )
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "unreachable",
+    }

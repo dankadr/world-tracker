@@ -13,9 +13,8 @@ import { computeProgress } from '../utils/achievementProgress';
 import './ProfileScreen.css';
 import ShareCard from './ShareCard';
 import { computeAllTimeStats } from '../utils/allTimeStats';
-import { withTouchFeedback } from '../utils/touchFeedback';
 
-export default function ProfileScreen({ onReset, onResetAll, onOpenStats }) {
+export default function ProfileScreen({ onReset, onResetAll }) {
   const [tab, setTab] = useState('profile');
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -81,7 +80,7 @@ export default function ProfileScreen({ onReset, onResetAll, onOpenStats }) {
               key={id}
               role="tab"
               aria-selected={tab === id}
-              className={withTouchFeedback(`profile-seg-btn${tab === id ? ' active' : ''}`)}
+              className={`profile-seg-btn${tab === id ? ' active' : ''}`}
               onClick={() => setTab(id)}
             >
               {label}
@@ -100,13 +99,7 @@ export default function ProfileScreen({ onReset, onResetAll, onOpenStats }) {
             totalXp={totalXp}
             user={user}
             onEditAvatar={() => setShowAvatarEditor(true)}
-            onOpenStats={() => {
-              if (onOpenStats) {
-                onOpenStats();
-                return;
-              }
-              setShowStats(true);
-            }}
+            onOpenStats={() => setShowStats(true)}
             showSharePicker={showSharePicker}
             onToggleShare={() => setShowSharePicker(p => !p)}
             onExport={setExportFormat}
@@ -137,7 +130,7 @@ export default function ProfileScreen({ onReset, onResetAll, onOpenStats }) {
           onClose={() => setShowAvatarEditor(false)}
         />
       )}
-      {!onOpenStats && showStats && <StatsModal onClose={() => setShowStats(false)} />}
+      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {/* Off-screen ShareCard for all-time export */}
       {exportFormat && (
         <ShareCard
@@ -158,7 +151,7 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
   return (
     <div className="profile-overview">
       <div className="profile-avatar-section">
-        <button className={withTouchFeedback('profile-avatar-btn')} onClick={onEditAvatar} aria-label="Edit avatar">
+        <button className="profile-avatar-btn" onClick={onEditAvatar} aria-label="Edit avatar">
           <AvatarCanvas config={config} size={96} />
           <span className="profile-avatar-edit-hint">Edit</span>
         </button>
@@ -179,11 +172,11 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
 
       <div className="profile-actions">
         <p className="profile-total-xp">Total XP earned: {totalXp}</p>
-        <button className={withTouchFeedback('profile-stats-btn')} onClick={onOpenStats}>
+        <button className="profile-stats-btn" onClick={onOpenStats}>
           View Travel Stats
         </button>
         <button
-          className={withTouchFeedback('profile-share-btn')}
+          className="profile-share-btn"
           onClick={onToggleShare}
           disabled={exporting}
         >
@@ -195,18 +188,18 @@ function ProfileTab({ config, level, currentXp, nextLevelXp, totalXp, user, onEd
         <div className="profile-share-picker">
           <div className="yir-picker-row">
             <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => onExport('portrait')} disabled={exporting}>
-              {exporting && exportFormat === 'portrait' ? 'Saving…' : 'Portrait'}
+              {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
             </button>
             <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => onExport('square')} disabled={exporting}>
-              {exporting && exportFormat === 'square' ? 'Saving…' : 'Square'}
+              {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
             </button>
           </div>
           <div className="yir-picker-row">
             <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => onSetTheme('dark')} disabled={exporting}>
-              Dark
+              🌑 Dark
             </button>
             <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => onSetTheme('light')} disabled={exporting}>
-              Light
+              ☀️ Light
             </button>
           </div>
         </div>

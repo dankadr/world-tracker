@@ -5,9 +5,9 @@ import { countryList } from '../data/countries';
 import worldData from '../data/world.json';
 
 const TABS = [
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'priority', label: 'High Priority' },
-  { id: 'all', label: 'All' },
+  { id: 'upcoming', label: '📅 Upcoming' },
+  { id: 'priority', label: '🔥 High Priority' },
+  { id: 'all', label: '📋 All' },
 ];
 
 const SORT_OPTIONS = [
@@ -37,7 +37,7 @@ function getTrackerInfo(trackerId) {
   return c ? { name: c.name, flag: c.flag } : { name: trackerId, flag: '🌐' };
 }
 
-export default function BucketListPanel({ items, onUpdate, onDelete, onMarkVisited, onClose, embedded = false }) {
+export default function BucketListPanel({ items, onUpdate, onDelete, onMarkVisited, onClose }) {
   const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('priority');
   const [filterTracker, setFilterTracker] = useState('all');
@@ -93,17 +93,17 @@ export default function BucketListPanel({ items, onUpdate, onDelete, onMarkVisit
     <div className="bucket-panel">
       <div className="bucket-panel-header">
         <div className="bucket-panel-title-row">
-          <h2 className="bucket-panel-title">Bucket List</h2>
-          {!embedded && onClose && (
+          <h2 className="bucket-panel-title">📌 Bucket List</h2>
+          {onClose && (
             <button className="modal-close" onClick={onClose}>&times;</button>
           )}
         </div>
         <div className="bucket-panel-stats">
           <span className="bucket-stat">{items.length} places</span>
           <span className="bucket-stat-sep">·</span>
-          <span className="bucket-stat">{highCount} high</span>
+          <span className="bucket-stat">{highCount} 🔴 high</span>
           <span className="bucket-stat-sep">·</span>
-          <span className="bucket-stat">{upcomingCount} dated</span>
+          <span className="bucket-stat">{upcomingCount} 📅 dated</span>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export default function BucketListPanel({ items, onUpdate, onDelete, onMarkVisit
       <div className="bucket-list">
         {filteredItems.length === 0 ? (
           <div className="bucket-empty">
-            <span className="bucket-empty-icon" aria-hidden="true">○</span>
+            <span className="bucket-empty-icon">{activeTab === 'upcoming' ? '📅' : activeTab === 'priority' ? '🔥' : '📌'}</span>
             <p className="bucket-empty-text">
               {activeTab === 'upcoming'
                 ? 'No upcoming trips planned yet'

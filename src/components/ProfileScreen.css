@@ -41,7 +41,7 @@
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
   color: var(--text-secondary, #4a6a8a);
   cursor: pointer;
-  transition: background 180ms ease, color 180ms ease, transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition: background 180ms ease, color 180ms ease, transform 100ms ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -56,6 +56,10 @@
 [data-theme="dark"] .profile-seg-btn.active {
   background: rgba(255, 255, 255, 0.12);
   color: var(--text-primary, #e8d5a3);
+}
+
+.profile-seg-btn:active {
+  transform: scale(0.97);
 }
 
 /* ── Tab body ── */
@@ -90,7 +94,11 @@
   border-radius: 50%;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 100ms ease;
+}
+
+.profile-avatar-btn:active {
+  transform: scale(0.95);
 }
 
 .profile-avatar-edit-hint {
@@ -215,7 +223,12 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1), background 150ms ease;
+  transition: transform 100ms ease, background 150ms ease;
+}
+
+.profile-stats-btn:active {
+  transform: scale(0.97);
+  background: var(--glass-bg-heavy, rgba(201, 168, 76, 0.18));
 }
 
 /* ── Achievements tab ── */
@@ -247,7 +260,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 200ms ease, border-color 200ms ease, transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition: all 0.2s;
   width: 100%;
 }
 
