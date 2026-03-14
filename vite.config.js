@@ -53,6 +53,11 @@ export default defineConfig({
       process.env.VITE_SENTRY_DSN || process.env.SENTRY_DSN || ''
     ),
   },
+  esbuild: {
+    // Keep esbuild from folding independent declarations into a single
+    // minified statement. Firefox is stricter about TDZ reads in that form.
+    minifySyntax: false,
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,
