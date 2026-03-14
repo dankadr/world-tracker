@@ -122,6 +122,57 @@
   { "id": "fun-pop-1b", "icon": "👥", "title": "Billion People", "desc": "Countries you visited have 1B+ combined population", "category": "Fun Facts", "rule": { "type": "worldPopulationVisited", "min": 1000000000 } },
   { "id": "fun-pop-4b", "icon": "🌆", "title": "Half of Humanity", "desc": "Countries you visited have 4B+ combined population", "category": "Fun Facts", "rule": { "type": "worldPopulationVisited", "min": 4000000000 } },
 
+  { "id": "au-3", "icon": "🦘", "title": "Outback Opener", "desc": "Visit 3 Australian states & territories", "category": "Australia", "rule": { "type": "countryVisited", "country": "au", "min": 3 } },
+  { "id": "au-6", "icon": "🌏", "title": "Southern Cross", "desc": "Visit 6 Australian states & territories", "category": "Australia", "rule": { "type": "countryVisited", "country": "au", "min": 6 } },
+  { "id": "au-complete", "icon": "🇦🇺", "title": "Aussie Atlas", "desc": "Visit all Australian states & territories", "category": "Australia", "rule": { "type": "countryComplete", "country": "au" } },
+
+  { "id": "jp-10", "icon": "🍣", "title": "Island Hopper", "desc": "Visit 10 Japanese prefectures", "category": "Japan", "rule": { "type": "countryVisited", "country": "jp", "min": 10 } },
+  { "id": "jp-25", "icon": "🗾", "title": "Shinkansen Streak", "desc": "Visit 25 Japanese prefectures", "category": "Japan", "rule": { "type": "countryVisited", "country": "jp", "min": 25 } },
+  { "id": "jp-complete", "icon": "🇯🇵", "title": "Rising Sun Complete", "desc": "Visit all Japanese prefectures", "category": "Japan", "rule": { "type": "countryComplete", "country": "jp" } },
+
+  { "id": "ph-5", "icon": "🌴", "title": "Archipelago Start", "desc": "Visit 5 Philippine regions", "category": "Philippines", "rule": { "type": "countryVisited", "country": "ph", "min": 5 } },
+  { "id": "ph-12", "icon": "⛵", "title": "Island Connector", "desc": "Visit 12 Philippine regions", "category": "Philippines", "rule": { "type": "countryVisited", "country": "ph", "min": 12 } },
+  { "id": "ph-complete", "icon": "🇵🇭", "title": "Pearl of the Orient", "desc": "Visit all Philippine regions", "category": "Philippines", "rule": { "type": "countryComplete", "country": "ph" } },
+
+  { "id": "br-10", "icon": "🥁", "title": "Samba States", "desc": "Visit 10 Brazilian states", "category": "Brazil", "rule": { "type": "countryVisited", "country": "br", "min": 10 } },
+  { "id": "br-20", "icon": "🦜", "title": "Amazon Arc", "desc": "Visit 20 Brazilian states", "category": "Brazil", "rule": { "type": "countryVisited", "country": "br", "min": 20 } },
+  { "id": "br-complete", "icon": "🇧🇷", "title": "Brazil Complete", "desc": "Visit all Brazilian states", "category": "Brazil", "rule": { "type": "countryComplete", "country": "br" } },
+
+  { "id": "fr-4", "icon": "🥐", "title": "Hexagon Explorer", "desc": "Visit 4 French regions", "category": "France", "rule": { "type": "countryVisited", "country": "fr", "min": 4 } },
+  { "id": "fr-9", "icon": "🧀", "title": "Tour de France", "desc": "Visit 9 French regions", "category": "France", "rule": { "type": "countryVisited", "country": "fr", "min": 9 } },
+  { "id": "fr-complete", "icon": "🇫🇷", "title": "French Complete", "desc": "Visit all French regions", "category": "France", "rule": { "type": "countryComplete", "country": "fr" } },
+
+  { "id": "de-6", "icon": "🍺", "title": "Bundesländer Beginner", "desc": "Visit 6 German states", "category": "Germany", "rule": { "type": "countryVisited", "country": "de", "min": 6 } },
+  { "id": "de-12", "icon": "🏰", "title": "Autobahn Trail", "desc": "Visit 12 German states", "category": "Germany", "rule": { "type": "countryVisited", "country": "de", "min": 12 } },
+  { "id": "de-complete", "icon": "🇩🇪", "title": "German Complete", "desc": "Visit all German states", "category": "Germany", "rule": { "type": "countryComplete", "country": "de" } },
+
+  { "id": "it-7", "icon": "🍝", "title": "Dolce Detour", "desc": "Visit 7 Italian regions", "category": "Italy", "rule": { "type": "countryVisited", "country": "it", "min": 7 } },
+  { "id": "it-14", "icon": "🛵", "title": "Roman Roads", "desc": "Visit 14 Italian regions", "category": "Italy", "rule": { "type": "countryVisited", "country": "it", "min": 14 } },
+  { "id": "it-complete", "icon": "🇮🇹", "title": "Italian Complete", "desc": "Visit all Italian regions", "category": "Italy", "rule": { "type": "countryComplete", "country": "it" } },
+
+  { "id": "es-6", "icon": "💃", "title": "Iberian Intro", "desc": "Visit 6 Spanish communities", "category": "Spain", "rule": { "type": "countryVisited", "country": "es", "min": 6 } },
+  { "id": "es-12", "icon": "⚽", "title": "Camino Mapper", "desc": "Visit 12 Spanish communities", "category": "Spain", "rule": { "type": "countryVisited", "country": "es", "min": 12 } },
+  { "id": "es-complete", "icon": "🇪🇸", "title": "Spanish Complete", "desc": "Visit all Spanish communities", "category": "Spain", "rule": { "type": "countryComplete", "country": "es" } },
+
+  { "id": "mx-10", "icon": "🌮", "title": "Aztec Path", "desc": "Visit 10 Mexican states", "category": "Mexico", "rule": { "type": "countryVisited", "country": "mx", "min": 10 } },
+  { "id": "mx-20", "icon": "🎺", "title": "Mariachi Miles", "desc": "Visit 20 Mexican states", "category": "Mexico", "rule": { "type": "countryVisited", "country": "mx", "min": 20 } },
+  { "id": "mx-complete", "icon": "🇲🇽", "title": "Mexican Complete", "desc": "Visit all Mexican states", "category": "Mexico", "rule": { "type": "countryComplete", "country": "mx" } },
+
+  { "id": "gb-2", "icon": "🍵", "title": "Union Starter", "desc": "Visit 2 UK countries", "category": "United Kingdom", "rule": { "type": "countryVisited", "country": "gb", "min": 2 } },
+  { "id": "gb-3", "icon": "🚆", "title": "Brit Route", "desc": "Visit 3 UK countries", "category": "United Kingdom", "rule": { "type": "countryVisited", "country": "gb", "min": 3 } },
+  { "id": "gb-complete", "icon": "🇬🇧", "title": "Union Complete", "desc": "Visit all UK countries", "category": "United Kingdom", "rule": { "type": "countryComplete", "country": "gb" } },
+
+  { "id": "in-12", "icon": "🕌", "title": "Subcontinent Sprint", "desc": "Visit 12 Indian states & UTs", "category": "India", "rule": { "type": "countryVisited", "country": "in", "min": 12 } },
+  { "id": "in-24", "icon": "🚂", "title": "Monsoon Miles", "desc": "Visit 24 Indian states & UTs", "category": "India", "rule": { "type": "countryVisited", "country": "in", "min": 24 } },
+  { "id": "in-complete", "icon": "🇮🇳", "title": "India Complete", "desc": "Visit all Indian states & UTs", "category": "India", "rule": { "type": "countryComplete", "country": "in" } },
+
+  { "id": "nz-5", "icon": "🥝", "title": "Kiwi Kickoff", "desc": "Visit 5 New Zealand regions", "category": "New Zealand", "rule": { "type": "countryVisited", "country": "nz", "min": 5 } },
+  { "id": "nz-10", "icon": "⛰️", "title": "Aotearoa Adventurer", "desc": "Visit 10 New Zealand regions", "category": "New Zealand", "rule": { "type": "countryVisited", "country": "nz", "min": 10 } },
+  { "id": "nz-complete", "icon": "🇳🇿", "title": "Aotearoa Complete", "desc": "Visit all New Zealand regions", "category": "New Zealand", "rule": { "type": "countryComplete", "country": "nz" } },
+
+  { "id": "country-specialist-triple", "icon": "🧳", "title": "Triple Specialist", "desc": "Fully complete 3 country maps", "category": "Country Specialist", "rule": { "type": "countriesComplete", "min": 3 } },
+  { "id": "country-specialist-legend", "icon": "🗺️", "title": "Country Specialist Legend", "desc": "Fully complete 6 country maps", "category": "Country Specialist", "rule": { "type": "countriesComplete", "min": 6 } },
+
   { "id": "collect-5", "icon": "🎖️", "title": "Badge Collector", "desc": "Unlock 5 achievements", "category": "Collector", "rule": { "type": "achievementsUnlocked", "min": 5 } },
   { "id": "collect-15", "icon": "🏅", "title": "Trophy Case", "desc": "Unlock 15 achievements", "category": "Collector", "rule": { "type": "achievementsUnlocked", "min": 15 } },
   { "id": "collect-30", "icon": "🎪", "title": "Achievement Hunter", "desc": "Unlock 30 achievements", "category": "Collector", "rule": { "type": "achievementsUnlocked", "min": 30 } },
