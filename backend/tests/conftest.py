@@ -4,6 +4,9 @@ import os
 # Make the backend/ directory importable
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# Set required env vars before importing the app
+os.environ.setdefault("ENCRYPTION_MASTER_KEY", "a" * 64)  # 32-byte hex key for tests
+
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timedelta, timezone
 
