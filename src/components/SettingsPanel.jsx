@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import DataExport from './DataExport';
+import DataImport from './DataImport';
 import './SettingsPanel.css';
 
 const APP_VERSION = '1.0.0';
 
 export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, onOpenAdmin }) {
   const { dark, toggle: toggleTheme } = useTheme();
+  const [dataSection, setDataSection] = useState(null); // null | 'export' | 'import'
 
   return (
     <div className="settings-panel">
@@ -42,8 +46,40 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
               <div className="settings-row-divider" />
             </>
           )}
+          <button
+            className="settings-row settings-row-btn"
+            onClick={() => setDataSection(dataSection === 'export' ? null : 'export')}
+          >
+            <div className="settings-row-left">
+              <span className="settings-row-icon">⬇</span>
+              <span className="settings-row-title">Export Data</span>
+            </div>
+            <span className="settings-row-chevron">{dataSection === 'export' ? '∨' : '›'}</span>
+          </button>
+          {dataSection === 'export' && (
+            <div className="settings-inline-panel">
+              <DataExport />
+            </div>
+          )}
+          <div className="settings-row-divider" />
+          <button
+            className="settings-row settings-row-btn"
+            onClick={() => setDataSection(dataSection === 'import' ? null : 'import')}
+          >
+            <div className="settings-row-left">
+              <span className="settings-row-icon">⬆</span>
+              <span className="settings-row-title">Import Data</span>
+            </div>
+            <span className="settings-row-chevron">{dataSection === 'import' ? '∨' : '›'}</span>
+          </button>
+          {dataSection === 'import' && (
+            <div className="settings-inline-panel">
+              <DataImport onImportComplete={() => setDataSection(null)} />
+            </div>
+          )}
           {onReset && (
             <>
+              <div className="settings-row-divider" />
               <button className="settings-row settings-row-btn settings-row-danger" onClick={onReset}>
                 <div className="settings-row-left">
                   <span className="settings-row-icon">🗑️</span>
@@ -51,17 +87,19 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
                 </div>
                 <span className="settings-row-chevron">›</span>
               </button>
-              <div className="settings-row-divider" />
             </>
           )}
           {onResetAll && (
-            <button className="settings-row settings-row-btn settings-row-danger" onClick={onResetAll}>
-              <div className="settings-row-left">
-                <span className="settings-row-icon">🗑️</span>
-                <span className="settings-row-title">Reset Everything</span>
-              </div>
-              <span className="settings-row-chevron">›</span>
-            </button>
+            <>
+              <div className="settings-row-divider" />
+              <button className="settings-row settings-row-btn settings-row-danger" onClick={onResetAll}>
+                <div className="settings-row-left">
+                  <span className="settings-row-icon">🗑️</span>
+                  <span className="settings-row-title">Reset Everything</span>
+                </div>
+                <span className="settings-row-chevron">›</span>
+              </button>
+            </>
           )}
         </div>
       </div>

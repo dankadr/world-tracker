@@ -1,0 +1,92 @@
+.install-prompt {
+  position: fixed;
+  bottom: calc(var(--tab-bar-safe-height, 80px) + 12px);
+  left: 12px;
+  right: 12px;
+  z-index: 9998;
+  animation: slideUp 0.3s ease-out;
+}
+
+.install-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.95));
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.1));
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(12px);
+}
+
+.install-prompt-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.install-prompt-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.install-prompt-text strong {
+  font-size: 0.9rem;
+  color: var(--text-primary, #1a1a1a);
+  font-weight: 600;
+}
+
+.install-prompt-text span {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #666);
+}
+
+.install-prompt-btn {
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.install-prompt-btn:hover {
+  opacity: 0.8;
+}
+
+.install-prompt-install {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #c07a30;
+  color: #fff;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.install-prompt-dismiss {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary, #888);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dark .install-prompt-content {
+  background: rgba(30, 30, 40, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
