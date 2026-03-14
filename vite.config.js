@@ -70,6 +70,12 @@ export default defineConfig({
     // before initialization"). Terser emits `var` for module-level bindings
     // and does not have this problem.
     minify: 'terser',
+    terserOptions: {
+      // Disable compression transforms — only mangle names.
+      // Compression passes (inline, sequences, etc.) can introduce TDZ by
+      // reordering `const` declarations in ways Firefox rejects.
+      compress: false,
+    },
     rollupOptions: {
       output: {
         // Also keep Rollup-generated bindings as `var` (belt-and-suspenders).
