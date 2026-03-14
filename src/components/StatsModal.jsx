@@ -17,6 +17,48 @@ import { useFriends } from '../context/FriendsContext';
 const INHABITED_CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 const TOTAL_WORLD_COUNTRIES = worldData.features.length;
 
+function PeopleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function ExpandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M15 3h6v6" />
+      <path d="M9 21H3v-6" />
+      <path d="M21 3l-7 7" />
+      <path d="M3 21l7-7" />
+    </svg>
+  );
+}
+
+function MinimizeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 3H3v5" />
+      <path d="M16 21h5v-5" />
+      <path d="M3 3l7 7" />
+      <path d="M21 21l-7-7" />
+    </svg>
+  );
+}
+
 function storagePrefix(userId) {
   return userId ? `swiss-tracker-u${userId}-` : 'swiss-tracker-';
 }
@@ -311,7 +353,7 @@ function computeCapitalSuperlatives(userId) {
   };
 }
 
-export default function StatsModal({ onClose }) {
+export default function StatsModal({ onClose, embedded = false, hideHeader = false }) {
   const { user, isLoggedIn } = useAuth();
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
@@ -337,17 +379,24 @@ export default function StatsModal({ onClose }) {
   const capStats = computeCapitalSuperlatives(userId);
 
   if (yirYear) {
-    return <YearInReview year={yirYear} onClose={() => setYirYear(null)} />;
+    return <YearInReview year={yirYear} onClose={() => setYirYear(null)} embedded={embedded} />;
   }
 
-  return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" ref={handleRef} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header" {...dragHandlers}>
-          <div className="drag-handle" />
-          <h2>Your Travel Statistics</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
-        </div>
+  const content = (
+      <div
+        className={`modal-content${embedded ? ' stats-embedded-content' : ''}`}
+        ref={handleRef}
+        onClick={(e) => {
+          if (!embedded) e.stopPropagation();
+        }}
+      >
+        {!hideHeader && (
+          <div className="modal-header" {...(embedded ? {} : dragHandlers)}>
+            {!embedded && <div className="drag-handle" />}
+            <h2>Your Travel Statistics</h2>
+            <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
+          </div>
+        )}
 
         {availableYears.length > 0 && (
           <div className="yir-button-row">
@@ -355,7 +404,7 @@ export default function StatsModal({ onClose }) {
               className="yir-trigger-btn"
               onClick={() => setYirYear(availableYears[0])}
             >
-              🎉 Year in Review
+              Year in Review
             </button>
             {availableYears.length > 1 && (
               <select
@@ -531,7 +580,7 @@ export default function StatsModal({ onClose }) {
             <div className="geo-grid" style={{ marginTop: '12px' }}>
               {areaPopStats.largest && (
                 <div className="geo-card">
-                  <span className="geo-card-icon">📐</span>
+                  <span className="geo-card-icon"><ExpandIcon /></span>
                   <span className="geo-card-label">Largest visited</span>
                   <span className="geo-card-value">{areaPopStats.largest.name}</span>
                   <span className="geo-card-sub">{areaPopStats.largest.area.toLocaleString()} km²</span>
@@ -539,7 +588,7 @@ export default function StatsModal({ onClose }) {
               )}
               {areaPopStats.smallest && (
                 <div className="geo-card">
-                  <span className="geo-card-icon">🔬</span>
+                  <span className="geo-card-icon"><MinimizeIcon /></span>
                   <span className="geo-card-label">Smallest visited</span>
                   <span className="geo-card-value">{areaPopStats.smallest.name}</span>
                   <span className="geo-card-sub">{areaPopStats.smallest.area.toLocaleString()} km²</span>
@@ -547,7 +596,7 @@ export default function StatsModal({ onClose }) {
               )}
               {areaPopStats.mostPopulous && (
                 <div className="geo-card">
-                  <span className="geo-card-icon">👥</span>
+                  <span className="geo-card-icon"><PeopleIcon /></span>
                   <span className="geo-card-label">Most populous</span>
                   <span className="geo-card-value">{areaPopStats.mostPopulous.name}</span>
                   <span className="geo-card-sub">{(areaPopStats.mostPopulous.pop / 1e6).toFixed(1)}M people</span>
@@ -555,7 +604,7 @@ export default function StatsModal({ onClose }) {
               )}
               {areaPopStats.leastPopulous && (
                 <div className="geo-card">
-                  <span className="geo-card-icon">👤</span>
+                  <span className="geo-card-icon"><PersonIcon /></span>
                   <span className="geo-card-label">Least populous</span>
                   <span className="geo-card-value">{areaPopStats.leastPopulous.name}</span>
                   <span className="geo-card-sub">{areaPopStats.leastPopulous.pop.toLocaleString()} people</span>
@@ -668,6 +717,15 @@ export default function StatsModal({ onClose }) {
 
         {isLoggedIn && <FriendsCompare worldVisited={worldStats.visitedCount} />}
       </div>
+  );
+
+  if (embedded) {
+    return <div className="stats-embedded">{content}</div>;
+  }
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      {content}
     </div>,
     document.body
   );

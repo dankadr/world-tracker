@@ -1,0 +1,276 @@
+<h2>Achievement detail — final design</h2>
+<p class="subtitle">Two scenarios: a tracker achievement (has list) and an aggregate achievement (no list)</p>
+
+<style>
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+  .phone {
+    background: #0a1628;
+    border-radius: 16px;
+    padding: 14px 12px;
+    border: 1px solid rgba(201,168,76,0.18);
+  }
+  .phone-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(201,168,76,0.6);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  /* Achievement grid */
+  .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+  /* Normal badge */
+  .badge {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 10px 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+  .badge.unlocked {
+    background: rgba(201,168,76,0.08);
+    border-color: rgba(201,168,76,0.25);
+  }
+  .badge-icon { font-size: 18px; line-height: 1; }
+  .badge-title { font-size: 9px; font-weight: 700; color: #fff; text-align: center; }
+  .badge-desc { font-size: 7px; color: rgba(255,255,255,0.4); text-align: center; line-height: 1.3; }
+  .badge-prog { font-size: 7px; color: #c9a84c; margin-top: 2px; }
+
+  /* Expanded badge — full width */
+  .badge-expanded {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(201,168,76,0.11), rgba(201,168,76,0.04));
+    border: 1.5px solid rgba(201,168,76,0.38);
+    border-radius: 12px;
+    padding: 13px;
+    position: relative;
+  }
+
+  .exp-close {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.25);
+    cursor: pointer;
+  }
+
+  .exp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .exp-icon { font-size: 28px; line-height: 1; }
+  .exp-title { font-size: 13px; font-weight: 800; color: #fff; }
+  .exp-desc { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .exp-status { font-size: 9px; margin-top: 3px; padding: 2px 7px; border-radius: 20px; display: inline-block; }
+  .exp-status.unlocked { background: rgba(100,200,120,0.15); color: #6dc882; border: 1px solid rgba(100,200,120,0.25); }
+  .exp-status.inprog { background: rgba(201,168,76,0.12); color: #c9a84c; border: 1px solid rgba(201,168,76,0.25); }
+
+  /* Progress bar */
+  .bar-wrap { margin-bottom: 10px; }
+  .bar-track { background: rgba(255,255,255,0.08); height: 6px; border-radius: 3px; overflow: hidden; }
+  .bar-fill { background: linear-gradient(90deg, #c9a84c, #d4b866); height: 100%; border-radius: 3px; }
+  .bar-label { font-size: 10px; color: #c9a84c; margin-top: 4px; font-weight: 600; }
+
+  /* Section headers */
+  .sec-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 700;
+    margin: 8px 0 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .sec-count {
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1px 5px;
+    color: rgba(255,255,255,0.4);
+    font-size: 8px;
+  }
+
+  /* Region chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; max-height: 52px; overflow: hidden; position: relative; }
+  .chips.scrollable { max-height: 52px; overflow-y: auto; }
+  .chip {
+    font-size: 8px;
+    padding: 3px 7px;
+    border-radius: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .chip.visited {
+    background: rgba(80,180,100,0.12);
+    color: #6dc882;
+    border: 1px solid rgba(80,180,100,0.2);
+  }
+  .chip.remaining {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .chip.more {
+    background: transparent;
+    color: rgba(255,255,255,0.25);
+    border: 1px dashed rgba(255,255,255,0.1);
+  }
+
+  /* No-list context hint */
+  .hint-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  .scenario-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 6px;
+    text-align: center;
+  }
+</style>
+
+<div class="two-col">
+
+  <!-- Scenario 1: tracker achievement with list -->
+  <div>
+    <div class="scenario-title">Tracker achievement</div>
+    <div class="phone">
+      <div class="phone-label">Badges · Switzerland</div>
+      <div class="badge-grid">
+
+        <div class="badge unlocked">
+          <span class="badge-icon">🧀</span>
+          <span class="badge-title">Swiss Start</span>
+          <span class="badge-prog">✓</span>
+        </div>
+
+        <!-- Expanded: Swiss Complete, in progress -->
+        <div class="badge-expanded">
+          <span class="exp-close">✕</span>
+          <div class="exp-header">
+            <span class="exp-icon">🇨🇭</span>
+            <div>
+              <div class="exp-title">Swiss Complete</div>
+              <div class="exp-desc">Visit all 26 Swiss cantons</div>
+              <span class="exp-status inprog">In progress</span>
+            </div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-track"><div class="bar-fill" style="width:62%;"></div></div>
+            <div class="bar-label">16 / 26 cantons · 10 to go</div>
+          </div>
+          <div class="sec-label">Visited <span class="sec-count">16</span></div>
+          <div class="chips">
+            <span class="chip visited">Zürich</span>
+            <span class="chip visited">Bern</span>
+            <span class="chip visited">Geneva</span>
+            <span class="chip visited">Basel-Stadt</span>
+            <span class="chip visited">Vaud</span>
+            <span class="chip visited">Valais</span>
+            <span class="chip more">+10 more</span>
+          </div>
+          <div class="sec-label">Still needed <span class="sec-count">10</span></div>
+          <div class="chips">
+            <span class="chip remaining">Appenzell IR</span>
+            <span class="chip remaining">Glarus</span>
+            <span class="chip remaining">Uri</span>
+            <span class="chip remaining">Obwalden</span>
+            <span class="chip remaining">Nidwalden</span>
+            <span class="chip remaining">Schaffhausen</span>
+            <span class="chip more">+4 more</span>
+          </div>
+        </div>
+
+        <div class="badge">
+          <span class="badge-icon" style="opacity:0.35;">⛰️</span>
+          <span class="badge-title" style="color:rgba(255,255,255,0.3);">Alpine Explorer</span>
+          <span class="badge-prog" style="color:rgba(255,255,255,0.2);">10/13</span>
+        </div>
+        <div class="badge">
+          <span class="badge-icon" style="opacity:0.35;">🏔️</span>
+          <span class="badge-title" style="color:rgba(255,255,255,0.3);">Swiss Pro</span>
+          <span class="badge-prog" style="color:rgba(255,255,255,0.2);">10/20</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenario 2: aggregate achievement (no list) -->
+  <div>
+    <div class="scenario-title">Aggregate achievement</div>
+    <div class="phone">
+      <div class="phone-label">Badges · General</div>
+      <div class="badge-grid">
+
+        <div class="badge unlocked">
+          <span class="badge-icon">👣</span>
+          <span class="badge-title">First Steps</span>
+          <span class="badge-prog">✓</span>
+        </div>
+
+        <!-- Expanded: Explorer (totalVisited) -->
+        <div class="badge-expanded">
+          <span class="exp-close">✕</span>
+          <div class="exp-header">
+            <span class="exp-icon">🧭</span>
+            <div>
+              <div class="exp-title">Explorer</div>
+              <div class="exp-desc">Visit 25 regions total</div>
+              <span class="exp-status inprog">In progress</span>
+            </div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-track"><div class="bar-fill" style="width:72%;"></div></div>
+            <div class="bar-label">18 / 25 regions · 7 to go</div>
+          </div>
+          <div class="hint-box">
+            Any region in any tracker counts.<br/>Keep exploring to unlock this badge.
+          </div>
+        </div>
+
+        <div class="badge">
+          <span class="badge-icon" style="opacity:0.35;">🎒</span>
+          <span class="badge-title" style="color:rgba(255,255,255,0.3);">Adventurer</span>
+          <span class="badge-prog" style="color:rgba(255,255,255,0.2);">18/50</span>
+        </div>
+        <div class="badge">
+          <span class="badge-icon" style="opacity:0.35;">💯</span>
+          <span class="badge-title" style="color:rgba(255,255,255,0.3);">Centurion</span>
+          <span class="badge-prog" style="color:rgba(255,255,255,0.2);">18/100</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>Details</h3>
+  <ul>
+    <li><strong>Tap badge → expands</strong>, collapses on second tap (or ✕ button)</li>
+    <li><strong>Only one badge expanded at a time</strong> — tapping a second collapses the first</li>
+    <li><strong>Chip overflow</strong>: "+N more" chip shown when list is truncated (chips wrap up to ~2 rows)</li>
+    <li><strong>Aggregate achievements</strong> (totalVisited, totalPercent, achievementsUnlocked, gameCompleted): show progress + context hint, no chip list</li>
+    <li><strong>Region names</strong>: resolved from <code>feature.properties.name</code> in each tracker's GeoJSON</li>
+  </ul>
+</div>

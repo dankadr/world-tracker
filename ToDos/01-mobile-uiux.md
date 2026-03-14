@@ -52,25 +52,25 @@ Transform the current mobile web experience from "responsive desktop adapted for
 ## Sub-tasks
 
 ### Phase 1: Foundation (Priority)
-- [ ] Implement `BottomTabBar.jsx` — 4 persistent tabs with active indicator animation
-- [ ] Implement `NavigationStack.jsx` + context — push/pop screen stack with slide transitions
-- [ ] Implement `Screen.jsx` — wrapper with back button + left-edge swipe gesture
-- [ ] Refactor `App.jsx` to render tab bar + navigation stack on mobile (keep desktop sidebar)
-- [ ] Add safe-area-inset CSS variables throughout
+- [x] Implement `BottomTabBar.jsx` — 4 persistent tabs with active indicator animation
+- [x] Implement `NavigationStack.jsx` + context — push/pop screen stack with slide transitions
+- [x] Implement `Screen.jsx` — wrapper with back button + left-edge swipe gesture
+- [x] Refactor `App.jsx` to render tab bar + navigation stack on mobile (keep desktop sidebar)
+- [x] Add safe-area-inset CSS variables throughout
 
 ### Phase 2: Screen Conversions
-- [ ] Create `ExploreScreen.jsx` — full-screen region/country list with search, replaces sidebar content
-- [ ] Create `SocialScreen.jsx` — Friends + Challenges tabs, replaces FriendsPanel modal
-- [ ] Create `ProfileScreen.jsx` — avatar, achievements, stats, XP/level, settings
-- [ ] Convert `ChallengeDetailModal` → `ChallengeScreen.jsx` (push screen, not modal)
-- [ ] Convert Stats, BucketList, YearInReview to push screens on mobile
+- [x] Create `ExploreScreen.jsx` — full-screen region/country list with search, replaces sidebar content
+- [x] Create `SocialScreen.jsx` — Friends + Challenges tabs, replaces FriendsPanel modal
+- [x] Create `ProfileScreen.jsx` — avatar, achievements, stats, XP/level, settings
+- [x] Convert `ChallengeDetailModal` → `ChallengeScreen.jsx` (push screen, not modal)
+- [x] Convert Stats, BucketList, YearInReview to push screens on mobile
 
 ### Phase 3: Polish
 - [ ] Add spring physics to all remaining transitions
-- [ ] Add haptic feedback (Vibration API) on visit toggles, achievement unlocks, level ups
+- [x] Add haptic feedback (Vibration API) on visit toggles, achievement unlocks, level ups
 - [ ] Implement skeleton loading screens for async data
-- [ ] Add pull-to-refresh on Social & Explore screens
-- [ ] Large title headers with scroll-to-shrink animation
+- [x] Add pull-to-refresh on Social & Explore screens
+- [x] Large title headers with scroll-to-shrink animation
 - [ ] Touch feedback (scale 0.97 on press, spring bounce-back on release) for all tappable elements
 - [ ] Rubber-band overscroll on all list containers
 - [ ] Test & fix all edge cases on iOS Safari and Android Chrome

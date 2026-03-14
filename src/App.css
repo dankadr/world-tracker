@@ -1719,6 +1719,18 @@ body {
   box-shadow: var(--glass-specular-strong), var(--glass-shadow-elevated);
 }
 
+.stats-embedded {
+  width: 100%;
+}
+
+.stats-embedded-content.modal-content {
+  max-width: none;
+  max-height: none;
+  border-radius: 14px;
+  box-shadow: none;
+  border-color: var(--glass-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -1934,6 +1946,12 @@ body {
   font-size: 1rem;
   color: var(--text-muted);
   line-height: 1;
+}
+
+.geo-card-icon svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
 }
 
 .geo-card-label {
@@ -4126,7 +4144,14 @@ body {
 }
 
 .back-to-world-icon {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-to-world-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 [data-theme="dark"] .back-to-world-btn {
@@ -4715,6 +4740,30 @@ body {
 }
 
 /* ======== Tab Screen Panels ======== */
+
+@media (hover: none) and (pointer: coarse) {
+  .ios-touch-feedback {
+    transform: translateZ(0);
+    transition-duration: 300ms !important;
+    transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1) !important;
+    will-change: transform;
+  }
+
+  .ios-touch-feedback:active {
+    transform: scale(0.97);
+    transition-duration: 100ms !important;
+    transition-timing-function: ease-out !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-touch-feedback,
+  .ios-touch-feedback:active {
+    transform: none !important;
+    transition-duration: 0ms !important;
+    animation: none !important;
+  }
+}
 
 .tab-screen {
   position: fixed;
