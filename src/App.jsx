@@ -161,7 +161,7 @@ export default function App() {
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
-  const { token, isLoggedIn, user } = useAuth();
+  const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
   const { activeTab, switchTab, push, pop } = useNavigation();
@@ -170,7 +170,7 @@ export default function App() {
   const country = applyColors(rawCountry);
   const { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading: regionsLoading } = useVisitedRegions(countryId);
   const { visited: worldVisited, toggleCountry: toggleWorldCountry, isLoading: worldLoading } = useVisitedCountries();
-  const isDataLoading = regionsLoading || worldLoading;
+  const isDataLoading = regionsLoading || worldLoading || isSyncingLocalData;
   const { grantXpOnce, revokeXpIfGranted, XP_RULES: xpRules } = useXp();
   const {
     items: bucketListItems,

@@ -131,7 +131,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
           <div style={{
             textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
             color: isCorrect ? '#22c55e' : '#ef4444',
-          }}>
+          }} data-testid="shape-quiz-feedback">
             {isCorrect ? '✓ Correct!' : `✗ ${question.name}`}
           </div>
         )}

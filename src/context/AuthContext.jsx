@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { syncLocalDataToServer } from '../utils/syncLocalData';
 import { cacheInvalidatePrefix } from '../utils/cache';
 import { clearBatch } from '../utils/batchQueue';
@@ -47,9 +47,28 @@ function saveAuth(data) {
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadAuth());
   const [loading, setLoading] = useState(false);
+  const [isSyncingLocalData, setIsSyncingLocalData] = useState(false);
+  const syncRunRef = useRef(0);
+  const didRunInitialSyncRef = useRef(false);
+
+  const runLocalDataSync = useCallback(async (token, userId) => {
+    if (!token || !userId) return false;
+
+    const runId = ++syncRunRef.current;
+    setIsSyncingLocalData(true);
+    try {
+      return await syncLocalDataToServer(token, userId);
+    } finally {
+      if (syncRunRef.current === runId) {
+        setIsSyncingLocalData(false);
+      }
+    }
+  }, [syncRunRef]);
 
   // On mount, if already logged in, check for any leftover anonymous data
   useEffect(() => {
+    if (didRunInitialSyncRef.current) return;
+    didRunInitialSyncRef.current = true;
     if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
       (async () => {
         try {
@@ -59,10 +78,10 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.error('[auth] key derivation failed on mount:', e);
         }
-        syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
+        await runLocalDataSync(auth.jwt_token, auth.user.id);
       })();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [auth?.jwt_token, auth?.user?.id, auth?.user?.sub, runLocalDataSync]);
 
   const login = useCallback(async (googleToken) => {
     setLoading(true);
@@ -77,10 +96,9 @@ export function AuthProvider({ children }) {
         throw new Error(err.detail || 'Login failed');
       }
       const data = await res.json();
-      setAuth(data);
-      saveAuth(data);
 
-      // Derive encryption key and warm the cache BEFORE syncing
+      // Derive encryption key and finish anonymous-data migration before
+      // switching the app into authenticated mode.
       if (data.jwt_token && data.user?.id && data.user?.sub) {
         try {
           const key = await deriveKey(data.user.sub);
@@ -89,17 +107,22 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.error('[auth] key derivation failed on login:', e);
         }
-        syncLocalDataToServer(data.jwt_token, data.user.id).catch(() => {});
+        await runLocalDataSync(data.jwt_token, data.user.id);
       }
+
+      setAuth(data);
+      saveAuth(data);
     } catch (err) {
       console.error('Login error:', err);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [runLocalDataSync]);
 
   const logout = useCallback(() => {
+    syncRunRef.current += 1;
+    setIsSyncingLocalData(false);
     clearActiveKey(); // wipe encryption key and decrypted data cache
     // Drop any queued writes so they don't fire with a stale token after logout
     clearBatch();
@@ -120,6 +143,7 @@ export function AuthProvider({ children }) {
     user: auth?.user || null,
     token: auth?.jwt_token || null,
     isLoggedIn: !!auth?.jwt_token,
+    isSyncingLocalData,
     loading,
     login,
     logout,

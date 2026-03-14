@@ -155,14 +155,14 @@ function initFromCache(countryId, token, userId) {
 }
 
 export default function useVisitedRegions(countryId) {
-  const { token, isLoggedIn, user } = useAuth();
+  const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const initial = initFromCache(countryId, token, userId);
   const [visited, setVisited] = useState(() => initial.visited);
   const [dates, setDatesState] = useState(() => initial.dates);
   const [notes, setNotesState] = useState(() => initial.notes);
   const [wishlist, setWishlist] = useState(() => initial.wishlist);
-  const [isLoading, setIsLoading] = useState(() => initial.visited.size === 0 && isLoggedIn);
+  const [isLoading, setIsLoading] = useState(() => (initial.visited.size === 0 && isLoggedIn) || isSyncingLocalData);
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
@@ -197,6 +197,11 @@ export default function useVisitedRegions(countryId) {
       setWishlist(new Set());
     }
   }
+
+  useEffect(() => {
+    const nextInitial = initFromCache(countryId, token, userId);
+    setIsLoading(isSyncingLocalData || (nextInitial.visited.size === 0 && isLoggedIn));
+  }, [countryId, isLoggedIn, isSyncingLocalData, token, userId]);
 
   // Debounced save: batches rapid PUT calls into a single request
   const debouncedSaveRemote = useCallback(
@@ -238,7 +243,7 @@ export default function useVisitedRegions(countryId) {
 
   // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
     let cancelled = false;
 
     fetchAllVisited(token).then((bulk) => {
@@ -293,7 +298,7 @@ export default function useVisitedRegions(countryId) {
     });
 
     return () => { cancelled = true; };
-  }, [countryId, isLoggedIn, token, userId]);
+  }, [countryId, isLoggedIn, isSyncingLocalData, token, userId]);
 
   // On logout, reset to empty so no data leaks between users
   useEffect(() => {
@@ -308,7 +313,7 @@ export default function useVisitedRegions(countryId) {
 
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
 
     const refetch = () => {
       // Only refetch if cache has expired — avoids a DB read on every tab switch
@@ -348,7 +353,7 @@ export default function useVisitedRegions(countryId) {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
     };
-  }, [countryId, isLoggedIn, token, userId]);
+  }, [countryId, isLoggedIn, isSyncingLocalData, token, userId]);
 
   const toggle = useCallback(
     (regionId) => {
@@ -373,14 +378,14 @@ export default function useVisitedRegions(countryId) {
           action = 'add';
         }
         saveLocal(countryId, next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           addToBatch('region_toggle', { country_id: countryId, region: regionId, action }, token);
         }
         emitVisitedChange();
         return next;
       });
     },
-    [countryId, isLoggedIn, token, userId]
+    [countryId, isLoggedIn, isSyncingLocalData, token, userId]
   );
 
   const setDate = useCallback(
@@ -393,13 +398,13 @@ export default function useVisitedRegions(countryId) {
           delete next[regionId];
         }
         saveDates(countryId, next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           debouncedSaveRemote(countryId, visitedRef.current, token, next, notesRef.current, wishlistRef.current);
         }
         return next;
       });
     },
-    [countryId, userId, isLoggedIn, token, debouncedSaveRemote]
+    [countryId, userId, isLoggedIn, isSyncingLocalData, token, debouncedSaveRemote]
   );
 
   const setNote = useCallback(
@@ -412,13 +417,13 @@ export default function useVisitedRegions(countryId) {
           delete next[regionId];
         }
         saveNotes(countryId, next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           debouncedSaveRemote(countryId, visitedRef.current, token, datesRef.current, next, wishlistRef.current);
         }
         return next;
       });
     },
-    [countryId, userId, isLoggedIn, token, debouncedSaveRemote]
+    [countryId, userId, isLoggedIn, isSyncingLocalData, token, debouncedSaveRemote]
   );
 
   const reset = useCallback(() => {
@@ -428,7 +433,7 @@ export default function useVisitedRegions(countryId) {
     saveDates(countryId, {}, userId);
     saveNotes(countryId, {}, userId);
     saveWishlist(countryId, emptyWishlist, userId);
-    if (isLoggedIn && token) {
+    if (isLoggedIn && token && !isSyncingLocalData) {
       saveVisitedRemote(countryId, empty, token, {}, {}, emptyWishlist);
     }
     setVisited(empty);
@@ -436,7 +441,7 @@ export default function useVisitedRegions(countryId) {
     setNotesState({});
     setWishlist(emptyWishlist);
     emitVisitedChange();
-  }, [countryId, isLoggedIn, token, userId]);
+  }, [countryId, isLoggedIn, isSyncingLocalData, token, userId]);
 
   const toggleWishlist = useCallback(
     (regionId) => {
@@ -451,13 +456,13 @@ export default function useVisitedRegions(countryId) {
           action = 'add';
         }
         saveWishlist(countryId, next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           toggleWishlistRemote(countryId, regionId, action, token);
         }
         return next;
       });
     },
-    [countryId, userId, isLoggedIn, token]
+    [countryId, userId, isLoggedIn, isSyncingLocalData, token]
   );
 
   const resetAll = useCallback(() => {
@@ -469,7 +474,7 @@ export default function useVisitedRegions(countryId) {
       saveNotes(c.id, {}, userId);
       saveWishlist(c.id, emptyWishlist, userId);
     }
-    if (isLoggedIn && token) {
+    if (isLoggedIn && token && !isSyncingLocalData) {
       deleteAllVisited(token);
       invalidateBulkCache(token);
     }
@@ -478,7 +483,7 @@ export default function useVisitedRegions(countryId) {
     setNotesState({});
     setWishlist(emptyWishlist);
     emitVisitedChange();
-  }, [isLoggedIn, token, userId]);
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   return { visited, toggle, reset, resetAll, dates, setDate, notes, setNote, wishlist, toggleWishlist, isLoading };
 }

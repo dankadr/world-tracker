@@ -46,10 +46,33 @@ const CONTINENT_FILTER_KEYS = {
   oceania: 'Oceania',
 };
 
+function collectCoords(coords, out) {
+  if (typeof coords?.[0] === 'number') {
+    out.push(coords);
+    return;
+  }
+  coords?.forEach((part) => collectCoords(part, out));
+}
+
+function isReasonablyClickable(feature) {
+  const pts = [];
+  collectCoords(feature.geometry?.coordinates, pts);
+  if (pts.length === 0) return false;
+  const lngs = pts.map((p) => p[0]);
+  const lats = pts.map((p) => p[1]);
+  const width = Math.max(...lngs) - Math.min(...lngs);
+  const height = Math.max(...lats) - Math.min(...lats);
+
+  // Tiny islands and very thin territories are poor fit for a click-the-country mode.
+  // Keep them in text-based quizzes, but exclude them from the map-click quiz.
+  return width >= 1 && height >= 1;
+}
+
 function buildPool(filter, worldVisited) {
   return worldData.features
     .filter(f => {
       const id = f.properties.id;
+      if (!isReasonablyClickable(f)) return false;
       if (filter === 'visited') return worldVisited.has(id);
       if (filter === 'unvisited') return !worldVisited.has(id);
       if (CONTINENT_FILTER_KEYS[filter]) return continentMap[id] === CONTINENT_FILTER_KEYS[filter];
