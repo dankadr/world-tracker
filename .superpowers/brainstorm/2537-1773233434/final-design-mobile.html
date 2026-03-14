@@ -1,0 +1,317 @@
+<h2>Achievement detail — mobile-optimised</h2>
+<p class="subtitle">375px viewport · 44px+ touch targets · 12px+ chip text · touch-action: manipulation</p>
+
+<style>
+  body { background: #070f1c; }
+
+  .phone-frame {
+    width: 375px;
+    margin: 0 auto;
+    background: #0a1628;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.18);
+    overflow: hidden;
+    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  }
+
+  /* Screen header */
+  .screen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    background: rgba(5,14,24,0.9);
+    backdrop-filter: blur(16px);
+  }
+  .screen-title { font-size: 17px; font-weight: 700; color: #fff; }
+  .screen-sub { font-size: 12px; color: rgba(201,168,76,0.7); }
+
+  .screen-body { padding: 14px; }
+
+  /* Category heading */
+  .cat-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 0 10px;
+  }
+  .cat-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 0.3px; }
+  .cat-count { font-size: 11px; color: rgba(201,168,76,0.6); }
+
+  /* Achievement grid */
+  .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* Normal badge — min 56px tall for comfortable touch */
+  .badge {
+    min-height: 56px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    touch-action: manipulation;  /* removes 300ms tap delay */
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .badge.unlocked {
+    background: rgba(201,168,76,0.08);
+    border-color: rgba(201,168,76,0.3);
+  }
+  .badge.inprog {
+    background: rgba(201,168,76,0.04);
+    border-color: rgba(201,168,76,0.18);
+  }
+  .badge-icon { font-size: 22px; line-height: 1; }
+  .badge-title { font-size: 11px; font-weight: 700; color: #fff; text-align: center; line-height: 1.25; }
+  .badge-prog { font-size: 11px; color: #c9a84c; font-weight: 600; margin-top: 1px; }
+  .badge-prog.done { color: #6dc882; }
+
+  /* Expanded badge — full width */
+  .badge-expanded {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.04));
+    border: 1.5px solid rgba(201,168,76,0.4);
+    border-radius: 14px;
+    padding: 16px;
+    position: relative;
+  }
+
+  /* ✕ close — 44x44 touch target */
+  .exp-close {
+    position: absolute;
+    top: 0; right: 0;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    touch-action: manipulation;
+    border-radius: 0 14px 0 14px;
+  }
+
+  .exp-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; padding-right: 36px; }
+  .exp-icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+  .exp-title { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.2; }
+  .exp-desc { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.4; }
+  .exp-pill {
+    display: inline-block; margin-top: 6px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .exp-pill.inprog { background: rgba(201,168,76,0.12); color: #c9a84c; border: 1px solid rgba(201,168,76,0.25); }
+  .exp-pill.done { background: rgba(80,180,100,0.12); color: #6dc882; border: 1px solid rgba(80,180,100,0.25); }
+
+  /* Progress bar */
+  .bar-wrap { margin-bottom: 14px; }
+  .bar-track { background: rgba(255,255,255,0.08); height: 7px; border-radius: 4px; overflow: hidden; }
+  .bar-fill { background: linear-gradient(90deg, #c9a84c, #d4b866); height: 100%; border-radius: 4px; }
+  .bar-label { font-size: 12px; color: #c9a84c; margin-top: 5px; font-weight: 600; }
+
+  /* Section divider */
+  .sec-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 700;
+    margin: 12px 0 7px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sec-count {
+    background: rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* Chips — informational, not tappable, 28px min height for readability */
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    overflow: hidden;
+  }
+  .chip {
+    min-height: 28px;
+    display: flex; align-items: center;
+    font-size: 12px; font-weight: 500;
+    padding: 0 10px;
+    border-radius: 20px;
+    line-height: 1;
+  }
+  .chip.visited {
+    background: rgba(80,180,100,0.12);
+    color: #7dd89a;
+    border: 1px solid rgba(80,180,100,0.22);
+  }
+  .chip.remaining {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .chip.more {
+    background: transparent;
+    color: rgba(255,255,255,0.25);
+    border: 1px dashed rgba(255,255,255,0.12);
+  }
+
+  /* No-list hint */
+  .hint-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  /* Annotations */
+  .annotations { width: 375px; margin: 16px auto 0; }
+  .ann { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+  .ann-badge { background: rgba(201,168,76,0.15); color: #c9a84c; border-radius: 6px; padding: 2px 6px; font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .ann-text { color: rgba(255,255,255,0.5); line-height: 1.5; }
+</style>
+
+<div class="phone-frame">
+
+  <!-- Screen header -->
+  <div class="screen-header">
+    <div>
+      <div class="screen-title">Badges</div>
+    </div>
+    <div class="screen-sub">24 / 67 unlocked</div>
+  </div>
+
+  <div class="screen-body">
+
+    <!-- Switzerland category -->
+    <div class="cat-heading">
+      <span class="cat-title">Switzerland</span>
+      <span class="cat-count">1 / 4</span>
+    </div>
+
+    <div class="badge-grid">
+
+      <div class="badge unlocked">
+        <span class="badge-icon">🧀</span>
+        <span class="badge-title">Swiss Start</span>
+        <span class="badge-prog done">✓ Unlocked</span>
+      </div>
+
+      <!-- EXPANDED: Swiss Complete -->
+      <div class="badge-expanded">
+        <div class="exp-close">✕</div>
+        <div class="exp-header">
+          <span class="exp-icon">🇨🇭</span>
+          <div>
+            <div class="exp-title">Swiss Complete</div>
+            <div class="exp-desc">Visit all 26 Swiss cantons</div>
+            <span class="exp-pill inprog">In progress</span>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:62%;"></div></div>
+          <div class="bar-label">16 / 26 cantons · 10 to go</div>
+        </div>
+
+        <div class="sec-label">Visited <span class="sec-count">16</span></div>
+        <div class="chips">
+          <span class="chip visited">Zürich</span>
+          <span class="chip visited">Bern</span>
+          <span class="chip visited">Geneva</span>
+          <span class="chip visited">Basel-Stadt</span>
+          <span class="chip visited">Vaud</span>
+          <span class="chip visited">Valais</span>
+          <span class="chip visited">Ticino</span>
+          <span class="chip visited">St. Gallen</span>
+          <span class="chip more">+8 more</span>
+        </div>
+
+        <div class="sec-label">Still needed <span class="sec-count">10</span></div>
+        <div class="chips">
+          <span class="chip remaining">Appenzell IR</span>
+          <span class="chip remaining">Glarus</span>
+          <span class="chip remaining">Uri</span>
+          <span class="chip remaining">Obwalden</span>
+          <span class="chip remaining">Nidwalden</span>
+          <span class="chip remaining">Schaffhausen</span>
+          <span class="chip more">+4 more</span>
+        </div>
+      </div>
+
+      <div class="badge inprog">
+        <span class="badge-icon">⛰️</span>
+        <span class="badge-title">Alpine Explorer</span>
+        <span class="badge-prog">10 / 13</span>
+      </div>
+      <div class="badge">
+        <span class="badge-icon" style="opacity:0.35;">🏔️</span>
+        <span class="badge-title" style="color:rgba(255,255,255,0.3);">Swiss Pro</span>
+        <span class="badge-prog" style="color:rgba(255,255,255,0.2);">10 / 20</span>
+      </div>
+
+    </div>
+
+    <!-- General category (aggregate achievement) -->
+    <div class="cat-heading" style="margin-top:18px;">
+      <span class="cat-title">General</span>
+      <span class="cat-count">2 / 6</span>
+    </div>
+
+    <div class="badge-grid">
+
+      <div class="badge unlocked">
+        <span class="badge-icon">👣</span>
+        <span class="badge-title">First Steps</span>
+        <span class="badge-prog done">✓ Unlocked</span>
+      </div>
+
+      <!-- EXPANDED: Explorer (aggregate — no list) -->
+      <div class="badge-expanded">
+        <div class="exp-close">✕</div>
+        <div class="exp-header">
+          <span class="exp-icon">🧭</span>
+          <div>
+            <div class="exp-title">Explorer</div>
+            <div class="exp-desc">Visit 25 regions total</div>
+            <span class="exp-pill inprog">In progress</span>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:72%;"></div></div>
+          <div class="bar-label">18 / 25 regions · 7 to go</div>
+        </div>
+        <div class="hint-box">Any region in any tracker counts.<br/>Keep exploring to unlock this badge.</div>
+      </div>
+
+      <div class="badge">
+        <span class="badge-icon" style="opacity:0.35;">🎒</span>
+        <span class="badge-title" style="color:rgba(255,255,255,0.3);">Adventurer</span>
+        <span class="badge-prog" style="color:rgba(255,255,255,0.2);">18 / 50</span>
+      </div>
+      <div class="badge">
+        <span class="badge-icon" style="opacity:0.35;">💯</span>
+        <span class="badge-title" style="color:rgba(255,255,255,0.3);">Centurion</span>
+        <span class="badge-prog" style="color:rgba(255,255,255,0.2);">18 / 100</span>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Mobile UX annotations -->
+<div class="annotations">
+  <div class="ann"><span class="ann-badge">44px</span><span class="ann-text">Badge cards min-height 56px, close button 44×44px — all comfortable tap targets</span></div>
+  <div class="ann"><span class="ann-badge">touch</span><span class="ann-text"><code>touch-action: manipulation</code> on all tappable badges removes 300ms delay on iOS</span></div>
+  <div class="ann"><span class="ann-badge">12px</span><span class="ann-text">Chips min-height 28px, font-size 12px — legible without being tappable</span></div>
+  <div class="ann"><span class="ann-badge">scroll</span><span class="ann-text">Chip wrap is capped — long lists show "+N more" chip, no overflow clipping issues</span></div>
+  <div class="ann"><span class="ann-badge">one</span><span class="ann-text">Only one badge expanded at a time — tapping a second collapses the first</span></div>
+</div>

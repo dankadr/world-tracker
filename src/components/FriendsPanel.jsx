@@ -5,6 +5,7 @@ import { lookupFriendCode } from '../utils/api';
 import AuthButton from './AuthButton';
 import ConfirmDialog from './ConfirmDialog';
 import ChallengesPanel from './ChallengesPanel';
+import { withTouchFeedback } from '../utils/touchFeedback';
 import './FriendsPanel.css';
 import './ChallengesPanel.css';
 
@@ -28,17 +29,61 @@ function Avatar({ user, size = 32 }) {
   );
 }
 
-export default function FriendsPanel({ onClose, onCompare, comparisonFriendId }) {
+function CopyIcon() {
+  return (
+    <svg className="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="12" height="12" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg className="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="M21 21l-4.3-4.3" />
+    </svg>
+  );
+}
+
+function CompareIcon() {
+  return (
+    <svg className="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 3v18" />
+      <path d="M16 3v18" />
+      <path d="M8 8h8" />
+      <path d="M8 16h8" />
+    </svg>
+  );
+}
+
+export default function FriendsPanel({ onClose, onCompare, comparisonFriendId, mode = 'tabs' }) {
   const { user, token, isLoggedIn } = useAuth();
   const { friends, requests, myProfile, loading, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, refresh } = useFriends();
-  const [activeTab, setActiveTab] = useState('friends');
+  const showInternalTabs = mode === 'tabs';
+  const forcedTab = mode === 'challenges' ? 'challenges' : mode === 'friends' ? 'friends' : null;
+  const [activeTab, setActiveTab] = useState(forcedTab || 'friends');
+
+  useEffect(() => {
+    if (forcedTab) setActiveTab(forcedTab);
+  }, [forcedTab]);
 
   // Ensure friends data is loaded when panel opens
   useEffect(() => {
     if (isLoggedIn && refresh) {
       refresh();
     }
-  }, [isLoggedIn, refresh]);  const [friendCode, setFriendCode] = useState('');
+  }, [isLoggedIn, refresh]);
+  const [friendCode, setFriendCode] = useState('');
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [error, setError] = useState('');
@@ -146,8 +191,8 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
     return (
       <div className="friends-panel">
         <div className="fp-header">
-          <h2 className="fp-title">👥 Friends</h2>
-          {onClose && <button className="fp-close" onClick={onClose} aria-label="Close">&times;</button>}
+          <h2 className="fp-title">Friends</h2>
+          {onClose && <button className={withTouchFeedback('fp-close')} onClick={onClose} aria-label="Close">&times;</button>}
         </div>
         <div className="fp-login-prompt">
           <p>Sign in to connect with friends, compare stats, and see what they've explored!</p>
@@ -160,28 +205,29 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
   const totalRequests = requests.incoming.length + requests.outgoing.length;
 
   return (
-    <div className="friends-panel">
-      <div className="fp-header">
-        <h2 className="fp-title">{activeTab === 'friends' ? '👥 Friends' : '🏆 Challenges'}</h2>
-        {onClose && <button className="fp-close" onClick={onClose} aria-label="Close">&times;</button>}
-      </div>
+      <div className="friends-panel">
+        <div className="fp-header">
+          <h2 className="fp-title">{activeTab === 'friends' ? 'Friends' : 'Challenges'}</h2>
+          {onClose && <button className={withTouchFeedback('fp-close')} onClick={onClose} aria-label="Close">&times;</button>}
+        </div>
 
-      {/* Tab Bar */}
-      <div className="fp-tab-bar">
-        <button
-          className={`fp-tab ${activeTab === 'friends' ? 'active' : ''}`}
-          onClick={() => setActiveTab('friends')}
-        >
-          👥 Friends
-          {totalRequests > 0 && <span className="fp-tab-badge">{totalRequests}</span>}
-        </button>
-        <button
-          className={`fp-tab ${activeTab === 'challenges' ? 'active' : ''}`}
-          onClick={() => setActiveTab('challenges')}
-        >
-          🏆 Challenges
-        </button>
-      </div>
+       {showInternalTabs && (
+         <div className="fp-tab-bar">
+            <button
+              className={withTouchFeedback(`fp-tab ${activeTab === 'friends' ? 'active' : ''}`)}
+              onClick={() => setActiveTab('friends')}
+            >
+             Friends
+             {totalRequests > 0 && <span className="fp-tab-badge">{totalRequests}</span>}
+           </button>
+            <button
+              className={withTouchFeedback(`fp-tab ${activeTab === 'challenges' ? 'active' : ''}`)}
+              onClick={() => setActiveTab('challenges')}
+            >
+             Challenges
+           </button>
+         </div>
+       )}
 
       {activeTab === 'challenges' ? (
         <ChallengesPanel />
@@ -193,11 +239,12 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
           <div className="fp-code-row">
             <span className="fp-code">{myProfile?.friend_code || '...'}</span>
             <button
-              className={`fp-copy-btn ${copied ? 'copied' : ''}`}
+              className={withTouchFeedback(`fp-copy-btn ${copied ? 'copied' : ''}`)}
               onClick={handleCopy}
               disabled={!myProfile?.friend_code}
+              aria-label={copied ? 'Copied friend code' : 'Copy friend code'}
             >
-              {copied ? '✓' : '📋'}
+              {copied ? <CheckIcon /> : <CopyIcon />}
             </button>
           </div>
         </div>
@@ -216,11 +263,12 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
               maxLength={12}
             />
             <button
-              className="fp-search-btn"
+              className={withTouchFeedback('fp-search-btn')}
               onClick={handleSearch}
               disabled={!friendCode.trim() || previewLoading}
+              aria-label="Search friend code"
             >
-              {previewLoading ? '...' : '🔍'}
+              {previewLoading ? '...' : <SearchIcon />}
             </button>
           </div>
 
@@ -231,7 +279,7 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
               <Avatar user={preview} />
               <span className="fp-preview-name">{preview.name}</span>
               <button
-                className="fp-add-btn"
+                className={withTouchFeedback('fp-add-btn')}
                 onClick={handleSendRequest}
                 disabled={actionLoading === 'send'}
               >
@@ -253,14 +301,14 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
                 <span className="fp-request-name">{req.from_user?.name || 'Someone'}</span>
                 <div className="fp-request-actions">
                   <button
-                    className="fp-accept-btn"
+                    className={withTouchFeedback('fp-accept-btn')}
                     onClick={() => handleAccept(req.id)}
                     disabled={actionLoading === `accept-${req.id}`}
                   >
                     {actionLoading === `accept-${req.id}` ? '...' : 'Accept'}
                   </button>
                   <button
-                    className="fp-decline-btn"
+                    className={withTouchFeedback('fp-decline-btn')}
                     onClick={() => handleDecline(req.id)}
                     disabled={actionLoading === `decline-${req.id}`}
                   >
@@ -276,7 +324,7 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
                 <Avatar user={req.to_user} size={28} />
                 <span className="fp-request-name">{req.to_user?.name || 'Someone'}</span>
                 <button
-                  className="fp-cancel-btn"
+                  className={withTouchFeedback('fp-cancel-btn')}
                   onClick={() => handleCancel(req.id)}
                   disabled={actionLoading === `cancel-${req.id}`}
                 >
@@ -306,15 +354,16 @@ export default function FriendsPanel({ onClose, onCompare, comparisonFriendId })
               <div className="fp-friend-actions">
                 {onCompare && (
                   <button
-                    className={`fp-compare-btn ${comparisonFriendId === friend.id ? 'active' : ''}`}
+                    className={withTouchFeedback(`fp-compare-btn ${comparisonFriendId === friend.id ? 'active' : ''}`)}
                     onClick={() => onCompare(comparisonFriendId === friend.id ? null : friend)}
                     title={comparisonFriendId === friend.id ? 'Exit comparison' : 'Compare maps'}
                   >
-                    {comparisonFriendId === friend.id ? '✕ Exit' : '⚔️ Compare'}
+                    <CompareIcon />
+                    {comparisonFriendId === friend.id ? 'Exit' : 'Compare'}
                   </button>
                 )}
                 <button
-                  className="fp-remove-btn"
+                  className={withTouchFeedback('fp-remove-btn')}
                   onClick={() => setConfirmRemove(friend)}
                   disabled={actionLoading === `remove-${friend.id}`}
                   title="Remove friend"

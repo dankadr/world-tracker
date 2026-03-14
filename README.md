@@ -144,6 +144,18 @@ Open [http://localhost:8088](http://localhost:8088) in your browser.
 npm test
 ```
 
+### Browser smoke tests (Playwright)
+
+```bash
+# first-time browser install
+npx playwright install chromium
+
+# run browser smoke tests
+npm run test:e2e
+```
+
+The browser smoke suite covers deterministic world-map and Geography Games flows. See `docs/qa/testing-strategy.md` for the layered QA setup.
+
 ### Backend (pytest)
 
 ```bash
