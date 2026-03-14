@@ -59,6 +59,16 @@ const FRIEND_LABEL_LAYERS = {
   dark: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
 };
 
+function syncFeatureTestAttributes(layer, { id, name, isVisited, isWishlisted, isGameTarget }) {
+  const el = layer.getElement?.();
+  if (!el) return;
+  el.setAttribute('data-country-id', id);
+  el.setAttribute('data-country-name', name);
+  el.setAttribute('data-visited', String(Boolean(isVisited)));
+  el.setAttribute('data-wishlisted', String(Boolean(isWishlisted)));
+  el.setAttribute('data-game-target', String(Boolean(isGameTarget)));
+}
+
 function GameFocuser({ targetId, geoJsonRef }) {
   const map = useMap();
   useEffect(() => {
@@ -270,6 +280,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         l.setStyle({ fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 });
         l.getElement()?.classList.remove('map-target-pulse');
       }
+      syncFeatureTestAttributes(l, {
+        id,
+        name: l.feature?.properties?.name || id,
+        isVisited: visitedRef.current.has(id),
+        isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+        isGameTarget: id === gameMode.targetId,
+      });
     });
   }, [gameMode]);
 
@@ -295,6 +312,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         style = { ...style, color: 'transparent', weight: 0 };
       }
       l.setStyle(style);
+      syncFeatureTestAttributes(l, {
+        id,
+        name: l.feature?.properties?.name || id,
+        isVisited,
+        isWishlisted,
+        isGameTarget: false,
+      });
     });
   }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]);
 
@@ -351,6 +375,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         add: (e) => {
           const el = e.target.getElement?.();
           if (el) el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
+          syncFeatureTestAttributes(e.target, {
+            id,
+            name,
+            isVisited: visitedRef.current.has(id),
+            isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+            isGameTarget: gameModeRef.current?.targetId === id,
+          });
         },
         mouseover: (e) => {
           if (gameModeRef.current) return;
@@ -393,6 +424,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           const finalStyle = willBeVisited
             ? (isTracked ? TRACKED_VISITED_STYLE : VISITED_STYLE)
             : (isTracked ? TRACKED_STYLE : UNVISITED_STYLE);
+          syncFeatureTestAttributes(target, {
+            id,
+            name,
+            isVisited: willBeVisited,
+            isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+            isGameTarget: false,
+          });
           target.setStyle({ fillOpacity: 0.85, weight: 2, color: 'rgba(255,255,255,0.7)' });
           setTimeout(() => target.setStyle({ fillOpacity: 0.7, weight: 1.5 }), 120);
           setTimeout(() => target.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
@@ -414,76 +452,78 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   }, [onToggle]);
 
   return (
-    <MapContainer
-      center={[20, 0]}
-      zoom={2}
-      className="swiss-map world-map"
-      zoomControl={true}
-      scrollWheelZoom={true}
-      minZoom={2}
-      maxZoom={8}
-      worldCopyJump={true}
-      maxBounds={[[-90, -Infinity], [90, Infinity]]}
-      maxBoundsViscosity={0.7}
-    >
-      <MapController center={[20, 0]} zoom={2} />
-      {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
-      <TileLayer
-        key={gameMode ? 'game-clean' : tileUrl}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        url={gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl}
-      />
-      {friendsActive && !comparisonFriend && (
-        <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
-          <TileLayer
-            key={`friend-labels-${dark ? 'dark' : 'light'}`}
-            url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
-            opacity={0.95}
-            noWrap={false}
+    <div data-testid="world-map-container" style={{ height: '100%' }}>
+      <MapContainer
+        center={[20, 0]}
+        zoom={2}
+        className="swiss-map world-map"
+        zoomControl={true}
+        scrollWheelZoom={true}
+        minZoom={2}
+        maxZoom={8}
+        worldCopyJump={true}
+        maxBounds={[[-90, -Infinity], [90, Infinity]]}
+        maxBoundsViscosity={0.7}
+      >
+        <MapController center={[20, 0]} zoom={2} />
+        {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
+        <TileLayer
+          key={gameMode ? 'game-clean' : tileUrl}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+          url={gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl}
+        />
+        {friendsActive && !comparisonFriend && (
+          <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
+            <TileLayer
+              key={`friend-labels-${dark ? 'dark' : 'light'}`}
+              url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
+              opacity={0.95}
+              noWrap={false}
+            />
+          </Pane>
+        )}
+        <GeoJSON
+          key={`world-geojson-${greaterIsraelEnabled}`}
+          ref={geoJsonRef}
+          data={modifiedWorldData}
+          style={getStyle}
+          onEachFeature={onEachFeature}
+        />
+        {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+          <FriendsWorldOverlay
+            worldData={modifiedWorldData}
+            friendOverlayData={friendOverlayData}
           />
-        </Pane>
-      )}
-      <GeoJSON
-        key={`world-geojson-${greaterIsraelEnabled}`}
-        ref={geoJsonRef}
-        data={modifiedWorldData}
-        style={getStyle}
-        onEachFeature={onEachFeature}
-      />
-      {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
-        <FriendsWorldOverlay
-          worldData={modifiedWorldData}
-          friendOverlayData={friendOverlayData}
-        />
-      )}
-      {comparisonFriend && (
-        <ComparisonWorldOverlay
-          worldData={modifiedWorldData}
-          visited={visited}
-          friendVisited={comparisonFriend.visited}
-          friendName={comparisonFriend.name}
-        />
-      )}
-      {!gameMode && <MapLayerControl
-        onLayerChange={setTileUrl}
-        onFriendsToggle={onFriendsToggle}
-        friendsActive={friendsActive}
-        onWishlistToggle={setWishlistActive}
-        wishlistActive={wishlistActive}
-        onUnescoToggle={setUnescoActive}
-        unescoActive={unescoActive}
-      />}
-      {unescoActive && <UnescoLayer />}
-      {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
-        <FriendOverlayLegend friendOverlayData={friendOverlayData} />
-      )}
-      {comparisonFriend && (
-        <ComparisonLegend
-          friendName={comparisonFriend.name}
-          friendPicture={comparisonFriend.picture}
-          onClose={onExitComparison}
-        />
-      )}
-    </MapContainer>
+        )}
+        {comparisonFriend && (
+          <ComparisonWorldOverlay
+            worldData={modifiedWorldData}
+            visited={visited}
+            friendVisited={comparisonFriend.visited}
+            friendName={comparisonFriend.name}
+          />
+        )}
+        {!gameMode && <MapLayerControl
+          onLayerChange={setTileUrl}
+          onFriendsToggle={onFriendsToggle}
+          friendsActive={friendsActive}
+          onWishlistToggle={setWishlistActive}
+          wishlistActive={wishlistActive}
+          onUnescoToggle={setUnescoActive}
+          unescoActive={unescoActive}
+        />}
+        {unescoActive && <UnescoLayer />}
+        {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+          <FriendOverlayLegend friendOverlayData={friendOverlayData} />
+        )}
+        {comparisonFriend && (
+          <ComparisonLegend
+            friendName={comparisonFriend.name}
+            friendPicture={comparisonFriend.picture}
+            onClose={onExitComparison}
+          />
+        )}
+      </MapContainer>
+    </div>
   );
 }
