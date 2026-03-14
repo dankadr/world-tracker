@@ -259,5 +259,27 @@ function importGuest(data, mode) {
     }
   }
 
+  // Wishlist items
+  if (Array.isArray(data.wishlist) && data.wishlist.length > 0) {
+    // Group by tracker_id
+    const byTracker = {};
+    for (const item of data.wishlist) {
+      if (!item.tracker_id || !item.region_id) continue;
+      if (!byTracker[item.tracker_id]) byTracker[item.tracker_id] = [];
+      byTracker[item.tracker_id].push(item.region_id);
+    }
+    for (const [tid, regionIds] of Object.entries(byTracker)) {
+      const key = `swiss-tracker-wishlist-${tid}`;
+      let toSave = regionIds;
+      if (mode === 'merge') {
+        try {
+          const existing = JSON.parse(localStorage.getItem(key) || '[]');
+          toSave = [...new Set([...existing, ...regionIds])];
+        } catch {}
+      }
+      localStorage.setItem(key, JSON.stringify(toSave));
+    }
+  }
+
   emitVisitedChange();
 }
