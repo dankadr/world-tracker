@@ -152,6 +152,7 @@ const MILESTONES = [25, 50, 75, 100];
 
 export default function App() {
   const [view, setView] = useState('world'); // 'world' | 'detail'
+  const isWorldView = view === 'world';
   const [countryId, setCountryId] = useState('ch');
   const [shareData, setShareData] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
