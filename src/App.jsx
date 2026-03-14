@@ -465,6 +465,7 @@ export default function App() {
   }, []);
 
   const isShareMode = !!shareData;
+  const isWorldView = view === 'world' && !isShareMode;
   const sharedVisited = isShareMode && shareData[countryId]
     ? new Set(shareData[countryId])
     : null;
@@ -529,7 +530,6 @@ export default function App() {
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
-  const isWorldView = view === 'world' && !isShareMode;
   const longPressTimerRef = useRef(null);
   const longPressStartRef = useRef(null);
 
