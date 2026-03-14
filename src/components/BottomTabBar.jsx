@@ -1,4 +1,6 @@
 import './BottomTabBar.css';
+import { hapticSelection } from '../utils/haptics';
+import { withTouchFeedback } from '../utils/touchFeedback';
 
 function MapIcon() {
   return (
@@ -68,8 +70,8 @@ export default function BottomTabBar({ activeTab, onTabChange, socialBadge = 0, 
           role="tab"
           aria-selected={activeTab === id}
           aria-label={label}
-          className={`tab-bar-item${activeTab === id ? ' active' : ''}`}
-          onClick={() => { navigator.vibrate?.(8); onTabChange(id); }}
+          className={withTouchFeedback(`tab-bar-item${activeTab === id ? ' active' : ''}`)}
+          onClick={() => { hapticSelection(); onTabChange(id); }}
         >
           <span className="tab-bar-icon">
             <Icon />
