@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './DataImport.css';
+import { emitVisitedChange } from '../utils/events';
 
 const VALID_TRACKER_IDS = new Set(['ch', 'us', 'usparks', 'nyc', 'no', 'ca', 'capitals', 'jp', 'au', 'unesco']);
 
@@ -231,6 +232,5 @@ function importGuest(data, mode) {
     }
   }
 
-  // Dispatch storage event so hooks re-read
-  window.dispatchEvent(new Event('storage'));
+  emitVisitedChange();
 }
