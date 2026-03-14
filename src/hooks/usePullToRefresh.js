@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useReducedMotion from './useReducedMotion';
 
 const DEFAULT_THRESHOLD = 64;
@@ -12,6 +12,7 @@ export default function usePullToRefresh({
   maxPull = DEFAULT_MAX_PULL,
 } = {}) {
   const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef(null);
   const startYRef = useRef(null);
   const pullActiveRef = useRef(false);
   const readyRef = useRef(false);
@@ -69,6 +70,15 @@ export default function usePullToRefresh({
     }
   }, [disabled, maxPull, threshold]);
 
+  // Attach touchmove with { passive: false } so preventDefault() works.
+  // React's synthetic onTouchMove is passive in React 17+ and cannot be overridden.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => el.removeEventListener('touchmove', handleTouchMove);
+  }, [handleTouchMove]);
+
   const handleTouchEnd = useCallback(async () => {
     if (!pullActiveRef.current) {
       return;
@@ -117,10 +127,10 @@ export default function usePullToRefresh({
       : (isReady ? 'Release to refresh' : 'Pull to refresh'),
     bind: {
       onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
       onTouchEnd: handleTouchEnd,
       onTouchCancel: handleTouchEnd,
     },
+    containerRef,
     contentStyle,
     reset,
   };

@@ -328,7 +328,7 @@ export default function FriendsPanel({
           onScrollPositionChange={onScrollPositionChange}
         />
       ) : (
-        <div className="fp-scrollable" {...pullToRefresh.bind} onScroll={handleScrollableScroll}>
+        <div className="fp-scrollable" ref={pullToRefresh.containerRef} {...pullToRefresh.bind} onScroll={handleScrollableScroll}>
           <div className={`ios-pull-indicator${pullToRefresh.pullDistance > 4 || pullToRefresh.isRefreshing ? ' visible' : ''}${pullToRefresh.isReady ? ' ready' : ''}${pullToRefresh.isRefreshing ? ' refreshing' : ''}`}>
             <PullArrowIcon />
             <span>{pullToRefresh.indicatorText}</span>

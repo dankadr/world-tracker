@@ -380,7 +380,7 @@ export default function ChallengesPanel({ onClose, showHeader = true, onScrollPo
         </div>
       )}
 
-      <div className="ch-scrollable" {...pullToRefresh.bind} onScroll={handleScrollableScroll}>
+      <div className="ch-scrollable" ref={pullToRefresh.containerRef} {...pullToRefresh.bind} onScroll={handleScrollableScroll}>
         <div className={`ios-pull-indicator${pullToRefresh.pullDistance > 4 || pullToRefresh.isRefreshing ? ' visible' : ''}${pullToRefresh.isReady ? ' ready' : ''}${pullToRefresh.isRefreshing ? ' refreshing' : ''}`}>
           <PullArrowIcon />
           <span>{pullToRefresh.indicatorText}</span>

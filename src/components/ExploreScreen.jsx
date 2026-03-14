@@ -324,7 +324,7 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
       </div>
 
       {tab === 'countries' ? (
-        <div className="explore-tab-pane" {...countriesPull.bind} onScroll={handlePaneScroll}>
+        <div className="explore-tab-pane" ref={countriesPull.containerRef} {...countriesPull.bind} onScroll={handlePaneScroll}>
           <div className={`ios-pull-indicator${countriesPull.pullDistance > 4 || countriesPull.isRefreshing ? ' visible' : ''}${countriesPull.isReady ? ' ready' : ''}${countriesPull.isRefreshing ? ' refreshing' : ''}`}>
             <PullArrowIcon />
             <span>{countriesPull.indicatorText}</span>
@@ -412,7 +412,7 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
           </div>
         </div>
       ) : (
-        <div className="explore-tab-pane" {...trackersPull.bind} onScroll={handlePaneScroll}>
+        <div className="explore-tab-pane" ref={trackersPull.containerRef} {...trackersPull.bind} onScroll={handlePaneScroll}>
           <div className={`ios-pull-indicator${trackersPull.pullDistance > 4 || trackersPull.isRefreshing ? ' visible' : ''}${trackersPull.isReady ? ' ready' : ''}${trackersPull.isRefreshing ? ' refreshing' : ''}`}>
             <PullArrowIcon />
             <span>{trackersPull.indicatorText}</span>
