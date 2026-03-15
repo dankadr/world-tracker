@@ -9,8 +9,9 @@
   "background_color": "#f5e6d0",
   "icons": [
     { "src": "/favicon.png", "sizes": "64x64", "type": "image/png" },
-    { "src": "/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "categories": ["travel", "lifestyle"],
   "shortcuts": [

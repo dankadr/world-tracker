@@ -1,43 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
     react(),
+    process.env.ANALYZE && visualizer({ open: true, gzipSize: true, filename: 'dist/stats.html' }),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       includeAssets: ['favicon.png'],
       manifest: false, // We provide our own public/manifest.json
-      workbox: {
-        // Only pre-cache app shell files — exclude large PNGs (logo.png is 16 MB)
+      injectManifest: {
+        // Only pre-cache app shell files — exclude large PNGs
         globPatterns: ['**/*.{js,css,html,ico,svg}'],
-        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // cover the 17 MB JS bundle
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/(a|b|c)\.(tile\.openstreetmap|basemaps\.cartocdn)\.org\/.*/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'map-tiles',
-              expiration: { maxEntries: 3000, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/.*\/api\/.*/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 },
-              networkTimeoutSeconds: 5,
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts' },
-          },
-        ],
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
       },
     }),
   ],
@@ -62,11 +42,21 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    // Use Terser instead of esbuild for minification.
+    // esbuild's minifier can produce `const` bindings in an order that
+    // triggers Firefox's strict TDZ check ("can't access lexical declaration
+    // before initialization"). Terser emits `var` for module-level bindings
+    // and does not have this problem.
+    minify: 'terser',
+    terserOptions: {
+      // Disable compression transforms — only mangle names.
+      // Compression passes (inline, sequences, etc.) can introduce TDZ by
+      // reordering `const` declarations in ways Firefox rejects.
+      compress: false,
+    },
     rollupOptions: {
       output: {
-        // Fix: Firefox strictly enforces TDZ for `const` in bundled output.
-        // Using `var` for Rollup-generated bindings prevents the
-        // "can't access lexical declaration before initialization" error.
+        // Also keep Rollup-generated bindings as `var` (belt-and-suspenders).
         generatedCode: { constBindings: false },
       },
     },
