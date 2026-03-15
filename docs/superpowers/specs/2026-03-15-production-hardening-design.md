@@ -223,8 +223,6 @@ On Vercel, use the real client IP via `X-Forwarded-For` header.
 
 **Files:** `vite.config.js`
 
-**Files:** `vite.config.js`
-
 ---
 
 ## Plan 3 — Architectural (post-beta)
@@ -279,6 +277,6 @@ On Vercel, use the real client IP via `X-Forwarded-For` header.
 
 ## Success Criteria
 
-- **Plan 1:** All 8 tasks pass CI (existing Playwright smoke + Vitest unit tests) with no regressions. Security headers visible in browser DevTools.
+- **Plan 1:** All 9 tasks pass CI (existing Playwright smoke + Vitest unit tests) with no regressions. Security headers visible in browser DevTools.
 - **Plan 2:** CORS headers return only the production domain in beta. Rate limiter returns 429 under test load. Error boundary renders on injected throw.
 - **Plan 3:** Lighthouse performance score improves by 20+ points after code splitting. No localStorage token visible after cookie migration. `alembic upgrade head` runs cleanly from scratch on a new DB.
