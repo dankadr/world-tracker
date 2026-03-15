@@ -48,6 +48,12 @@
   transition: all 0.15s;
 }
 
+.fp-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
 .fp-close:hover {
   background: var(--hover-bg);
   color: var(--text-primary);
@@ -168,6 +174,9 @@
   transition: all 0.2s;
   border: 1px solid var(--glass-border-subtle);
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fp-copy-btn svg,
@@ -228,6 +237,9 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fp-search-btn:hover:not(:disabled) {
