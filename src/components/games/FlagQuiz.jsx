@@ -25,7 +25,7 @@ function buildPool() {
 
 const SCORE_KEY = 'flag';
 
-export default function FlagQuiz({ onBack, onPlayAgain }) {
+export default function FlagQuiz({ onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(), []);
   const isNewBestRef = useRef(false);
 
@@ -69,7 +69,7 @@ export default function FlagQuiz({ onBack, onPlayAgain }) {
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 20 }}>
         <div style={{ fontSize: '5rem', lineHeight: 1 }}>{question.flag}</div>
@@ -80,6 +80,10 @@ export default function FlagQuiz({ onBack, onPlayAgain }) {
           </div>
         )}
         <div style={{ width: '100%', maxWidth: 400 }}>
+          <p style={{ textAlign: 'center', margin: '0 0 8px', fontSize: '0.95rem', color: 'var(--text-secondary, #6b7280)' }}>
+            <span style={{ fontSize: '1.6rem', verticalAlign: 'middle', marginRight: 6 }}>{question.flag}</span>
+            Name this country:
+          </p>
           <AnswerInput
             candidates={pool.map(({ id, name }) => ({ id, name }))}
             nameKey="name"

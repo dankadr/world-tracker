@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { countryList } from '../data/countries';
+import { encodeShareData } from '../utils/shareUrl';
 
 const STORAGE_PREFIX = 'swiss-tracker-visited-';
 
@@ -25,7 +26,7 @@ export default function ShareButton() {
     const data = buildShareData();
     if (Object.keys(data).length === 0) return;
 
-    const encoded = btoa(JSON.stringify(data));
+    const encoded = encodeShareData(data);
     const url = `${window.location.origin}${window.location.pathname}#share=${encoded}`;
 
     navigator.clipboard.writeText(url).then(() => {

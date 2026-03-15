@@ -62,7 +62,7 @@ function getScoreKey(filter) {
   return `map_${filter}`;
 }
 
-export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack, onPlayAgain }) {
+export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -133,13 +133,13 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   if (!question) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
       <GameTopBar
         questionIndex={questionIndex}
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',

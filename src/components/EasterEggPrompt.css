@@ -40,17 +40,13 @@
 .easter-egg-modal p {
   font-size: 16px;
   margin: 0 0 24px 0;
-  color: #666;
+  color: var(--text-secondary, #666);
   line-height: 1.5;
-}
-
-[data-theme="dark"] .easter-egg-modal p {
-  color: #aaa;
 }
 
 .easter-egg-input {
   width: 100%;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--glass-border, #e0e0e0);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 16px;
@@ -62,7 +58,6 @@
 
 [data-theme="dark"] .easter-egg-input {
   background: #2a2a2a;
-  border-color: #444;
   color: #fff;
 }
 
@@ -117,21 +112,12 @@
 }
 
 .easter-egg-cancel {
-  background: #ecf0f1;
-  color: #333;
-}
-
-[data-theme="dark"] .easter-egg-cancel {
-  background: #333;
-  color: #aaa;
+  background: rgba(0, 0, 0, 0.07);
+  color: var(--text-primary, #333);
 }
 
 .easter-egg-cancel:hover {
-  background: #d5dbdb;
-}
-
-[data-theme="dark"] .easter-egg-cancel:hover {
-  background: #444;
+  background: rgba(0, 0, 0, 0.13);
 }
 
 @keyframes easter-egg-pop {
