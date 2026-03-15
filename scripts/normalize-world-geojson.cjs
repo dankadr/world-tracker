@@ -1,5 +1,6 @@
 // One-off script: generates src/data/world.json from Natural Earth 1:50m countries data.
-// Run with: node scripts/normalize-world-geojson.cjs
+// Run from the project root: node scripts/normalize-world-geojson.cjs
+// Requires: curl (available on macOS/Linux; on Windows use WSL or install curl)
 //
 // Source: Natural Earth 1:50m Admin-0 Countries
 // https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_0_countries.geojson
