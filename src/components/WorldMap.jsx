@@ -273,7 +273,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         l.setStyle({ fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 });
       } else if (id === gameMode.incorrectId) {
         l.setStyle({ fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 });
-      } else if (id === gameMode.targetId) {
+      } else if (id === gameMode.targetId && gameMode.revealTarget) {
         l.setStyle({ fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 });
         l.getElement()?.classList.add('map-target-pulse');
       } else {
@@ -328,9 +328,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
       // Game mode overrides all other styles
       if (gameMode) {
-        if (id === gameMode.correctId)   return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.incorrectId) return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.targetId)    return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
+        if (id === gameMode.correctId)                              return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.incorrectId)                            return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.targetId && gameMode.revealTarget)      return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
         return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
       }
 

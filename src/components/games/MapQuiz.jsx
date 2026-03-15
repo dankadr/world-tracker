@@ -112,9 +112,10 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   // Must be declared before any conditional returns to satisfy Rules of Hooks.
   const gameMode = useMemo(() => ({
     onCountryClick: handleCountryClick,
-    // Only reveal the target country (blue highlight + zoom) after the user
-    // has answered — during 'playing' it must stay hidden or it gives the answer away
-    targetId: status === 'reviewing' ? question?.id : null,
+    targetId: question?.id,
+    // Blue highlight is only shown after the user answers; the map still
+    // zooms to the region (good UX) but the colour stays neutral during play
+    revealTarget: status === 'reviewing',
     correctId,
     incorrectId,
   }), [handleCountryClick, status, question?.id, correctId, incorrectId]);
@@ -143,9 +144,6 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         timeLeft={timeLeft}
         onQuit={onQuit ?? onBack}
       />
-      {/* Hidden anchor for test automation — does NOT highlight the country visually.
-          Uses data-quiz-country-id (not data-country-id) to avoid matching SVG map paths. */}
-      <span data-testid="map-quiz-target" data-quiz-country-id={question.id} style={{ display: 'none' }} />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',
         background: 'rgba(0,0,0,0.75)', color: '#fff', borderRadius: 10,

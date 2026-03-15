@@ -30,12 +30,10 @@ test('starts map quiz and answers the highlighted target', async ({ page }) => {
 
   await expect(page.getByTestId('map-quiz-prompt')).toBeVisible();
 
-  // Read the target country ID from the hidden metadata element (no visual highlight)
-  const targetMeta = page.getByTestId('map-quiz-target');
-  await expect(targetMeta).toBeAttached();
-  const targetId = await targetMeta.getAttribute('data-quiz-country-id');
-
-  const targetCountry = page.locator(`[data-country-id="${targetId}"]`).first();
+  // data-game-target="true" is set on the SVG path while a question is active
+  // (the blue reveal colour is suppressed until after the user answers)
+  const targetCountry = page.locator('[data-game-target="true"]').first();
+  await expect(targetCountry).toBeVisible();
   await targetCountry.click({ force: true });
 
   await expect(page.getByText(/Correct!/)).toBeVisible();

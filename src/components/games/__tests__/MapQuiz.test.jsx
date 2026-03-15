@@ -41,9 +41,11 @@ describe('MapQuiz layout', () => {
 });
 
 describe('MapQuiz answer reveal', () => {
-  it('does not expose targetId to WorldMap during playing state (answer must stay hidden)', () => {
+  it('passes targetId to WorldMap but keeps revealTarget false during playing state', () => {
     render(<MapQuiz worldVisited={new Set()} onBack={vi.fn()} />);
-    // While status==='playing' the correct country must NOT be highlighted/zoomed
-    expect(capturedGameMode?.targetId).toBeNull();
+    // targetId stays set so the map can zoom to the region and data-game-target is on the SVG path
+    expect(capturedGameMode?.targetId).toBe('FR');
+    // But the blue colour must be suppressed until the user has answered
+    expect(capturedGameMode?.revealTarget).toBe(false);
   });
 });
