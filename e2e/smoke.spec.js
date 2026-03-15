@@ -33,7 +33,7 @@ test('starts map quiz and answers the highlighted target', async ({ page }) => {
   // Read the target country ID from the hidden metadata element (no visual highlight)
   const targetMeta = page.getByTestId('map-quiz-target');
   await expect(targetMeta).toBeAttached();
-  const targetId = await targetMeta.getAttribute('data-country-id');
+  const targetId = await targetMeta.getAttribute('data-quiz-country-id');
 
   const targetCountry = page.locator(`[data-country-id="${targetId}"]`).first();
   await targetCountry.click({ force: true });

@@ -143,8 +143,9 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         timeLeft={timeLeft}
         onQuit={onQuit ?? onBack}
       />
-      {/* Hidden anchor for test automation — does NOT highlight the country visually */}
-      <span data-testid="map-quiz-target" data-country-id={question.id} style={{ display: 'none' }} />
+      {/* Hidden anchor for test automation — does NOT highlight the country visually.
+          Uses data-quiz-country-id (not data-country-id) to avoid matching SVG map paths. */}
+      <span data-testid="map-quiz-target" data-quiz-country-id={question.id} style={{ display: 'none' }} />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',
         background: 'rgba(0,0,0,0.75)', color: '#fff', borderRadius: 10,
