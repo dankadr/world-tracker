@@ -40,7 +40,7 @@ function getScoreKey(filter) {
   return `shape_${filter}`;
 }
 
-export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onPlayAgain }) {
+export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -109,13 +109,13 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
   if (!question) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
       <GameTopBar
         questionIndex={questionIndex}
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
         <WorldMap

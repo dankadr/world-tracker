@@ -49,17 +49,13 @@ import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
+import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
 
 function parseShareHash() {
-  try {
-    const hash = window.location.hash;
-    if (!hash.startsWith('#share=')) return null;
-    const encoded = hash.slice(7);
-    return JSON.parse(atob(encoded));
-  } catch {
-    return null;
-  }
+  const hash = window.location.hash;
+  if (!hash.startsWith('#share=')) return null;
+  return decodeShareData(hash.slice(7));
 }
 
 function AchievementToasts() {
