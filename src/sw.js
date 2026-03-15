@@ -34,13 +34,18 @@ registerRoute(
 // API routes — NetworkFirst with per-user cache key
 // Note: localStorage is NOT available in SW scope.
 // We decode the user ID from the JWT in the Authorization header.
+// URL pattern restricted to production domain to avoid accidentally caching
+// third-party HTTPS requests that happen to contain /api/ in the path.
+// Local dev uses HTTP so this rule does not fire in development.
 registerRoute(
-  /^https?:\/\/.*\/api\/.*/,
+  /^https:\/\/rightworld\.io\/api\/.*/,
   new NetworkFirst({
     cacheName: 'api-cache',
     networkTimeoutSeconds: 5,
     plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 }),
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 5 * 60 }), // 5 min (was 24h)
+      // Only cache successful responses — never cache 401/403/500 errors
+      new CacheableResponsePlugin({ statuses: [200] }),
       {
         // Skip caching unauthenticated responses — prevents guest data
         // from entering the cache and bleeding to authenticated users.
