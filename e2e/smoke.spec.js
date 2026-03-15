@@ -30,8 +30,12 @@ test('starts map quiz and answers the highlighted target', async ({ page }) => {
 
   await expect(page.getByTestId('map-quiz-prompt')).toBeVisible();
 
-  const targetCountry = page.locator('[data-game-target="true"]').first();
-  await expect(targetCountry).toBeVisible();
+  // Read the target country ID from the hidden metadata element (no visual highlight)
+  const targetMeta = page.getByTestId('map-quiz-target');
+  await expect(targetMeta).toBeAttached();
+  const targetId = await targetMeta.getAttribute('data-country-id');
+
+  const targetCountry = page.locator(`[data-country-id="${targetId}"]`).first();
   await targetCountry.click({ force: true });
 
   await expect(page.getByText(/Correct!/)).toBeVisible();
