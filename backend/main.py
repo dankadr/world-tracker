@@ -93,7 +93,10 @@ JWT_EXPIRE_DAYS = 30
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
-VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco"}
+VALID_COUNTRIES = {
+    "ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco",
+    "ph", "br", "fr", "de", "it", "es", "mx", "gb", "in", "nz",
+}
 
 
 # ---------------------------------------------------------------------------

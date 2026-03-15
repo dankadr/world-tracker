@@ -20,6 +20,15 @@ const TRACKED_COUNTRY_IDS = {
   jp: 'jp',
   au: 'au',
   ph: 'ph',
+  br: 'br',
+  fr: 'fr',
+  de: 'de',
+  it: 'it',
+  es: 'es',
+  mx: 'mx',
+  gb: 'gb',
+  in: 'in',
+  nz: 'nz',
 };
 
 const UNVISITED_STYLE = {
