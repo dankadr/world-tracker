@@ -34,7 +34,21 @@ test('starts map quiz and answers the highlighted target', async ({ page }) => {
   // (the blue reveal colour is suppressed until after the user answers)
   const targetCountry = page.locator('[data-game-target="true"]').first();
   await expect(targetCountry).toBeVisible();
-  await targetCountry.click({ force: true });
+
+  // Leaflet's SVG renderer relies on clientX/clientY in click events.
+  // Playwright's force:true synthetic click omits coordinates, so dispatch
+  // a native MouseEvent with the element's centre coordinates instead.
+  await page.evaluate(() => {
+    const el = document.querySelector('[data-game-target="true"]');
+    if (!el) throw new Error('game-target element not found');
+    const rect = el.getBoundingClientRect();
+    el.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    }));
+  });
 
   await expect(page.getByText(/Correct!/)).toBeVisible();
 });
