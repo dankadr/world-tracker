@@ -82,3 +82,20 @@ async def test_google_login_existing_user(client, mock_db):
     assert data["user"]["id"] == 42
     assert data["user"]["email"] == "existing@example.com"
     assert data["user"]["sub"] == "google-uid-42"
+
+
+async def test_auth_endpoint_rate_limited_after_10_requests(client):
+    """POST /auth/google returns 429 after 10 requests per minute from the same IP."""
+    with patch("main.GOOGLE_CLIENT_ID", "test-client-id"):
+        for _ in range(10):
+            await client.post("/auth/google", json={"token": "bad"})
+        resp = await client.post("/auth/google", json={"token": "bad"})
+    assert resp.status_code == 429
+
+
+async def test_batch_endpoint_rate_limited_after_60_requests(client, auth_headers):
+    """POST /api/batch returns 429 after 60 requests per minute."""
+    for _ in range(60):
+        await client.post("/api/batch", json={"actions": []}, headers=auth_headers)
+    resp = await client.post("/api/batch", json={"actions": []}, headers=auth_headers)
+    assert resp.status_code == 429

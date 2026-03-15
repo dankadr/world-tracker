@@ -66,3 +66,14 @@ async def client(mock_db):
             yield c
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture(autouse=True)
+async def reset_rate_limiter():
+    """Reset slowapi in-memory counters before each test to prevent cross-test contamination."""
+    try:
+        from main import limiter
+        limiter._storage.reset()
+    except (ImportError, AttributeError):
+        pass  # slowapi not installed or limiter not yet created — safe to skip
+    yield
