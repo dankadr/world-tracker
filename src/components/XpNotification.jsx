@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useRef } from 'react';
 import useXp from '../hooks/useXp';
-import { hapticSelection, hapticSuccess } from '../utils/haptics';
+import { haptics } from '../utils/haptics';
 
 const REASON_LABELS = {
   visit_region: 'Region visited',
@@ -24,9 +24,9 @@ export default function XpNotification() {
       if (seenRef.current.has(n.id)) return;
       seenRef.current.add(n.id);
       if (n.levelUp) {
-        hapticSuccess();
+        haptics.levelUp();
       } else if (n.reason === 'unlock_achievement') {
-        hapticSelection();
+        haptics.achievementUnlock();
       }
     });
   }, [notifications]);
