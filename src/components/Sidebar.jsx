@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -58,6 +58,16 @@ export default function Sidebar({
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
+  const tabsRef = useRef(null);
+
+  const handleTabsWheel = useCallback((e) => {
+    // If the user is already scrolling horizontally (trackpad), let it through
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    const el = tabsRef.current;
+    if (!el) return;
+    e.preventDefault();
+    el.scrollLeft += e.deltaY;
+  }, []);
 
   // Compute bucket list set for this country
   const bucketListSet = useMemo(
@@ -258,7 +268,7 @@ export default function Sidebar({
 
       <OverallProgress />
 
-      <nav className="country-tabs">
+      <nav className="country-tabs" ref={tabsRef} onWheel={handleTabsWheel}>
         {countryList.map((c) => (
           <button
             key={c.id}
