@@ -1,5 +1,7 @@
 import { createPortal } from 'react-dom';
+import { useEffect, useRef } from 'react';
 import useXp from '../hooks/useXp';
+import { haptics } from '../utils/haptics';
 
 const REASON_LABELS = {
   visit_region: 'Region visited',
@@ -15,6 +17,19 @@ const REASON_LABELS = {
  */
 export default function XpNotification() {
   const { notifications, dismissNotification } = useXp();
+  const seenRef = useRef(new Set());
+
+  useEffect(() => {
+    notifications.forEach((n) => {
+      if (seenRef.current.has(n.id)) return;
+      seenRef.current.add(n.id);
+      if (n.levelUp) {
+        haptics.levelUp();
+      } else if (n.reason === 'unlock_achievement') {
+        haptics.achievementUnlock();
+      }
+    });
+  }, [notifications]);
 
   if (notifications.length === 0) return null;
 
