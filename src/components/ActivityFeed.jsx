@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useFriendsData } from '../hooks/useFriendsData';
 import { useAuth } from '../context/AuthContext';
 import './ActivityFeed.css';
+import './iosPrimitives.css';
 
 function relativeTime(dateStr) {
   const now = new Date();
@@ -72,6 +73,22 @@ function groupByDay(items) {
   return groups;
 }
 
+function ActivityFeedSkeleton() {
+  return (
+    <div className="af-skeleton-list" aria-hidden="true">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="af-skeleton-item">
+          <span className="ios-skeleton af-skeleton-avatar" />
+          <div className="af-skeleton-content">
+            <span className="ios-skeleton af-skeleton-line af-skeleton-line-main" />
+            <span className="ios-skeleton af-skeleton-line af-skeleton-line-sub" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ActivityFeed() {
   const { isLoggedIn } = useAuth();
   const { activity, loading, loadActivity } = useFriendsData();
@@ -97,7 +114,7 @@ export default function ActivityFeed() {
       <h3 className="af-title">📋 Activity</h3>
 
       {loading && activity.length === 0 && (
-        <p className="af-empty">Loading...</p>
+        <ActivityFeedSkeleton />
       )}
 
       {!loading && activity.length === 0 && (

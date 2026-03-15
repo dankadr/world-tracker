@@ -1,11 +1,11 @@
 .screen {
   position: fixed;
   inset: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   background: var(--body-bg, #faf6f0);
   display: flex;
   flex-direction: column;
-  z-index: 1200;
+  z-index: 2100;
   /* Slide-in from right on mount */
   transform: translateX(100%);
   transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
@@ -100,6 +100,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Left-edge swipe zone (invisible hit area) */

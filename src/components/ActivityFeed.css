@@ -18,6 +18,47 @@
   padding: 12px 0;
 }
 
+.af-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.af-skeleton-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.af-skeleton-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.af-skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.af-skeleton-line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.af-skeleton-line-main {
+  width: 88%;
+}
+
+.af-skeleton-line-sub {
+  width: 36%;
+}
+
 /* Day groups */
 .af-day-group {
   margin-bottom: 12px;

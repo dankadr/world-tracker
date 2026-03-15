@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 import countries from '../data/countries';
 import { useState } from 'react';
+import ChallengeDetailSkeleton from './ChallengeDetailSkeleton';
 
 const TRACKER_LABELS = {
   world: { flag: '🌍', name: 'World' },
@@ -121,7 +122,7 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
 
         <div className="ch-detail-body">
           {loading ? (
-            <p className="ch-loading">Loading challenge details...</p>
+            <ChallengeDetailSkeleton />
           ) : (
             <>
               {challenge.description && (

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useFriendsData } from '../hooks/useFriendsData';
 import { useAuth } from '../context/AuthContext';
 import './Leaderboard.css';
+import './iosPrimitives.css';
 
 function RankBadge({ rank }) {
   const cls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
@@ -28,6 +29,22 @@ function Avatar({ user, size = 28 }) {
   );
 }
 
+function LeaderboardSkeleton() {
+  return (
+    <div className="lb-skeleton-list" aria-hidden="true">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="lb-skeleton-row">
+          <span className="ios-skeleton lb-skeleton-rank" />
+          <span className="ios-skeleton lb-skeleton-avatar" />
+          <span className="ios-skeleton lb-skeleton-name" />
+          <span className="ios-skeleton lb-skeleton-bar" />
+          <span className="ios-skeleton lb-skeleton-count" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Leaderboard() {
   const { isLoggedIn } = useAuth();
   const { leaderboard, loading, loadLeaderboard } = useFriendsData();
@@ -47,7 +64,7 @@ export default function Leaderboard() {
       <h3 className="lb-title">🏆 Leaderboard</h3>
 
       {loading && leaderboard.length === 0 && (
-        <p className="lb-empty">Loading...</p>
+        <LeaderboardSkeleton />
       )}
 
       {!loading && leaderboard.length === 0 && (

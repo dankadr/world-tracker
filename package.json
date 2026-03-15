@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:qa": "npm run test && npm run test:e2e"
+    "test:qa": "npm run test && npm run test:e2e",
+    "icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@sentry/react": "^9.3.0",
@@ -36,8 +37,14 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "jsdom": "^25.0.1",
+    "sharp": "^0.34.5",
     "vite": "^6.1.0",
     "vite-plugin-pwa": "^1.2.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "workbox-cacheable-response": "^7.4.0",
+    "workbox-expiration": "^7.4.0",
+    "workbox-precaching": "^7.4.0",
+    "workbox-routing": "^7.4.0",
+    "workbox-strategies": "^7.4.0"
   }
 }
