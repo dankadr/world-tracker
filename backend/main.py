@@ -1850,18 +1850,5 @@ async def add_user_xp(
 # --------------- Health check ---------------
 @app.get("/api/health")
 async def health():
-    """Basic health check. Pings the database to verify connectivity."""
-    db_ok = False
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text("SELECT 1"))
-        db_ok = True
-    except Exception as exc:
-        logger.warning("Health check DB ping failed: %s", exc)
-
-    if db_ok:
-        return JSONResponse({"status": "ok", "database": "connected"})
-    return JSONResponse(
-        {"status": "degraded", "database": "unreachable", "reason": "database unreachable"},
-        status_code=503,
-    )
+    """Liveness check — no auth, no DB. For uptime monitors."""
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
