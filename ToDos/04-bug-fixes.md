@@ -60,6 +60,16 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Required behavior:** No country should be visually indicated as correct until after the user makes their selection.
 - **Status:** Open
 
+
+#### G. Map Quiz + Shape Quiz render blank on mobile
+- **Severity:** Critical
+- **Component:** Geography mini-games (`MapQuiz`, `ShapeQuiz`)
+- **Issue:** On mobile devices, both quizzes load the top bar and prompt but the interactive quiz/map area is blank, so users cannot answer.
+- **Browser/Device:** User-reported on iPhone (mobile Safari view).
+- **Required behavior:** Quiz content should render reliably on mobile with visible and interactive map/shape targets.
+- **Status:** Open
+- **Tracking plan:** See `ToDos/16-mobile-map-shape-quiz-blank.md`
+
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
