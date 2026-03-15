@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -55,6 +55,20 @@ export default function Sidebar({
   const [showAvatar, setShowAvatar] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const tabsRef = useRef(null);
+
+  // On desktop, redirect vertical wheel events to horizontal scroll on the tab strip
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
@@ -258,7 +272,7 @@ export default function Sidebar({
 
       <OverallProgress />
 
-      <nav className="country-tabs">
+      <nav className="country-tabs" ref={tabsRef}>
         {countryList.map((c) => (
           <button
             key={c.id}
