@@ -17,12 +17,23 @@ function decodeJwtEmail(token) {
   }
 }
 
-function loadAuth() {
+function isJwtExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (!payload.exp) return false;
+    return Date.now() / 1000 > payload.exp;
+  } catch {
+    return true; // malformed token — treat as expired
+  }
+}
+
+export function loadAuth() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
       if (data.jwt_token && data.user) {
+        if (isJwtExpired(data.jwt_token)) return null;
         // Backfill email from JWT payload if missing (e.g. older cached auth)
         if (!data.user.email) {
           data.user.email = decodeJwtEmail(data.jwt_token);
