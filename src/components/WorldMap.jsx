@@ -102,7 +102,7 @@ function MapController({ center, zoom }) {
   return null;
 }
 
-function OverlayFader({ gameModeRef }) {
+function OverlayFader({ gameModeRef, gameMode }) {
   const map = useMap();
 
   useEffect(() => {
@@ -117,12 +117,12 @@ function OverlayFader({ gameModeRef }) {
       pane.style.opacity = computeZoomFactor(map.getZoom());
     }
 
-    // Apply at mount time (handles the case where map loads already zoomed in)
+    // Apply at mount time AND whenever gameMode changes
     onZoomEnd();
 
     map.on('zoomend', onZoomEnd);
     return () => { map.off('zoomend', onZoomEnd); };
-  }, [map, gameModeRef]);
+  }, [map, gameModeRef, gameMode]); // gameMode triggers re-run when game mode activates/deactivates
 
   return null;
 }
@@ -497,7 +497,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         maxBoundsViscosity={0.7}
       >
         <MapController center={[20, 0]} zoom={2} />
-        <OverlayFader gameModeRef={gameModeRef} />
+        <OverlayFader gameModeRef={gameModeRef} gameMode={gameMode} />
         {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
         <TileLayer
           key={gameMode ? 'game-clean' : tileUrl}
