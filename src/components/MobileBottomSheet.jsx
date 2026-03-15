@@ -4,9 +4,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
  * MobileBottomSheet — a draggable bottom-sheet container for mobile.
  *
  * Snap points (% of viewport height):
- *   peek       : shows grab handle + header info + quick actions  ( 20vh )
- *   half       : shows list + tabs                                ( 50vh )
- *   full       : shows everything                                 ( 92vh )
+ *   peek       : shows grab handle + header info + quick actions  ( 20dvh )
+ *   half       : shows list + tabs                                ( 50dvh )
+ *   full       : shows everything                                 ( 92dvh )
  */
 
 const SNAP_PEEK = 20;
@@ -26,11 +26,11 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
     setSnap(target);
     if (onSnapChange) onSnapChange(target);
     if (sheetRef.current) {
-      sheetRef.current.style.height = `${target}vh`;
+      sheetRef.current.style.height = `${target}dvh`;
       sheetRef.current.style.transition = `height 0.45s ${SPRING_EASING}`;
     }
     // Set CSS custom property for map controls positioning
-    document.documentElement.style.setProperty('--sheet-height', `${target}vh`);
+    document.documentElement.style.setProperty('--sheet-height', `${target}dvh`);
   }, [onSnapChange]);
 
   // Allow parent to programmatically expand (e.g. search focus -> half)
@@ -54,7 +54,7 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
     const delta = dragState.current.startY - clientY;
     const newH = Math.max(0, Math.min(window.innerHeight, dragState.current.startH + delta));
     const pct = (newH / window.innerHeight) * 100;
-    sheetRef.current.style.height = `${pct}vh`;
+    sheetRef.current.style.height = `${pct}dvh`;
     sheetRef.current.style.transition = 'none';
 
     // Keep rolling window of last 3 positions
@@ -142,9 +142,9 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
   // Set initial height
   useEffect(() => {
     if (sheetRef.current) {
-      sheetRef.current.style.height = `${SNAP_PEEK}vh`;
+      sheetRef.current.style.height = `${SNAP_PEEK}dvh`;
     }
-    document.documentElement.style.setProperty('--sheet-height', `${SNAP_PEEK}vh`);
+    document.documentElement.style.setProperty('--sheet-height', `${SNAP_PEEK}dvh`);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isPeek = snap === SNAP_PEEK;

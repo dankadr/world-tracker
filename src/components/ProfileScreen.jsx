@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '../context/NavigationContext';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
 import AchievementCard from './AchievementCard';
-import StatsModal from './StatsModal';
 import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
 import useXp from '../hooks/useXp';
@@ -17,10 +17,10 @@ import { computeAllTimeStats } from '../utils/allTimeStats';
 export default function ProfileScreen({ onReset, onResetAll }) {
   const [tab, setTab] = useState('profile');
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const { config, setPart, resetAvatar } = useAvatar();
   const { level, currentXp, nextLevelXp, totalXp } = useXp();
   const { user } = useAuth();
+  const { push } = useNavigation();
   const userId = user?.id ?? null;
 
   // All-time stats (memoized — recomputed only when userId changes)
@@ -99,7 +99,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
             totalXp={totalXp}
             user={user}
             onEditAvatar={() => setShowAvatarEditor(true)}
-            onOpenStats={() => setShowStats(true)}
+            onOpenStats={() => push('stats')}
             showSharePicker={showSharePicker}
             onToggleShare={() => setShowSharePicker(p => !p)}
             onExport={setExportFormat}
@@ -130,7 +130,6 @@ export default function ProfileScreen({ onReset, onResetAll }) {
           onClose={() => setShowAvatarEditor(false)}
         />
       )}
-      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {/* Off-screen ShareCard for all-time export */}
       {exportFormat && (
         <ShareCard

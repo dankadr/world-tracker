@@ -18,6 +18,53 @@
   padding: 12px 0;
 }
 
+.lb-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lb-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+}
+
+.lb-skeleton-rank {
+  width: 26px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.lb-skeleton-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lb-skeleton-name {
+  width: 64px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.lb-skeleton-bar {
+  height: 6px;
+  border-radius: 3px;
+  flex: 1;
+}
+
+.lb-skeleton-count {
+  width: 28px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 .lb-list {
   display: flex;
   flex-direction: column;

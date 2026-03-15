@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './DataImport.css';
+import { emitVisitedChange } from '../utils/events';
 
 const VALID_TRACKER_IDS = new Set(['ch', 'us', 'usparks', 'nyc', 'no', 'ca', 'capitals', 'jp', 'au', 'unesco']);
 
@@ -194,7 +195,34 @@ async function importAuthenticated(data, token, mode) {
       await fetch(`/api/visited/${trackerId}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ regions: toSave, dates: {}, notes: {}, wishlist: [] }),
+        body: JSON.stringify({
+          regions: toSave,
+          ...(data.dates?.[trackerId] && Object.keys(data.dates[trackerId]).length
+            ? { dates: data.dates[trackerId] } : {}),
+          ...(data.notes?.[trackerId] && Object.keys(data.notes[trackerId]).length
+            ? { notes: data.notes[trackerId] } : {}),
+        }),
+      });
+    }
+  }
+
+  // Import wishlist items
+  if (Array.isArray(data.wishlist) && data.wishlist.length > 0) {
+    let itemsToImport = data.wishlist;
+    if (mode === 'merge') {
+      const existingRes = await fetch('/api/wishlist', { headers: { Authorization: `Bearer ${token}` } });
+      if (existingRes.ok) {
+        const existing = await existingRes.json();
+        const existingKeys = new Set(existing.map((i) => `${i.tracker_id}:${i.region_id}`));
+        itemsToImport = data.wishlist.filter((i) => !existingKeys.has(`${i.tracker_id}:${i.region_id}`));
+      }
+    }
+    for (const item of itemsToImport) {
+      if (!item.tracker_id || !item.region_id) continue;
+      await fetch(`/api/wishlist/${item.tracker_id}/${item.region_id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(item),
       });
     }
   }
@@ -231,6 +259,27 @@ function importGuest(data, mode) {
     }
   }
 
-  // Dispatch storage event so hooks re-read
-  window.dispatchEvent(new Event('storage'));
+  // Wishlist items
+  if (Array.isArray(data.wishlist) && data.wishlist.length > 0) {
+    // Group by tracker_id
+    const byTracker = {};
+    for (const item of data.wishlist) {
+      if (!item.tracker_id || !item.region_id) continue;
+      if (!byTracker[item.tracker_id]) byTracker[item.tracker_id] = [];
+      byTracker[item.tracker_id].push(item.region_id);
+    }
+    for (const [tid, regionIds] of Object.entries(byTracker)) {
+      const key = `swiss-tracker-wishlist-${tid}`;
+      let toSave = regionIds;
+      if (mode === 'merge') {
+        try {
+          const existing = JSON.parse(localStorage.getItem(key) || '[]');
+          toSave = [...new Set([...existing, ...regionIds])];
+        } catch {}
+      }
+      localStorage.setItem(key, JSON.stringify(toSave));
+    }
+  }
+
+  emitVisitedChange();
 }

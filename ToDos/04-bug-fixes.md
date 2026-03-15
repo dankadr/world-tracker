@@ -53,6 +53,13 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Required behavior:** Display flag in close visual proximity to country label/prompt.
 - **Status:** Open
 
+#### F. Map Quiz reveals correct country before user selects
+- **Severity:** High
+- **Component:** Map Quiz mini-game
+- **Issue:** The correct country is highlighted/marked on the map before the user clicks, spoiling the answer.
+- **Required behavior:** No country should be visually indicated as correct until after the user makes their selection.
+- **Status:** Open
+
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
@@ -106,7 +113,15 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Impact:** Share links break or get truncated
 - **Fix approach:** Compress data before base64 encoding (LZ-string), or switch to a server-generated short link
 
-#### 8. Dark Mode Inconsistencies
+#### 8. Country Tabs Not Horizontally Scrollable on Desktop
+- **Severity:** Medium
+- **Component:** Country/tracker tab bar (desktop)
+- **Issue:** The horizontal tab bar (e.g., Switzerland, United States, US Nat. Parks, NYC…) cannot be scrolled sideways on desktop, so tabs that overflow off-screen are inaccessible.
+- **Screenshot:** User-reported — tabs cut off on right side, no scroll affordance visible.
+- **Required behavior:** The tab row should be horizontally scrollable on desktop (mouse wheel or drag), or show prev/next arrow controls when tabs overflow.
+- **Status:** Open
+
+#### 9. Dark Mode Inconsistencies
 - **File:** `src/App.css`, various component CSS files
 - **Issue:** Some components have hardcoded colors that don't respond to the dark mode CSS variables. Particularly:
   - `src/components/ChallengesPanel.css`
