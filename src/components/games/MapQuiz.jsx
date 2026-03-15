@@ -112,10 +112,12 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   // Must be declared before any conditional returns to satisfy Rules of Hooks.
   const gameMode = useMemo(() => ({
     onCountryClick: handleCountryClick,
-    targetId: question?.id,
+    // Only reveal the target country (blue highlight + zoom) after the user
+    // has answered — during 'playing' it must stay hidden or it gives the answer away
+    targetId: status === 'reviewing' ? question?.id : null,
     correctId,
     incorrectId,
-  }), [handleCountryClick, question?.id, correctId, incorrectId]);
+  }), [handleCountryClick, status, question?.id, correctId, incorrectId]);
 
   if (status === 'finished') {
     return (
