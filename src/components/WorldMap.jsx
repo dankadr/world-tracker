@@ -466,7 +466,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         maxBoundsViscosity={0.7}
       >
         <MapController center={[20, 0]} zoom={2} />
-        {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
+        {gameMode?.targetId && gameMode?.revealTarget && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
         <TileLayer
           key={gameMode ? 'game-clean' : tileUrl}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'

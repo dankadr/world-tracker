@@ -33,7 +33,9 @@ test('starts map quiz and answers the highlighted target', async ({ page }) => {
   // data-game-target="true" is set on the SVG path while a question is active
   // (the blue reveal colour is suppressed until after the user answers)
   const targetCountry = page.locator('[data-game-target="true"]').first();
-  await expect(targetCountry).toBeVisible();
+  // No zoom during playing — the SVG path may be sub-pixel at world zoom,
+  // so check DOM presence rather than visual size
+  await expect(targetCountry).toBeAttached();
 
   // Leaflet's SVG renderer relies on clientX/clientY in click events.
   // Playwright's force:true synthetic click omits coordinates, so dispatch
