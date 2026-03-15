@@ -93,6 +93,16 @@ JWT_EXPIRE_DAYS = 30
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
+# ALLOWED_ORIGINS: comma-separated list of allowed CORS origins.
+# Falls back to [FRONTEND_URL] when not set (backwards compatible).
+# Example: ALLOWED_ORIGINS=https://rightworld.io,https://www.rightworld.io
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS: list[str] = (
+    [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    if _raw_origins
+    else [FRONTEND_URL]
+)
+
 VALID_COUNTRIES = {"ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco"}
 
 
@@ -132,7 +142,7 @@ app = FastAPI(title="Travel Tracker API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
