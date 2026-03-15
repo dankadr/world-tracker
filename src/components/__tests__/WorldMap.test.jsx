@@ -22,7 +22,7 @@ vi.mock('leaflet', () => ({
 
 vi.mock('react-leaflet', () => ({
   MapContainer: forwardRef(({ children, zoomControl, scrollWheelZoom, minZoom, maxZoom, worldCopyJump, maxBounds, maxBoundsViscosity, ...props }, ref) => (
-    <div ref={ref} {...props}>{children}</div>
+    <div ref={ref} data-max-zoom={maxZoom} {...props}>{children}</div>
   )),
   TileLayer: () => null,
   Pane: ({ children }) => <div>{children}</div>,
@@ -97,5 +97,19 @@ describe('WorldMap', () => {
     await user.click(screen.getAllByRole('button')[0]);
 
     expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('sets maxZoom to 18 on the map container', () => {
+    const { container } = render(
+      <ThemeProvider>
+        <WorldMap
+          visited={new Set()}
+          onToggle={() => {}}
+          wishlist={new Set()}
+          comparisonMode={false}
+        />
+      </ThemeProvider>
+    );
+    expect(container.querySelector('[data-max-zoom]').dataset.maxZoom).toBe('18');
   });
 });

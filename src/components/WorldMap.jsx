@@ -460,7 +460,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         zoomControl={true}
         scrollWheelZoom={true}
         minZoom={2}
-        maxZoom={8}
+        maxZoom={18}
         worldCopyJump={true}
         maxBounds={[[-90, -Infinity], [90, Infinity]]}
         maxBoundsViscosity={0.7}
