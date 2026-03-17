@@ -88,6 +88,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
 
   const gameMode = useMemo(() => ({
     targetId: question?.id ?? null,
+    revealTarget: true,
     correctId,
     incorrectId,
     onCountryClick: null,
