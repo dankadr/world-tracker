@@ -39,13 +39,18 @@ export default function AuthButton() {
       },
     });
 
-    if (googleBtnRef.current) {
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: 'outline',
-        size: 'medium',
-        width: 260,
-        text: 'signin_with',
-      });
+    if (googleBtnRef.current && document.contains(googleBtnRef.current)) {
+      try {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline',
+          size: 'medium',
+          width: 260,
+          text: 'signin_with',
+        });
+      } catch {
+        // GIS can throw InvalidNodeTypeError if the container moves in the DOM
+        // while renderButton is running its async Range operations. Safe to ignore.
+      }
     }
   }, [gsiReady, isLoggedIn, login]);
 

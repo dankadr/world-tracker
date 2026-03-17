@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { haptics } from '../utils/haptics';
 import './Screen.css';
 
 function BackChevron() {
@@ -67,6 +68,7 @@ export default function Screen({ title, onBack, backLabel = 'Back', children, ri
 
   function handleBack() {
     if (!onBack) return;
+    haptics.selection();
     setExiting(true);
     setVisible(false);
     // Wait for exit animation then call onBack

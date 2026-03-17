@@ -311,7 +311,7 @@ function computeCapitalSuperlatives(userId) {
   };
 }
 
-export default function StatsModal({ onClose }) {
+export default function StatsModal({ onClose, embedded = false, onOpenYearInReview }) {
   const { user, isLoggedIn } = useAuth();
   const userId = user?.id || null;
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
@@ -335,25 +335,25 @@ export default function StatsModal({ onClose }) {
   const worldStats = computeWorldStats(userId);
   const areaPopStats = computeAreaPopStats(userId);
   const capStats = computeCapitalSuperlatives(userId);
+  const openYearInReview = (year) => {
+    if (onOpenYearInReview) {
+      onOpenYearInReview(year);
+      return;
+    }
+    setYirYear(year);
+  };
 
-  if (yirYear) {
+  if (!embedded && yirYear) {
     return <YearInReview year={yirYear} onClose={() => setYirYear(null)} />;
   }
 
-  return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" ref={handleRef} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header" {...dragHandlers}>
-          <div className="drag-handle" />
-          <h2>Your Travel Statistics</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
-        </div>
-
+  const modalContent = (
+    <>
         {availableYears.length > 0 && (
           <div className="yir-button-row">
             <button
               className="yir-trigger-btn"
-              onClick={() => setYirYear(availableYears[0])}
+              onClick={() => openYearInReview(availableYears[0])}
             >
               🎉 Year in Review
             </button>
@@ -361,7 +361,7 @@ export default function StatsModal({ onClose }) {
               <select
                 className="yir-year-select"
                 value={availableYears[0]}
-                onChange={(e) => setYirYear(Number(e.target.value))}
+                onChange={(e) => openYearInReview(Number(e.target.value))}
               >
                 {availableYears.map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -667,6 +667,22 @@ export default function StatsModal({ onClose }) {
         )}
 
         {isLoggedIn && <FriendsCompare worldVisited={worldStats.visitedCount} />}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="modal-content stats-modal-embedded">{modalContent}</div>;
+  }
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" ref={handleRef} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header" {...dragHandlers}>
+          <div className="drag-handle" />
+          <h2>Your Travel Statistics</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Close">&times;</button>
+        </div>
+        {modalContent}
       </div>
     </div>,
     document.body

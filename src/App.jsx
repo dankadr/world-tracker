@@ -49,16 +49,13 @@ import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
+import { decodeShareData } from './utils/shareUrl';
+import { haptics } from './utils/haptics';
 
 function parseShareHash() {
-  try {
-    const hash = window.location.hash;
-    if (!hash.startsWith('#share=')) return null;
-    const encoded = hash.slice(7);
-    return JSON.parse(atob(encoded));
-  } catch {
-    return null;
-  }
+  const hash = window.location.hash;
+  if (!hash.startsWith('#share=')) return null;
+  return decodeShareData(hash.slice(7));
 }
 
 function AchievementToasts() {
@@ -90,6 +87,7 @@ function AchievementToasts() {
 
     const newlyUnlocked = currentUnlocked.filter((id) => !prevUnlocked.current.has(id));
     if (newlyUnlocked.length > 0) {
+      haptics.achievementUnlock();
       const newToasts = newlyUnlocked.map((id) => {
         const a = achievements.find((x) => x.id === id);
         // Grant XP once per achievement (keyed by achievement id — never double-awarded)
@@ -150,6 +148,7 @@ const MILESTONES = [25, 50, 75, 100];
 
 export default function App() {
   const [view, setView] = useState('world'); // 'world' | 'detail'
+  const isWorldView = view === 'world';
   const [countryId, setCountryId] = useState('ch');
   const [shareData, setShareData] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -160,6 +159,8 @@ export default function App() {
   const searchRef = useRef(null);
   const { token, isLoggedIn, user } = useAuth();
   const userId = user?.id || null;
+  const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
+  const { activeTab, switchTab, push, pop } = useNavigation();
 
   const rawCountry = countries[countryId];
   const country = applyColors(rawCountry);
@@ -188,7 +189,7 @@ export default function App() {
   // XP-granting wrappers
   const handleToggleRegion = useCallback((regionId) => {
     const wasVisited = visited.has(regionId);
-    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
+    haptics.visitToggle(wasVisited);
     toggle(regionId);
     if (!wasVisited) {
       grantXpOnce(`region:${countryId}:${regionId}`, xpRules.VISIT_REGION, 'visit_region', countryId);
@@ -271,8 +272,12 @@ export default function App() {
     setPendingBucketVisit({ trackerId, regionId });
     setCountryId(trackerId);
     setView('detail');
-    setShowBucketList(false);
-  }, [countryId, handleToggleRegion, handleToggleWishlist, removeFromWishlist, toggleWorldCountry, visited, wishlist]);
+    if (isMobile) {
+      pop();
+    } else {
+      setShowBucketList(false);
+    }
+  }, [countryId, handleToggleRegion, handleToggleWishlist, removeFromWishlist, toggleWorldCountry, visited, wishlist, isMobile, pop]);
 
   useEffect(() => {
     if (!pendingBucketVisit) return;
@@ -291,7 +296,7 @@ export default function App() {
 
   const handleToggleWorldCountry = useCallback((countryCode) => {
     const wasVisited = worldVisited.has(countryCode);
-    navigator.vibrate?.(wasVisited ? [8, 30, 8] : 12);
+    haptics.visitToggle(wasVisited);
     toggleWorldCountry(countryCode);
     if (!wasVisited) {
       grantXpOnce(`world:${countryCode}`, xpRules.VISIT_COUNTRY, 'visit_country', 'world');
@@ -321,9 +326,6 @@ export default function App() {
       clearCache();
     }
   }, [friendsActive, friends]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
-  const { activeTab, switchTab } = useNavigation();
 
   const handleFriendsToggle = useCallback((active) => {
     setFriendsActive(active);
@@ -421,7 +423,40 @@ export default function App() {
   }, []);
 
   const isShareMode = !!shareData;
-  const isWorldView = view === 'world' && !isShareMode;
+  const handleOpenStats = useCallback(() => {
+    if (isMobile && !isShareMode) {
+      push('stats');
+      return;
+    }
+    setPeekStatsOpen(true);
+  }, [isMobile, isShareMode, push]);
+  const handleOpenBucketList = useCallback(() => {
+    if (isMobile && !isShareMode) {
+      push('bucketList', {
+        items: bucketListItems,
+        onUpdate: updateBucketItem,
+        onDelete: handleDeleteBucketItem,
+        onMarkVisited: handleMarkVisitedBucketList,
+      });
+      return;
+    }
+    setShowBucketList(true);
+  }, [isMobile, isShareMode, push, bucketListItems, updateBucketItem, handleDeleteBucketItem, handleMarkVisitedBucketList]);
+  const handleOpenComparisonStats = useCallback(() => {
+    if (!comparisonFriend) return;
+    if (isMobile && !isShareMode) {
+      push('comparisonStats', {
+        myVisited: isWorldView ? worldVisited : visited,
+        friendVisited: isWorldView ? comparisonFriend.visited : new Set(comparisonFriend.visitedRegions || []),
+        total: isWorldView ? worldData.features.length : country.data.features.filter((f) => !f.properties.isBorough).length,
+        friendName: comparisonFriend.name,
+        friendPicture: comparisonFriend.picture,
+        regionLabel: isWorldView ? 'Countries' : country.regionLabel,
+      });
+      return;
+    }
+    setShowComparisonStats(true);
+  }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country]);
   const sharedVisited = isShareMode && shareData[countryId]
     ? new Set(shareData[countryId])
     : null;
@@ -584,7 +619,8 @@ export default function App() {
                     </div>
                     <div className="sheet-peek-pills">
                       <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
-                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handleOpenStats(); }}>📊 Stats</button>
+                      <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); push('games', { worldVisited }); }}>🎮 Games</button>
                     </div>
                   </div>
                 }
@@ -670,7 +706,7 @@ export default function App() {
               </div>
             )}
             {comparisonFriend && (
-              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+              <button className="comparison-stats-trigger" onClick={handleOpenComparisonStats}>
                 📊 Compare Stats
               </button>
             )}
@@ -703,7 +739,7 @@ export default function App() {
                   </div>
                   <div className="sheet-peek-pills">
                     <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handlePeekSearch(); }}>🔍 Search</button>
-                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); setPeekStatsOpen(true); }}>📊 Stats</button>
+                    <button className="sheet-pill" onClick={(e) => { e.stopPropagation(); handleOpenStats(); }}>📊 Stats</button>
                   </div>
                 </div>
               }
@@ -725,7 +761,7 @@ export default function App() {
                 collapsed={false}
                 wishlist={isShareMode ? new Set() : wishlist}
                 onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
-                onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
+                onOpenBucketList={isShareMode ? null : handleOpenBucketList}
                 bucketListItems={isShareMode ? [] : bucketListItems}
                 onAddToBucketList={isShareMode ? null : handleAddToBucketList}
                 searchRef={searchRef}
@@ -759,7 +795,7 @@ export default function App() {
               collapsed={sidebarCollapsed}
               wishlist={isShareMode ? new Set() : wishlist}
               onToggleWishlist={isShareMode ? () => {} : handleToggleWishlist}
-              onOpenBucketList={isShareMode ? null : () => setShowBucketList(true)}
+              onOpenBucketList={isShareMode ? null : handleOpenBucketList}
               bucketListItems={isShareMode ? [] : bucketListItems}
               onAddToBucketList={isShareMode ? null : handleAddToBucketList}
               searchRef={searchRef}
@@ -808,6 +844,15 @@ export default function App() {
             {isMobile && !isShareMode && (
               <div className="map-controls-cluster">
                 <ExportButton country={country} />
+                <button
+                  className="map-action-btn"
+                  onClick={() => push('games', { worldVisited })}
+                  title="Geography Games"
+                  aria-label="Open geography games"
+                  data-testid="open-geography-games"
+                >
+                  🎮
+                </button>
               </div>
             )}
 
@@ -853,14 +898,14 @@ export default function App() {
               </div>
             )}
             {comparisonFriend && (
-              <button className="comparison-stats-trigger" onClick={() => setShowComparisonStats(true)}>
+              <button className="comparison-stats-trigger" onClick={handleOpenComparisonStats}>
                 📊 Compare Stats
               </button>
             )}
           </main>
         </>
       )}
-      {peekStatsOpen && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
+      {peekStatsOpen && (!isMobile || isShareMode) && <StatsModal onClose={() => setPeekStatsOpen(false)} />}
 
       {/* Mobile tab screens — full-screen overlays over the map */}
       {isMobile && !isShareMode && activeTab === 'social' && (
@@ -871,6 +916,7 @@ export default function App() {
           worldVisited={worldVisited}
           onToggleWorld={handleToggleWorldCountry}
           onExploreCountry={handleExploreCountry}
+          onOpenWorld={handleBackToWorld}
         />
       )}
       {isMobile && !isShareMode && activeTab === 'profile' && (
@@ -912,7 +958,7 @@ export default function App() {
         />
       )}
 
-      {showBucketList && (
+      {!isMobile && showBucketList && (
         <SwipeableModal
           onClose={handleCloseBucketList}
           className="bucket-panel-modal"
@@ -928,7 +974,7 @@ export default function App() {
           />
         </SwipeableModal>
       )}
-      {showComparisonStats && comparisonFriend && (
+      {!isMobile && showComparisonStats && comparisonFriend && (
         <SwipeableModal onClose={handleCloseComparisonStats} height="90vh">
           <ComparisonStats
             myVisited={isWorldView ? worldVisited : visited}
