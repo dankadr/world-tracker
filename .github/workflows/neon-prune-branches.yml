@@ -1,0 +1,43 @@
+name: Neon — Prune All Non-Main Branches
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prune:
+    name: Delete all non-default branches
+    runs-on: ubuntu-latest
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+    steps:
+      - name: List and delete non-default branches
+        run: |
+          BRANCHES=$(curl -sf \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          # Show what we're keeping
+          MAIN_NAME=$(echo "$BRANCHES" | jq -r '.branches[] | select(.default == true) | .name')
+          echo "Keeping default branch: $MAIN_NAME"
+
+          # Collect non-default branch IDs and names
+          TO_DELETE=$(echo "$BRANCHES" | jq -r '.branches[] | select(.default != true) | "\(.id) \(.name)"')
+
+          if [ -z "$TO_DELETE" ]; then
+            echo "Nothing to delete — no non-default branches found."
+            exit 0
+          fi
+
+          echo "Branches to delete:"
+          echo "$TO_DELETE"
+
+          # Delete each one
+          while IFS=' ' read -r BRANCH_ID BRANCH_NAME; do
+            curl -sf -X DELETE \
+              -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID"
+            echo "Deleted: $BRANCH_NAME ($BRANCH_ID)"
+          done <<< "$TO_DELETE"
+
+          echo "Done."
