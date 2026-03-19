@@ -37,12 +37,26 @@ assert(src.features.length > 150, `Expected 150+ features, got ${src.features.le
 // have ISO_A2 = '-99' due to disputed-borders encoding; ISO_A2_EH is the fallback.
 // Deduplicate by ISO code (territories share their sovereign's code) keeping lowest scalerank.
 const seen = new Set();
+let israelGeometry = null;
+let palestineGeometry = null;
+
 const features = src.features
   .sort((a, b) => a.properties.scalerank - b.properties.scalerank)
   .reduce((acc, f) => {
     let isoA2 = f.properties.ISO_A2;
     if (isoA2 === '-99') isoA2 = f.properties.ISO_A2_EH;
     if (!isoA2 || isoA2 === '-99') return acc; // skip truly unidentifiable features
+
+    // Capture Israel and Palestine geometries for merging
+    const isoA2Lower = isoA2.toLowerCase();
+    if (isoA2Lower === 'il') {
+      israelGeometry = f.geometry;
+    }
+    if (isoA2Lower === 'ps') {
+      palestineGeometry = f.geometry;
+      return acc; // skip Palestine feature (will merge into Israel)
+    }
+
     if (seen.has(isoA2)) return acc;            // deduplicate
     seen.add(isoA2);
     acc.push({
@@ -54,6 +68,31 @@ const features = src.features
     });
     return acc;
   }, []);
+
+// Merge Palestine geometry into Israel to show unified territory
+if (israelGeometry && palestineGeometry) {
+  const israelFeature = features.find(f => f.properties.id === 'il');
+  if (israelFeature) {
+    // Convert Israel's geometry to MultiPolygon if needed, then merge Palestine's parts
+    if (israelGeometry.type === 'Polygon') {
+      israelFeature.geometry = {
+        type: 'MultiPolygon',
+        coordinates: [
+          israelGeometry.coordinates,
+          ...palestineGeometry.coordinates
+        ]
+      };
+    } else if (israelGeometry.type === 'MultiPolygon') {
+      israelFeature.geometry = {
+        type: 'MultiPolygon',
+        coordinates: [
+          ...israelGeometry.coordinates,
+          ...palestineGeometry.coordinates
+        ]
+      };
+    }
+  }
+}
 
 const normalized = {
   type: 'FeatureCollection',
