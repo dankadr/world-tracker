@@ -118,13 +118,15 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
         onQuit={onBack}
       />
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
-        <WorldMap
-          visited={EMPTY_VISITED}
-          onToggle={() => {}}
-          wishlist={EMPTY_WISHLIST}
-          comparisonMode={false}
-          gameMode={gameMode}
-        />
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <WorldMap
+            visited={EMPTY_VISITED}
+            onToggle={() => {}}
+            wishlist={EMPTY_WISHLIST}
+            comparisonMode={false}
+            gameMode={gameMode}
+          />
+        </div>
       </div>
       <div style={{ padding: '12px 16px 20px', background: 'var(--bg, #fff)' }}>
         {status === 'reviewing' && (
