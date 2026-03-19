@@ -32,7 +32,7 @@ function bestLabel(key) {
 function MapConfig({ onStart, onBack, title = '🗺️ Map Quiz' }) {
   const [filter, setFilter] = useState('all');
   return (
-    <div className="game-config-screen">
+    <div className="game-config-screen" data-testid="map-config-screen">
       <button className="game-config-back" onClick={onBack}>← Back</button>
       <p className="game-config-title">{title}</p>
       <p className="game-config-label">Choose your question pool:</p>
@@ -47,7 +47,7 @@ function MapConfig({ onStart, onBack, title = '🗺️ Map Quiz' }) {
           </button>
         ))}
       </div>
-      <button className="game-config-start" data-testid="map-config-start" onClick={() => onStart(filter)}>Start Quiz</button>
+      <button className="game-config-start" onClick={() => onStart(filter)} data-testid="map-config-start">Start Quiz</button>
     </div>
   );
 }
@@ -83,16 +83,15 @@ export default function GamesPanel({ worldVisited, onClose }) {
   const [gameKey, setGameKey] = useState(0);
 
   const handleBack = () => { setScreen('home'); setGameKey(0); };
-  const handleQuit = onClose ?? handleBack;
   const handlePlayAgain = () => setGameKey(k => k + 1);
 
   if (screen === 'map-config') return <MapConfig onBack={handleBack} onStart={f => { setMapFilter(f); setScreen('map'); }} />;
   if (screen === 'capital-config') return <CapitalConfig onBack={handleBack} onStart={s => { setCapitalSubMode(s); setScreen('capital'); }} />;
-  if (screen === 'map') return <MapQuiz key={gameKey} filter={mapFilter} worldVisited={worldVisited} onBack={handleBack} onQuit={handleQuit} onPlayAgain={handlePlayAgain} />;
-  if (screen === 'flag') return <FlagQuiz key={gameKey} onBack={handleBack} onQuit={handleQuit} onPlayAgain={handlePlayAgain} />;
-  if (screen === 'capital') return <CapitalQuiz key={gameKey} subMode={capitalSubMode} onBack={handleBack} onQuit={handleQuit} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'map') return <MapQuiz key={gameKey} filter={mapFilter} worldVisited={worldVisited} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'flag') return <FlagQuiz key={gameKey} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'capital') return <CapitalQuiz key={gameKey} subMode={capitalSubMode} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
   if (screen === 'shape-config') return <MapConfig title="🌍 Shape Quiz" onBack={handleBack} onStart={f => { setShapeFilter(f); setScreen('shape'); }} />;
-  if (screen === 'shape') return <ShapeQuiz key={gameKey} filter={shapeFilter} worldVisited={worldVisited} onBack={handleBack} onQuit={handleQuit} onPlayAgain={handlePlayAgain} />;
+  if (screen === 'shape') return <ShapeQuiz key={gameKey} filter={shapeFilter} worldVisited={worldVisited} onBack={handleBack} onPlayAgain={handlePlayAgain} />;
 
   return (
     <div className="games-panel" data-testid="games-panel">
@@ -107,7 +106,7 @@ export default function GamesPanel({ worldVisited, onClose }) {
           <span className="game-card-title">Map Quiz</span>
           <span className="game-card-desc">Click the highlighted country on a blank map</span>
           <span className="game-card-best">{bestLabel('map_all')}</span>
-          <button className="game-card-play" data-testid="play-map-quiz" onClick={() => setScreen('map-config')}>Play</button>
+          <button className="game-card-play" onClick={() => setScreen('map-config')} data-testid="play-map-quiz">Play</button>
         </div>
         <div className="game-card">
           <span className="game-card-icon">🏳️</span>
