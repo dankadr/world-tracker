@@ -1,5 +1,6 @@
 // src/utils/secureStorage.js
 import { encrypt, decrypt } from './crypto.js';
+import { logger } from './logger.js';
 
 let activeKey = null;
 const memCache = new Map(); // key → plaintext string | null
@@ -61,7 +62,7 @@ export const secureStorage = {
         return plaintext;
       } catch {
         // Pre-encryption plaintext or corrupt data — return as-is
-        console.debug('[secureStorage] decrypt fallback for', key);
+        logger.debug('[secureStorage] decrypt fallback for', key);
         memCache.set(key, raw);
         return raw;
       }
