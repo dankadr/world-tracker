@@ -136,7 +136,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
   if (!question) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
       <GameTopBar
         questionIndex={questionIndex}
         total={total}
@@ -153,13 +153,15 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         Find: {question.name}
       </div>
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
-        <WorldMap
-          visited={new Set()}
-          onToggle={() => {}}
-          wishlist={new Set()}
-          comparisonMode={false}
-          gameMode={gameMode}
-        />
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <WorldMap
+            visited={new Set()}
+            onToggle={() => {}}
+            wishlist={new Set()}
+            comparisonMode={false}
+            gameMode={gameMode}
+          />
+        </div>
       </div>
       {status === 'reviewing' && (
         <div style={{
