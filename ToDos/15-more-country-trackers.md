@@ -1,7 +1,7 @@
 # ToDo: More Country Sub-Trackers
 
 **Date:** 2026-03-06
-**Status:** Not Started
+**Status:** Partially complete — several new trackers already landed, but the plan and wiring are inconsistent with the repo
 **Priority:** Medium
 **Scope:** Add sub-region trackers for more countries, following the exact same pattern as the existing trackers (CH, US, NO, CA, JP, AU, PH, BR)
 
@@ -10,6 +10,15 @@
 ## Overview
 
 The app already supports sub-region tracking for Switzerland, USA, Norway, Canada, Japan, Australia, Philippines, and Brazil via `src/config/countries.json` and the corresponding GeoJSON files. This plan extends that to cover major popular destinations: England (UK regions), France, Germany, Italy, Spain, India, China, Mexico, New Zealand, and Argentina.
+
+## Reality Check (2026-03-14)
+
+- Already landed in `src/config/countries.json`: France, Germany, Italy, Spain, Mexico, United Kingdom, India, and New Zealand
+- Corresponding GeoJSON/data wiring already exists for most of those countries in `src/data/`
+- The implementation diverged slightly from the original plan: UK shipped as `gb` with `uk.json`, not `gb-eng`
+- `WorldMap` tracked-country wiring is still incomplete and only exposes the older subset plus `ph`
+- Backend `VALID_COUNTRIES` in `backend/main.py` is still outdated and does not include the newer tracker IDs
+- China and Argentina are still missing from the repo
 
 Each new tracker requires:
 1. A GeoJSON file in `src/data/`
