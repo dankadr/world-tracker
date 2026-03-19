@@ -315,19 +315,19 @@ export default function Sidebar({
         ) : (
           <ul>{regionList.map((r) => renderRegionItem(r))}</ul>
         )}
+        {!isMobile && !readOnly && (
+          <SettingsPanel
+            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+            onShowOnboarding={onShowOnboarding}
+            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
+        )}
       </div>
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
       </div>
-      {!isMobile && !readOnly && (
-        <SettingsPanel
-          onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-          onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
-          onShowOnboarding={onShowOnboarding}
-          onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
-        />
-      )}
       {showAdmin && (
         <SwipeableModal onClose={() => setShowAdmin(false)} maxWidth={480}>
           <AdminPanel />
