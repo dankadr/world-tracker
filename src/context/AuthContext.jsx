@@ -59,6 +59,20 @@ export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadAuth());
   const [loading, setLoading] = useState(false);
 
+  // Auto-logout when any API call receives a 401 (expired/invalid token).
+  // api.js dispatches 'auth:expired' on every 401 response.
+  useEffect(() => {
+    const handleExpired = () => {
+      if (!loadAuth()) return; // already logged out
+      clearActiveKey();
+      clearBatch();
+      setAuth(null);
+      saveAuth(null);
+    };
+    window.addEventListener('auth:expired', handleExpired);
+    return () => window.removeEventListener('auth:expired', handleExpired);
+  }, []);
+
   // On mount, if already logged in, check for any leftover anonymous data
   useEffect(() => {
     if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
