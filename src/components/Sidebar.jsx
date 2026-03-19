@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -58,6 +58,25 @@ export default function Sidebar({
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
+
+  const tabsRef = useRef(null);
+
+  // Redirect vertical wheel events to horizontal scroll on the tab strip.
+  // Uses addEventListener (not onWheel) so we can pass { passive: false } and
+  // call preventDefault — required for Chrome to honour it.
+  // Trackpad guard: if the user is already scrolling horizontally, let it through.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   // Compute bucket list set for this country
   const bucketListSet = useMemo(
@@ -258,7 +277,7 @@ export default function Sidebar({
 
       <OverallProgress />
 
-      <nav className="country-tabs">
+      <nav className="country-tabs" ref={tabsRef}>
         {countryList.map((c) => (
           <button
             key={c.id}

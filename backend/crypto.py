@@ -7,6 +7,24 @@ import os
 
 from cryptography.fernet import Fernet, InvalidToken
 
+# Cache Fernet instances to avoid re-deriving the key on every enc()/dec() call.
+# Keyed by (user_id, master_key_fingerprint) where the fingerprint is the first
+# 4 bytes of the master key as hex — this ensures the cache auto-invalidates if
+# the master key ever rotates (new fingerprint → cache miss → fresh derivation).
+_FERNET_CACHE: dict[tuple[int, str], Fernet] = {}
+
+
+def _get_fernet(user_id: int) -> Fernet:
+    master_hex = os.environ["ENCRYPTION_MASTER_KEY"]
+    fingerprint = master_hex[:8]  # first 4 bytes as hex chars
+    cache_key = (user_id, fingerprint)
+    if cache_key not in _FERNET_CACHE:
+        master = bytes.fromhex(master_hex)
+        digest = hmac.new(master, str(user_id).encode(), hashlib.sha256).digest()
+        key = base64.urlsafe_b64encode(digest)
+        _FERNET_CACHE[cache_key] = Fernet(key)
+    return _FERNET_CACHE[cache_key]
+
 
 def _derive_key(user_id: int) -> bytes:
     master = bytes.fromhex(os.environ["ENCRYPTION_MASTER_KEY"])
@@ -16,12 +34,12 @@ def _derive_key(user_id: int) -> bytes:
 
 def enc(user_id: int, plaintext: str) -> str:
     """Encrypt a string. Returns a Fernet token string."""
-    return Fernet(_derive_key(user_id)).encrypt(plaintext.encode()).decode()
+    return _get_fernet(user_id).encrypt(plaintext.encode()).decode()
 
 
 def dec(user_id: int, token: str) -> str:
     """Decrypt a Fernet token string. Raises InvalidToken on failure."""
-    return Fernet(_derive_key(user_id)).decrypt(token.encode()).decode()
+    return _get_fernet(user_id).decrypt(token.encode()).decode()
 
 
 def enc_json(user_id: int, obj) -> str:
