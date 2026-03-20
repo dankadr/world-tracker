@@ -78,7 +78,10 @@ export default function useVisitedCountries() {
   }
 
   useEffect(() => {
-    setIsLoading(isSyncingLocalData || (initWorldFromCache(token, userId).size === 0 && isLoggedIn));
+    // Use visitedRef.current (actual current state) not initWorldFromCache (stale bulk cache).
+    // Same reasoning as useVisitedRegions: the stale cache may have data while visited is
+    // still empty (fresh device, memCache not yet populated), causing false isLoading=false.
+    setIsLoading(isSyncingLocalData || (visitedRef.current.size === 0 && isLoggedIn));
   }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   // Sync from server when logged in (bulk endpoint) — background only

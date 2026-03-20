@@ -199,8 +199,13 @@ export default function useVisitedRegions(countryId) {
   }
 
   useEffect(() => {
-    const nextInitial = initFromCache(countryId, token, userId);
-    setIsLoading(isSyncingLocalData || (nextInitial.visited.size === 0 && isLoggedIn));
+    // Use visitedRef.current (the actual current visited state after the render-time
+    // reset) rather than initFromCache. initFromCache reads the stale bulk cache which
+    // can contain data for the new country even though visited was just reset to empty
+    // by loadLocal (which returns empty on fresh devices where memCache isn't populated).
+    // Using the stale cache size would set isLoading=false while visited is still empty,
+    // causing Leaflet to mount with blank data before the sync effect corrects it.
+    setIsLoading(isSyncingLocalData || (visitedRef.current.size === 0 && isLoggedIn));
   }, [countryId, isLoggedIn, isSyncingLocalData, token, userId]);
 
   // Debounced save: batches rapid PUT calls into a single request
