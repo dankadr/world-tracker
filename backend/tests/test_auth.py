@@ -82,3 +82,12 @@ async def test_google_login_existing_user(client, mock_db):
     assert data["user"]["id"] == 42
     assert data["user"]["email"] == "existing@example.com"
     assert data["user"]["sub"] == "google-uid-42"
+
+
+async def test_health_endpoint_returns_ok(client):
+    """GET /api/health returns 200 with status ok, no auth required."""
+    resp = await client.get("/api/health")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert "timestamp" in data

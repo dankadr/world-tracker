@@ -17,6 +17,7 @@
 import { invalidateBulkCache } from './api';
 import { emitVisitedChange } from './events';
 import { secureStorage } from './secureStorage';
+import { logger } from './logger.js';
 
 const ANON_PREFIX = 'swiss-tracker-';
 const USER_PREFIX_RE = /^swiss-tracker-u\d+-/;
@@ -162,7 +163,7 @@ export async function syncLocalDataToServer(token, userId) {
 
   if (!hasRegions && !hasWorld) return false;
 
-  console.log('[sync] Found anonymous local data, syncing to server…', {
+  logger.log('[sync] Found anonymous local data, syncing to server…', {
     regions: Object.keys(anonData.regions),
     worldCountries: anonData.world?.length || 0,
   });
@@ -232,7 +233,7 @@ export async function syncLocalDataToServer(token, userId) {
     invalidateBulkCache(token);
     emitVisitedChange();
 
-    console.log('[sync] Anonymous local data synced successfully');
+    logger.log('[sync] Anonymous local data synced successfully');
     return true;
   } catch (err) {
     console.error('[sync] Failed to sync anonymous local data:', err);
