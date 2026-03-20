@@ -51,6 +51,8 @@ import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import useShareMode from './hooks/useShareMode';
+import GlobalSearch from './components/GlobalSearch';
 
 function parseShareHash() {
   const hash = window.location.hash;
@@ -157,6 +159,7 @@ export default function App() {
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const { token, isLoggedIn, user } = useAuth();
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
@@ -408,6 +411,26 @@ export default function App() {
     setView('detail');
   }, []);
 
+  const handleSearchSelect = useCallback((entry) => {
+    if (entry.type === 'country') {
+      // Navigate to world view and select the country
+      setView('world');
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'region') {
+      // Navigate to the tracker and highlight the region
+      setCountryId(entry.trackerId);
+      setView('detail');
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'tracker') {
+      setCountryId(entry.trackerId);
+      setView('detail');
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'unesco') {
+      setView('world');
+      if (isMobile) switchTab('map');
+    }
+  }, [isMobile, switchTab]);
+
   const handleBackToWorld = useCallback(() => {
     setView('world');
   }, []);
@@ -518,6 +541,7 @@ export default function App() {
     searchRef,
     closeModals,
     onOpenEasterEggPrompt: handleOpenEasterEggPrompt,
+    onOpenGlobalSearch: () => setShowGlobalSearch(true),
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
@@ -580,6 +604,12 @@ export default function App() {
       {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
+      {showGlobalSearch && (
+        <GlobalSearch
+          onClose={() => setShowGlobalSearch(false)}
+          onSelect={handleSearchSelect}
+        />
+      )}
       <Onboarding />
       {isShareMode && (
         <div className="share-banner">

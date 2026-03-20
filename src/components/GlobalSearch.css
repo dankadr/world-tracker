@@ -1,0 +1,263 @@
+/* ── GlobalSearch Palette ───────────────────────────────────────────────── */
+
+.gs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9900;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(48px, 12vh, 120px);
+  padding-left: 16px;
+  padding-right: 16px;
+  animation: gs-fade-in 120ms ease;
+}
+
+@keyframes gs-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.gs-modal {
+  width: 100%;
+  max-width: 560px;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow-elevated);
+  overflow: hidden;
+  animation: gs-slide-in 150ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: min(80vh, 600px);
+}
+
+@keyframes gs-slide-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Input row ─────────────────────────────────────────────────────────── */
+
+.gs-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+
+.gs-input-icon {
+  font-size: 16px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.gs-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  caret-color: var(--text-primary);
+}
+
+.gs-input::placeholder {
+  color: var(--text-muted);
+}
+
+.gs-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 150ms;
+}
+
+.gs-clear-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ── Results area ──────────────────────────────────────────────────────── */
+
+.gs-results {
+  overflow-y: auto;
+  flex: 1;
+  overscroll-behavior: contain;
+  /* custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+/* ── Group ─────────────────────────────────────────────────────────────── */
+
+.gs-group {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.gs-group:last-child {
+  border-bottom: none;
+}
+
+.gs-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.gs-clear-recent {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  transition: color 150ms;
+}
+
+.gs-clear-recent:hover {
+  color: var(--text-primary);
+}
+
+/* ── Result item ───────────────────────────────────────────────────────── */
+
+.gs-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 100ms;
+}
+
+.gs-result-item:hover,
+.gs-result-item--active {
+  background: var(--hover-bg);
+}
+
+.gs-recent-item {
+  opacity: 0.85;
+}
+
+.gs-result-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.gs-recent-icon {
+  font-size: 13px;
+  opacity: 0.5;
+}
+
+.gs-result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.gs-result-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gs-result-sublabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Status messages ───────────────────────────────────────────────────── */
+
+.gs-status {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.gs-status--hint {
+  opacity: 0.7;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+.gs-footer {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+
+.gs-footer span {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gs-footer kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .gs-backdrop {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+    align-items: flex-start;
+  }
+
+  .gs-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0 0 16px 16px;
+    max-height: 80vh;
+  }
+
+  .gs-footer {
+    display: none;
+  }
+}
