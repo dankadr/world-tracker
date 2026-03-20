@@ -51,6 +51,7 @@ import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { haptics } from './utils/haptics';
 import useShareMode from './hooks/useShareMode';
+import useComparisonMode from './hooks/useComparisonMode';
 
 
 function AchievementToasts() {
@@ -307,11 +308,15 @@ export default function App() {
   const [showFriends, setShowFriends] = useState(false);
   const [friendsActive, setFriendsActive] = useState(false);
 
-  // Comparison state: { id, name, picture, visited (Set of country ids), visitedRegions (array of region ids for current country) }
-  const [comparisonFriend, setComparisonFriend] = useState(null);
-  const [comparisonData, setComparisonData] = useState(null); // raw API data
-  const [showComparisonStats, setShowComparisonStats] = useState(false);
-  const [comparisonLoading, setComparisonLoading] = useState(false);
+  // Comparison state managed by hook
+  const {
+    comparisonFriend,
+    showComparisonStats,
+    setShowComparisonStats,
+    comparisonLoading,
+    compare: doCompare,
+    exitComparison,
+  } = useComparisonMode({ countryId, loadFriendVisited });
 
   // Load/clear friend overlay data when toggled
   useEffect(() => {
@@ -346,57 +351,14 @@ export default function App() {
 
   // Comparison handlers
   const handleCompare = useCallback(async (friend) => {
-    if (!friend) {
-      // Exit comparison
-      setComparisonFriend(null);
-      setComparisonData(null);
-      setShowComparisonStats(false);
-      return;
+    const loaded = await doCompare(friend);
+    if (friend && loaded) {
+      if (isMobile) switchTab('map');
+      else setShowFriends(false);
     }
-    setComparisonLoading(true);
-    try {
-      const data = await loadFriendVisited(friend.id);
-      if (data) {
-        setComparisonData(data);
-        const friendWorldCountries = new Set(data.world?.countries || []);
-        // Extract regions for the current country
-        const countryRegions = (data.regions || [])
-          .filter((r) => r.country_id === countryId)
-          .flatMap((r) => r.regions || []);
-        setComparisonFriend({
-          id: friend.id,
-          name: friend.name,
-          picture: friend.picture,
-          visited: friendWorldCountries,
-          visitedRegions: countryRegions,
-        });
-        if (isMobile) {
-          switchTab('map');
-        } else {
-          setShowFriends(false);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load comparison data:', err);
-    } finally {
-      setComparisonLoading(false);
-    }
-  }, [loadFriendVisited, countryId]);
+  }, [doCompare, isMobile, switchTab]);
 
-  const handleExitComparison = useCallback(() => {
-    setComparisonFriend(null);
-    setComparisonData(null);
-    setShowComparisonStats(false);
-  }, []);
-
-  // Update comparison friend's region data when switching countries
-  useEffect(() => {
-    if (!comparisonData) return;
-    const countryRegions = (comparisonData.regions || [])
-      .filter((r) => r.country_id === countryId)
-      .flatMap((r) => r.regions || []);
-    setComparisonFriend((prev) => prev ? { ...prev, visitedRegions: countryRegions } : null);
-  }, [countryId, comparisonData]);
+  const handleExitComparison = exitComparison;
 
   const handleExploreCountry = useCallback((id) => {
     setCountryId(id);
