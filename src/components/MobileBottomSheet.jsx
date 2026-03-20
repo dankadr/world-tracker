@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import useKeyboardAvoidance from '../hooks/useKeyboardAvoidance';
 
 /**
  * MobileBottomSheet — a draggable bottom-sheet container for mobile.
@@ -18,7 +19,10 @@ const SPRING_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
 export default function MobileBottomSheet({ children, peekContent, onSnapChange, expandTo }) {
   const [snap, setSnap] = useState(SNAP_PEEK);
   const sheetRef = useRef(null);
+  const sheetBodyRef = useRef(null);
   const dragState = useRef(null);
+
+  useKeyboardAvoidance(sheetBodyRef);
   // Rolling window of last 3 touch positions for velocity calc
   const touchHistory = useRef([]);
 
@@ -165,7 +169,7 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
           </div>
         )}
       </div>
-      <div className="sheet-body" style={{ display: isPeek ? 'none' : 'flex' }}>
+      <div className="sheet-body" ref={sheetBodyRef} style={{ display: isPeek ? 'none' : 'flex' }}>
         {children}
       </div>
     </div>
