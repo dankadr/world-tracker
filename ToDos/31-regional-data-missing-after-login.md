@@ -1,5 +1,7 @@
 # Bug: Regional Data Not Loaded After Login
 
+**Status:** Fixed — `fix/regional-data-after-login`
+
 ## Problem
 After user logs in, only the world map progress displays. Regional data (Swiss cantons, US states, etc.) doesn't load — it appears empty or undefined.
 

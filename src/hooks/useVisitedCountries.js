@@ -145,11 +145,25 @@ export default function useVisitedCountries() {
       if (document.visibilityState === 'visible') refetch();
     };
 
+    // Re-fetch when syncLocalDataToServer completes — it invalidates the cache
+    // and emits 'visitedchange' so world progress loads immediately after login sync.
+    const onVisitedChange = () => {
+      invalidateBulkCache(token);
+      fetchAllVisited(token, true).then((bulk) => {
+        if (!bulk) return;
+        const remote = new Set(bulk.world || []);
+        setVisited(remote);
+        saveVisitedWorld(remote, userId);
+      });
+    };
+
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    window.addEventListener('visitedchange', onVisitedChange);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', onVisitedChange);
     };
   }, [isLoggedIn, token, userId]);
 

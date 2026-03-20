@@ -351,11 +351,40 @@ export default function useVisitedRegions(countryId) {
       if (document.visibilityState === 'visible') refetch();
     };
 
+    // Also re-fetch when syncLocalDataToServer completes — it invalidates the bulk
+    // cache and emits 'visitedchange' so we pick up the freshly merged data
+    // immediately after login sync, without waiting for a tab-focus event.
+    const onVisitedChange = () => {
+      invalidateBulkCache(token);
+      fetchAllVisited(token, true).then((bulk) => {
+        if (!bulk) return;
+        const countryData = bulk.regions[countryId];
+        const remote = countryData
+          ? {
+              regions: new Set(countryData.regions || []),
+              dates: countryData.dates || {},
+              notes: countryData.notes || {},
+              wishlist: new Set(countryData.wishlist || []),
+            }
+          : { regions: new Set(), dates: {}, notes: {}, wishlist: new Set() };
+        setVisited(remote.regions);
+        setDatesState(remote.dates);
+        setNotesState(remote.notes);
+        setWishlist(remote.wishlist);
+        saveLocal(countryId, remote.regions, userId);
+        saveDates(countryId, remote.dates, userId);
+        saveNotes(countryId, remote.notes, userId);
+        saveWishlist(countryId, remote.wishlist, userId);
+      });
+    };
+
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    window.addEventListener('visitedchange', onVisitedChange);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', onVisitedChange);
     };
   }, [countryId, isLoggedIn, token, userId]);
 
