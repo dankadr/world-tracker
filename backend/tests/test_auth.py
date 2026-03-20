@@ -91,3 +91,21 @@ async def test_health_endpoint_returns_ok(client):
     data = resp.json()
     assert data["status"] == "ok"
     assert "timestamp" in data
+
+
+# ---------------------------------------------------------------------------
+# Security: input length validation
+# ---------------------------------------------------------------------------
+
+async def test_login_token_too_long_rejected(client):
+    """POST /auth/google rejects tokens over 4096 chars."""
+    resp = await client.post("/auth/google", json={"token": "x" * 4097})
+    assert resp.status_code == 422
+
+
+async def test_google_login_token_max_length_accepted(client):
+    """POST /auth/google accepts token at exactly max length boundary (4096)."""
+    # Validation only — doesn't need to succeed auth, just not reject on length
+    resp = await client.post("/auth/google", json={"token": "x" * 4096})
+    # Will fail auth (invalid token) but NOT with a 422 validation error
+    assert resp.status_code != 422

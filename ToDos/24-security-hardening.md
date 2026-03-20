@@ -1,7 +1,7 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Phase 1–3 complete — CSPRNG, input validation, CSP headers, CORS multi-origin, security.txt shipped
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 
