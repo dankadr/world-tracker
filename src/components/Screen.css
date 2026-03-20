@@ -88,9 +88,36 @@
   text-overflow: ellipsis;
   /* Shift slightly left to visually center with back button on left */
   margin-right: 40px;
+  transition: opacity 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* When a large title is present, hide compact title initially */
+.screen-header--large-title .screen-title {
+  opacity: 0;
+}
+
+/* Reveal compact title when large title has scrolled away */
+.screen-header--large-title.header-compact .screen-title {
+  opacity: 1;
 }
 
 .dark .screen-title {
+  color: var(--text-primary, #e8d5a3);
+}
+
+/* Large collapsing title (iOS-style 34px heading above content) */
+.screen-large-title {
+  margin: 0;
+  padding: 8px 20px 16px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+  color: var(--text-primary, #0d1b2a);
+  flex-shrink: 0;
+}
+
+.dark .screen-large-title {
   color: var(--text-primary, #e8d5a3);
 }
 
