@@ -49,14 +49,9 @@ import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
-import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import useShareMode from './hooks/useShareMode';
 
-function parseShareHash() {
-  const hash = window.location.hash;
-  if (!hash.startsWith('#share=')) return null;
-  return decodeShareData(hash.slice(7));
-}
 
 function AchievementToasts() {
   const { user } = useAuth();
@@ -150,7 +145,7 @@ export default function App() {
   const [view, setView] = useState('world'); // 'world' | 'detail'
   const isWorldView = view === 'world';
   const [countryId, setCountryId] = useState('ch');
-  const [shareData, setShareData] = useState(null);
+  const { isShareMode, exitShareMode, getSharedVisited } = useShareMode({ setView, setCountryId });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
@@ -412,17 +407,6 @@ export default function App() {
     setView('world');
   }, []);
 
-  useEffect(() => {
-    const data = parseShareHash();
-    if (data) {
-      setShareData(data);
-      setView('detail');
-      const firstKey = Object.keys(data).find((k) => countries[k]);
-      if (firstKey) setCountryId(firstKey);
-    }
-  }, []);
-
-  const isShareMode = !!shareData;
   const handleOpenStats = useCallback(() => {
     if (isMobile && !isShareMode) {
       push('stats');
@@ -457,17 +441,10 @@ export default function App() {
     }
     setShowComparisonStats(true);
   }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country]);
-  const sharedVisited = isShareMode && shareData[countryId]
-    ? new Set(shareData[countryId])
-    : null;
+  const sharedVisited = getSharedVisited(countryId);
 
   const displayVisited = isShareMode ? (sharedVisited || new Set()) : visited;
   const handleToggle = isShareMode ? () => {} : handleToggleRegion;
-
-  const exitShareMode = () => {
-    setShareData(null);
-    window.location.hash = '';
-  };
 
   const regionList = country.data.features.filter((f) => !f.properties.isBorough);
   const total = regionList.length;
