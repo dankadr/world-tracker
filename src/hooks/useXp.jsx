@@ -133,7 +133,7 @@ export function XpProvider({ children }) {
   const pendingDeltasRef = useRef(loadPendingDeltas(userId));
   const isFlushingRef = useRef(false);
 
-  // When user changes, reload user-scoped local state.
+  // When user changes (login transition), reload user-scoped local state.
   useEffect(() => {
     if (userId === currentUserId) return;
     setCurrentUserId(userId);
@@ -141,6 +141,25 @@ export function XpProvider({ children }) {
     grantedKeysRef.current = loadGrantedKeys(userId);
     pendingDeltasRef.current = loadPendingDeltas(userId);
   }, [userId, currentUserId]);
+
+  // On page load when the user is already logged in, the useState() initializers
+  // above run before AuthContext's mount effect has had a chance to call
+  // warmCache(). This means loadGrantedKeys() / loadPendingDeltas() read from
+  // unwarmed encrypted storage and return empty data. Once warmCache() completes
+  // it dispatches 'auth:cache-warm' — we reload the refs so granted-key tracking
+  // and pending-delta replay are correct for the session.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      grantedKeysRef.current = loadGrantedKeys(userId);
+      pendingDeltasRef.current = loadPendingDeltas(userId);
+      // Reload local XP — it may have been read as 0 before the cache was warm.
+      const localXp = loadXp(userId);
+      if (localXp > 0) setTotalXp(localXp);
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [userId]);
 
   const enqueuePendingDelta = useCallback((delta) => {
     pendingDeltasRef.current = [...pendingDeltasRef.current, delta];
