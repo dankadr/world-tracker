@@ -51,6 +51,7 @@ import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import useTabSwipe from './hooks/useTabSwipe';
 
 function parseShareHash() {
   const hash = window.location.hash;
@@ -521,6 +522,9 @@ export default function App() {
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
+  const [sheetSnap, setSheetSnap] = useState(20); // 20 = SNAP_PEEK
+
+  useTabSwipe(activeTab, switchTab, sheetSnap);
   const longPressTimerRef = useRef(null);
   const longPressStartRef = useRef(null);
 
@@ -558,6 +562,7 @@ export default function App() {
   }, [isMobile]);
 
   const handleSheetSnap = useCallback((snapVal) => {
+    setSheetSnap(snapVal);
     // Reset expandTo after snap completes so it can be triggered again
     setSheetExpandTo(null);
   }, []);
