@@ -137,10 +137,17 @@ export function XpProvider({ children }) {
   useEffect(() => {
     if (userId === currentUserId) return;
     setCurrentUserId(userId);
-    setTotalXp(loadXp(userId));
+    // On fresh login, user.xp from the auth response gives the correct server value
+    // immediately — no need to wait for a separate /api/user/xp fetch.
+    // On page reload the auth object stored in localStorage also carries xp.
+    // Fall back to loadXp (local cache) only when xp is absent from auth data.
+    const authXp = user?.xp;
+    const initialXp = authXp !== undefined ? authXp : loadXp(userId);
+    setTotalXp(initialXp);
+    if (initialXp > 0) saveXp(userId, initialXp);
     grantedKeysRef.current = loadGrantedKeys(userId);
     pendingDeltasRef.current = loadPendingDeltas(userId);
-  }, [userId, currentUserId]);
+  }, [userId, currentUserId, user]);
 
   const enqueuePendingDelta = useCallback((delta) => {
     pendingDeltasRef.current = [...pendingDeltasRef.current, delta];
