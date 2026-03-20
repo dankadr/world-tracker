@@ -1,7 +1,7 @@
 # ToDo: Bug Fixes & Quality Improvements
 
 **Date:** 2026-03-14
-**Status:** In Progress — bug list is now partially triaged against the current repo
+**Status:** In Progress — bug list is now triaged against the current repo, with several recent PRs already folded into the plan
 **Priority:** High (ongoing)
 **Scope:** Fix known bugs, improve stability, establish bug tracking process
 
@@ -23,6 +23,19 @@ Document known issues, establish a bug triage process, and systematically fix ex
   - `npx playwright test` passes
 - Older `test-results/` artifacts are no longer a reliable source of truth by themselves; some reflect the pre-fix setup
 - `src/App.jsx` and `backend/main.py` are still large coordination points, so regression risk remains high
+
+
+## PR Review Snapshot (2026-03-19)
+
+Recent merged PRs materially changed the bug backlog, so this ToDo now reflects the current branch instead of the older reports:
+
+- **PR #77** — fixed the mini-game quit blank-screen flow, share URL compression, dark-mode cleanup, and added regression tests around Map Quiz / Flag Quiz behavior.
+- **PR #100** — fixed the mobile zero-height quiz rendering bug and restored Shape Quiz target reveal behavior.
+- **PR #102** — fixed horizontal tracker-tab scrolling and dark-mode styling in `EasterEggPrompt`.
+- **PR #104** — moved `SettingsPanel` inside the scrollable region list so desktop region views no longer hide the achievements / progress area.
+- **PR #111** — added a proper loading state for fresh login and tracker switches so stale or empty region data does not flash before authenticated fetches resolve.
+
+These changes mean several previously-open bugs are now closed or downgraded to monitoring-only.
 
 ## Known Issues to Investigate
 
@@ -52,16 +65,16 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Component:** Mini-game map layout
 - **Issue:** The mini-game map leaves visible space showing the background map behind it.
 - **Required behavior:** Mini-game map container should fully cover intended viewport area.
-- **Current repo status:** Could not reproduce in a current desktop visual check of Map Quiz. The quiz screen renders as a full overlay and the game map fills the available screen area.
-- **Status:** Not currently reproducing on desktop; re-check on mobile if this report returns
+- **Current repo status:** Fixed by PR #100 after a mobile-specific flex/height bug collapsed the quiz container to 0 height. Current desktop and mobile behavior should be treated as fixed unless a new repro appears.
+- **Status:** Fixed
 
 #### D. Quit button in mini-game leads to blank screen
 - **Severity:** Critical
 - **Component:** Mini-game quit/exit navigation
 - **Issue:** Pressing quit exits to a blank screen instead of returning to the expected app view.
 - **Required behavior:** Route/state should return users to the previous screen (e.g., main map/dashboard) reliably.
-- **Current repo status:** Could not reproduce in current mobile smoke. Opening games from the Explore tab, starting Map Quiz, and pressing `Quit` returns to the games home screen correctly.
-- **Status:** Verified not currently reproducing
+- **Current repo status:** Fixed by PR #77 and kept covered by smoke tests. `Quit` now routes back correctly on desktop and mobile instead of leaving a blank shell.
+- **Status:** Fixed
 
 #### E. Flag mini-game missing nearby flag display
 - **Severity:** Medium
@@ -80,11 +93,11 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Fix:** Scope Vitest to frontend unit/spec files under `src/` and explicitly exclude `.worktrees/`, `e2e/`, `dist/`, `test-results/`, and `node_modules/`.
 - **Status:** Fixed
 
-#### G. Map Quiz target country was not highlighted in click mode
+#### G. Map Quiz target country / reveal-state regressions in click mode
 - **Severity:** High
 - **Component:** `src/components/games/MapQuiz.jsx`
-- **Issue:** `WorldMap` never received the active `targetId`, so the click-the-country game could ask for a country without actually marking the live target state on the map.
-- **Fix:** Pass `targetId: question?.id ?? null` into `gameMode`.
+- **Issue:** The click flow had two back-to-back regressions: first the target was not wired through at all, then later fixes risked revealing or zooming the answer too early.
+- **Fix:** Keep `targetId` available for testability and map data attributes, but gate visual reveal / zoom behind `revealTarget` so the answer is only shown during review state.
 - **Status:** Fixed
 
 #### H. Smoke coverage was desktop-only
@@ -172,7 +185,8 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **File:** `src/components/ShareButton.jsx`
 - **Issue:** Share mode encodes visited data as base64 in the URL hash. With many visited regions across all trackers, the URL can exceed browser limits (~2,000 chars for some browsers)
 - **Impact:** Share links break or get truncated
-- **Fix approach:** Compress data before base64 encoding (LZ-string), or switch to a server-generated short link
+- **Current repo status:** Fixed by PR #77 using `lz-string` encoded URI compression with backward-compatible legacy decode support.
+- **Remaining gap:** If share payloads grow substantially again, a server-generated short-link flow may still be worth adding later.
 
 #### 8. Dark Mode Inconsistencies
 - **File:** `src/App.css`, various component CSS files
@@ -181,7 +195,8 @@ Document known issues, establish a bug triage process, and systematically fix ex
   - `src/components/ConfirmDialog.css`
   - `src/components/EasterEggPrompt.css`
 - **Impact:** Visual inconsistency in dark mode
-- **Fix approach:** Audit all CSS files for hardcoded colors, replace with CSS custom properties
+- **Current repo status:** Partially fixed by PR #77 and PR #102 (`ConfirmDialog.css` and `EasterEggPrompt.css` were cleaned up).
+- **Remaining gap:** Continue auditing other component styles for hardcoded light-theme colors.
 
 ### Low Priority
 
