@@ -142,7 +142,7 @@ export default function WorldSidebar({
     <aside className={`sidebar world-sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-header-top">
-          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
+          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar" aria-label="Customize avatar">
             <AvatarCanvas config={avatarConfig} size={40} />
           </button>
           <div className="sidebar-title-group">
@@ -154,8 +154,8 @@ export default function WorldSidebar({
           </div>
           <div className="header-actions">
             {!isMobile && onOpenFriends && (
-              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends" aria-label="Friends">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -167,8 +167,8 @@ export default function WorldSidebar({
               </button>
             )}
             {!isMobile && (
-              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics" aria-label="Statistics">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
@@ -180,13 +180,14 @@ export default function WorldSidebar({
                 className="theme-toggle"
                 onClick={toggleTheme}
                 title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {dark ? '☀️' : '🌙'}
+                <span aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
               </button>
             )}
             {!isMobile && isAdmin && (
-              <button className="header-icon-btn" onClick={() => setShowAdmin(true)} title="Admin Panel">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button className="header-icon-btn" onClick={() => setShowAdmin(true)} title="Admin Panel" aria-label="Admin Panel">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                 </svg>
               </button>

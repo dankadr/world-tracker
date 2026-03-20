@@ -136,7 +136,7 @@ function AchievementToasts() {
             <span className="toast-title">{t.title}</span>
             <span className="toast-desc">{t.desc}</span>
           </div>
-          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))}>&times;</button>
+          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))} aria-label="Dismiss notification">&times;</button>
         </div>
       ))}
     </div>,
@@ -659,8 +659,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <WorldMap
@@ -815,8 +816,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <RegionMap
