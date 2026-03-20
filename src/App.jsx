@@ -127,9 +127,9 @@ function AchievementToasts() {
   if (toasts.length === 0) return null;
 
   return createPortal(
-    <div className="toast-container">
+    <div className="toast-container" aria-live="assertive" aria-atomic="false">
       {toasts.map((t) => (
-        <div key={t.ts} className="toast-achievement">
+        <div key={t.ts} className="toast-achievement" role="alert">
           <span className="toast-icon">{t.icon}</span>
           <div className="toast-text">
             <span className="toast-label">Achievement Unlocked!</span>
