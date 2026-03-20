@@ -31,14 +31,14 @@ try:
     from backend.database import get_db, init_db, engine, DATABASE_URL as _DATABASE_URL
     from backend.models import (
         User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
-        Challenge, ChallengeParticipant, WishlistItem, XpLog,
+        Challenge, ChallengeParticipant, WishlistItem, XpLog, CustomMarker,
         generate_friend_code, generate_challenge_id,
     )
 except ImportError:
     from database import get_db, init_db, engine, DATABASE_URL as _DATABASE_URL
     from models import (
         User, VisitedRegions, VisitedWorld, FriendRequest, Friendship,
-        Challenge, ChallengeParticipant, WishlistItem, XpLog,
+        Challenge, ChallengeParticipant, WishlistItem, XpLog, CustomMarker,
         generate_friend_code, generate_challenge_id,
     )
 
@@ -1848,6 +1848,144 @@ async def add_user_xp(
         next_level_xp=new_level_info["next_level_xp"],
         xp_gained=applied_delta,
     )
+
+
+# --------------- Custom Markers endpoints ---------------
+
+class MarkerCreate(BaseModel):
+    lat: float
+    lng: float
+    label: str | None = None
+    icon: str = '📍'
+    color: str = '#c9a84c'
+
+
+class MarkerUpdate(BaseModel):
+    label: str | None = None
+    icon: str | None = None
+    color: str | None = None
+
+
+@app.get("/api/markers")
+async def list_markers(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all custom markers for the current user."""
+    result = await db.execute(
+        select(CustomMarker)
+        .where(CustomMarker.user_id == user.id)
+        .order_by(CustomMarker.created_at.asc())
+    )
+    markers = result.scalars().all()
+    uid = user.id
+    return [
+        {
+            "id": m.id,
+            "lat": float(m.lat),
+            "lng": float(m.lng),
+            "label": dec_str_safe(uid, m.label) if m.label else None,
+            "icon": m.icon,
+            "color": m.color,
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+        }
+        for m in markers
+    ]
+
+
+@app.post("/api/markers", status_code=201)
+async def create_marker(
+    body: MarkerCreate,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a custom marker (max 50 per user)."""
+    count = (await db.execute(
+        select(func.count()).select_from(CustomMarker).where(CustomMarker.user_id == user.id)
+    )).scalar()
+    if count >= 50:
+        raise HTTPException(400, "Marker limit reached (50)")
+
+    if body.icon and len(body.icon) > 10:
+        raise HTTPException(400, "Icon must be 10 characters or fewer")
+    if body.color and (len(body.color) != 7 or not body.color.startswith('#')):
+        raise HTTPException(400, "Color must be a 7-character hex string like #c9a84c")
+
+    uid = user.id
+    marker = CustomMarker(
+        user_id=uid,
+        lat=str(body.lat),
+        lng=str(body.lng),
+        label=enc(uid, body.label) if body.label else None,
+        icon=body.icon,
+        color=body.color,
+    )
+    db.add(marker)
+    await db.commit()
+    return {
+        "id": marker.id,
+        "lat": body.lat,
+        "lng": body.lng,
+        "label": body.label,
+        "icon": marker.icon,
+        "color": marker.color,
+        "created_at": marker.created_at.isoformat() if marker.created_at else None,
+    }
+
+
+@app.patch("/api/markers/{marker_id}")
+async def update_marker(
+    marker_id: int,
+    body: MarkerUpdate,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a marker's label, icon, or color."""
+    result = await db.execute(
+        select(CustomMarker).where(CustomMarker.id == marker_id, CustomMarker.user_id == user.id)
+    )
+    marker = result.scalar_one_or_none()
+    if not marker:
+        raise HTTPException(404, "Marker not found")
+
+    uid = user.id
+    if body.label is not None:
+        marker.label = enc(uid, body.label) if body.label else None
+    if body.icon is not None:
+        if len(body.icon) > 10:
+            raise HTTPException(400, "Icon must be 10 characters or fewer")
+        marker.icon = body.icon
+    if body.color is not None:
+        if len(body.color) != 7 or not body.color.startswith('#'):
+            raise HTTPException(400, "Color must be a 7-character hex string")
+        marker.color = body.color
+
+    await db.commit()
+    return {
+        "id": marker.id,
+        "lat": float(marker.lat),
+        "lng": float(marker.lng),
+        "label": dec_str_safe(uid, marker.label) if marker.label else None,
+        "icon": marker.icon,
+        "color": marker.color,
+        "created_at": marker.created_at.isoformat() if marker.created_at else None,
+    }
+
+
+@app.delete("/api/markers/{marker_id}")
+async def delete_marker(
+    marker_id: int,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a custom marker."""
+    result = await db.execute(
+        delete(CustomMarker).where(CustomMarker.id == marker_id, CustomMarker.user_id == user.id)
+    )
+    if result.rowcount == 0:
+        raise HTTPException(404, "Marker not found")
+    await db.commit()
+    return {"status": "deleted"}
 
 
 # --------------- Health check ---------------
