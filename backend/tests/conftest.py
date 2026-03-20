@@ -66,3 +66,18 @@ async def client(mock_db):
             yield c
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    try:
+        from main import limiter
+        limiter._storage.reset()
+    except Exception:
+        pass
+    yield
+    try:
+        from main import limiter
+        limiter._storage.reset()
+    except Exception:
+        pass
