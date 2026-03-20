@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
 import WorldSidebar from './components/WorldSidebar';
 import ExportButton from './components/ExportButton';
-import Confetti from './components/Confetti';
+import Confetti, { isMilestoneShown, markMilestoneShown } from './components/Confetti';
 import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
@@ -153,6 +153,7 @@ export default function App() {
   const [shareData, setShareData] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiMilestone, setConfettiMilestone] = useState(null); // { trackerId, milestone }
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
@@ -485,19 +486,9 @@ export default function App() {
     if (countryChanged || prev === pct) return;
     for (const m of MILESTONES) {
       if (prev < m && pct >= m) {
-        const confettiKey = userId
-          ? `swiss-tracker-u${userId}-confetti-milestones`
-          : 'swiss-tracker-confetti-milestones';
-        let shown;
-        try {
-          shown = new Set(JSON.parse(secureStorage.getItemSync(confettiKey) || '[]'));
-        } catch {
-          shown = new Set();
-        }
-        const milestoneId = `${countryId}-${m}`;
-        if (!shown.has(milestoneId)) {
-          shown.add(milestoneId);
-          secureStorage.setItem(confettiKey, JSON.stringify([...shown])); // fire-and-forget
+        if (!isMilestoneShown(countryId, m, userId)) {
+          markMilestoneShown(countryId, m, userId);
+          setConfettiMilestone({ trackerId: countryId, milestone: m });
           setShowConfetti(true);
         }
         break;
@@ -578,7 +569,14 @@ export default function App() {
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
       {!isShareMode && <XpNotification />}
-      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
+      {showConfetti && (
+        <Confetti
+          onDone={() => { setShowConfetti(false); setConfettiMilestone(null); }}
+          trackerId={confettiMilestone?.trackerId}
+          milestone={confettiMilestone?.milestone}
+          userId={userId}
+        />
+      )}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       <Onboarding />
       {isShareMode && (
