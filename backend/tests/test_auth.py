@@ -91,3 +91,22 @@ async def test_health_endpoint_returns_ok(client):
     data = resp.json()
     assert data["status"] == "ok"
     assert "timestamp" in data
+
+
+def test_parse_allowed_origins_falls_back_for_blank_input():
+    """Blank or whitespace-only ALLOWED_ORIGINS falls back to FRONTEND_URL."""
+    from main import _parse_allowed_origins
+
+    assert _parse_allowed_origins("", "https://rightworld.io") == ["https://rightworld.io"]
+    assert _parse_allowed_origins("   ", "https://rightworld.io") == ["https://rightworld.io"]
+    assert _parse_allowed_origins(" ,  , ", "https://rightworld.io") == ["https://rightworld.io"]
+
+
+def test_parse_allowed_origins_keeps_non_empty_entries():
+    """Configured origins are stripped and preserved."""
+    from main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(
+        " https://rightworld.io, https://app.rightworld.io  ,",
+        "https://fallback.example",
+    ) == ["https://rightworld.io", "https://app.rightworld.io"]
