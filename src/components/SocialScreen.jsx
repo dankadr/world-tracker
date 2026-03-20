@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import FriendsPanel from './FriendsPanel';
 import ChallengesPanel from './ChallengesPanel';
 import useTouchFeedback from '../hooks/useTouchFeedback';
@@ -52,6 +52,17 @@ export default function SocialScreen({ onCompare, comparisonFriendId }) {
     setTab(nextTab);
     setHeaderCollapsed(false);
   }, []);
+
+  // Scroll-to-top when the already-active Social tab is re-tapped
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail !== 'social') return;
+      const sel = tab === 'friends' ? '.fp-scrollable' : '.ch-scrollable';
+      document.querySelector(sel)?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('tab-reselect', handler);
+    return () => window.removeEventListener('tab-reselect', handler);
+  }, [tab]);
 
   const handleScrollPositionChange = useCallback((scrollTop) => {
     setHeaderCollapsed(scrollTop > 22);

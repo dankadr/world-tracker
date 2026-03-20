@@ -225,6 +225,17 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
     switchTab('map');
   };
 
+  // Scroll-to-top when the already-active Explore tab is re-tapped
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail !== 'explore') return;
+      const ref = tab === 'countries' ? countriesPull.containerRef : trackersPull.containerRef;
+      ref.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('tab-reselect', handler);
+    return () => window.removeEventListener('tab-reselect', handler);
+  }, [tab, countriesPull.containerRef, trackersPull.containerRef]);
+
   const handlePaneScroll = useCallback((event) => {
     setHeaderCollapsed(event.currentTarget.scrollTop > 22);
   }, []);
