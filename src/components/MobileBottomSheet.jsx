@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { haptics } from '../utils/haptics';
 
 /**
  * MobileBottomSheet — a draggable bottom-sheet container for mobile.
@@ -23,6 +24,7 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
   const touchHistory = useRef([]);
 
   const animateTo = useCallback((target) => {
+    haptics.selection();
     setSnap(target);
     if (onSnapChange) onSnapChange(target);
     if (sheetRef.current) {
