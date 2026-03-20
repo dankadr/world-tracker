@@ -58,10 +58,10 @@ function initWorldFromCache(token, userId) {
 }
 
 export default function useVisitedCountries() {
-  const { token, isLoggedIn, user } = useAuth();
+  const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const [visited, setVisited] = useState(() => initWorldFromCache(token, userId));
-  const [isLoading, setIsLoading] = useState(() => initWorldFromCache(token, userId).size === 0 && isLoggedIn);
+  const [isLoading, setIsLoading] = useState(() => (initWorldFromCache(token, userId).size === 0 && isLoggedIn) || isSyncingLocalData);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
   const visitedRef = useRef(visited);
@@ -77,18 +77,17 @@ export default function useVisitedCountries() {
     }
   }
 
+  useEffect(() => {
+    setIsLoading(isSyncingLocalData || (initWorldFromCache(token, userId).size === 0 && isLoggedIn));
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
+
   // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
     let cancelled = false;
 
-    // Cover the fresh-login case: isLoading was initialized false when the user
-    // wasn't yet authenticated, so flip it to true while the fetch is in-flight.
-    if (visitedRef.current.size === 0) setIsLoading(true);
-
     fetchAllVisited(token).then((bulk) => {
-      if (cancelled) return;
-      if (!bulk) { setIsLoading(false); return; }
+      if (cancelled || !bulk) return;
       const remote = new Set(bulk.world || []);
       const local = loadVisitedWorld(userId);
       // Merge: if user had local data before logging in, push it up
@@ -110,7 +109,7 @@ export default function useVisitedCountries() {
     });
 
     return () => { cancelled = true; };
-  }, [isLoggedIn, token, userId]);
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   // On logout, reset to prevent data leaks
   useEffect(() => {
@@ -125,7 +124,7 @@ export default function useVisitedCountries() {
 
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
 
     const refetch = () => {
       // Only refetch if cache has expired — avoids a DB read on every tab switch
@@ -151,7 +150,7 @@ export default function useVisitedCountries() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
     };
-  }, [isLoggedIn, token, userId]);
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   const toggleCountry = useCallback(
     (countryCode) => {
@@ -164,14 +163,14 @@ export default function useVisitedCountries() {
           next.add(countryCode);
         }
         saveVisitedWorld(next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           addToBatch('world_toggle', { country: countryCode, action }, token);
         }
         emitVisitedChange();
         return next;
       });
     },
-    [userId, isLoggedIn, token]
+    [userId, isLoggedIn, isSyncingLocalData, token]
   );
 
   const isVisited = useCallback(

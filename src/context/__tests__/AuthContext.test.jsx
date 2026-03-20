@@ -1,37 +1,101 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { AuthProvider, useAuth } from '../AuthContext';
 
-// Helper to build a minimal fake JWT with a given exp claim.
-// We only need the payload to be base64url-encoded — no real signing.
-function makeFakeJwt(payload) {
-  const encoded = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  return `header.${encoded}.signature`;
+const syncLocalDataToServer = vi.fn();
+const deriveKey = vi.fn();
+const setActiveKey = vi.fn();
+const warmCache = vi.fn();
+
+vi.mock('../../utils/syncLocalData', () => ({
+  syncLocalDataToServer: (...args) => syncLocalDataToServer(...args),
+}));
+
+vi.mock('../../utils/crypto', () => ({
+  deriveKey: (...args) => deriveKey(...args),
+}));
+
+vi.mock('../../utils/secureStorage', () => ({
+  setActiveKey: (...args) => setActiveKey(...args),
+  clearActiveKey: vi.fn(),
+  warmCache: (...args) => warmCache(...args),
+}));
+
+vi.mock('../../utils/cache', () => ({
+  cacheInvalidatePrefix: vi.fn(),
+}));
+
+vi.mock('../../utils/batchQueue', () => ({
+  clearBatch: vi.fn(),
+}));
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
 }
 
-const STORAGE_KEY = 'swiss-tracker-auth';
+function AuthProbe() {
+  const { isLoggedIn, isSyncingLocalData, loading, login } = useAuth();
 
-function storeAuth(jwt_token, user = { id: 1, email: 'a@b.com', sub: 'google-1' }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ jwt_token, user }));
+  return (
+    <div>
+      <div data-testid="logged-in">{String(isLoggedIn)}</div>
+      <div data-testid="syncing">{String(isSyncingLocalData)}</div>
+      <div data-testid="loading">{String(loading)}</div>
+      <button onClick={() => login('google-token')}>Login</button>
+    </div>
+  );
 }
 
-describe('loadAuth', () => {
-  it('returns null when localStorage is empty', async () => {
-    const { loadAuth } = await import('../AuthContext.jsx');
-    expect(loadAuth()).toBeNull();
+describe('AuthProvider', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+    syncLocalDataToServer.mockReset();
+    deriveKey.mockReset();
+    setActiveKey.mockReset();
+    warmCache.mockReset();
+    deriveKey.mockResolvedValue({ id: 'derived-key' });
+    warmCache.mockResolvedValue(undefined);
   });
 
-  it('returns null for an expired JWT', async () => {
-    const expiredToken = makeFakeJwt({ sub: '1', exp: Math.floor(Date.now() / 1000) - 60 });
-    storeAuth(expiredToken);
-    const { loadAuth } = await import('../AuthContext.jsx');
-    expect(loadAuth()).toBeNull();
-  });
+  it('waits for local data sync before exposing authenticated state on login', async () => {
+    const user = userEvent.setup();
+    const syncGate = deferred();
 
-  it('returns the stored auth for a valid (non-expired) JWT', async () => {
-    const validToken = makeFakeJwt({ sub: '1', exp: Math.floor(Date.now() / 1000) + 3600 });
-    storeAuth(validToken);
-    const { loadAuth } = await import('../AuthContext.jsx');
-    const result = loadAuth();
-    expect(result).not.toBeNull();
-    expect(result.jwt_token).toBe(validToken);
+    syncLocalDataToServer.mockReturnValue(syncGate.promise);
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        jwt_token: 'jwt-token-1234567890',
+        user: { id: 7, sub: 'sub-7', email: 'user@example.com' },
+      }),
+    });
+
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+
+    await waitFor(() => expect(syncLocalDataToServer).toHaveBeenCalledWith('jwt-token-1234567890', 7));
+    expect(screen.getByTestId('loading')).toHaveTextContent('true');
+    expect(screen.getByTestId('syncing')).toHaveTextContent('true');
+    expect(screen.getByTestId('logged-in')).toHaveTextContent('false');
+
+    syncGate.resolve(false);
+
+    await waitFor(() => expect(screen.getByTestId('logged-in')).toHaveTextContent('true'));
+    await waitFor(() => expect(screen.getByTestId('syncing')).toHaveTextContent('false'));
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
+    expect(setActiveKey).toHaveBeenCalled();
+    expect(warmCache).toHaveBeenCalledWith(7);
   });
 });
