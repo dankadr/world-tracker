@@ -6,6 +6,7 @@ import { invalidateBulkCache } from './api';
 
 const queue = [];
 let timer = null;
+let isFlushing = false; // prevents concurrent flushes during multi-chunk sends
 const BATCH_INTERVAL = 2000; // ms
 const BATCH_CHUNK_SIZE = 50; // must match server-side Field(max_length=50)
 const QUEUE_STORAGE_KEY = 'swiss-tracker-batch-queue';
@@ -60,50 +61,59 @@ export function addToBatch(action, payload, token) {
 }
 
 export async function flushBatch() {
+  if (isFlushing) return;
   if (queue.length === 0) {
     timer = null;
     return;
   }
+
+  isFlushing = true;
   const batch = [...queue];
   queue.length = 0;
   timer = null;
   persistQueue();
 
-  // Use the first available token in this batch
   const token = batch.find((item) => item.token)?.token;
 
-  // Send in chunks of ≤BATCH_CHUNK_SIZE to satisfy the server-side validation limit.
-  // Re-queue only from the failed chunk onward — already-committed chunks stay committed
-  // (actions like region_toggle are not idempotent so we must not re-send them).
-  for (let i = 0; i < batch.length; i += BATCH_CHUNK_SIZE) {
-    const chunk = batch.slice(i, i + BATCH_CHUNK_SIZE);
-    const actions = chunk.map(({ action, payload }) => ({ action, payload }));
-    try {
-      const res = await fetch('/api/batch', {
-        method: 'POST',
-        keepalive: true,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ actions }),
-      });
-      if (!res.ok) {
-        console.error('flushBatch error:', res.status);
+  try {
+    // Send in chunks of ≤BATCH_CHUNK_SIZE to satisfy the server-side validation limit.
+    // Invalidate cache after each successful chunk so partial commits are visible.
+    // Re-queue only from the failed chunk onward — already-committed chunks stay committed
+    // (actions like region_toggle are not idempotent so we must not re-send them).
+    for (let i = 0; i < batch.length; i += BATCH_CHUNK_SIZE) {
+      const chunk = batch.slice(i, i + BATCH_CHUNK_SIZE);
+      const actions = chunk.map(({ action, payload }) => ({ action, payload }));
+      try {
+        const res = await fetch('/api/batch', {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ actions }),
+        });
+        if (!res.ok) {
+          console.error('flushBatch error:', res.status);
+          queue.unshift(...batch.slice(i));
+          persistQueue();
+          return;
+        }
+      } catch (err) {
+        console.error('flushBatch error:', err);
         queue.unshift(...batch.slice(i));
         persistQueue();
         return;
       }
-    } catch (err) {
-      console.error('flushBatch error:', err);
-      queue.unshift(...batch.slice(i));
-      persistQueue();
-      return;
+      // Invalidate bulk cache so next background revalidation picks up server state
+      if (token) invalidateBulkCache(token);
     }
+  } finally {
+    isFlushing = false;
+    // Items added by addToBatch() during the flush already scheduled their own timer.
+    // Re-queued items from error recovery are left for the next addToBatch() call — no
+    // immediate retry to avoid hammering a failing server.
   }
-
-  // Invalidate bulk cache so next background revalidation picks up server state
-  if (token) invalidateBulkCache(token);
 }
 
 export function clearBatch() {

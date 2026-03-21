@@ -103,14 +103,18 @@ async def test_get_all_visited_empty(client, auth_headers, mock_db):
     assert data["world"] == []
 
 
-async def test_batch_rejects_more_than_50_actions(client, auth_headers):
-    """POST /api/batch returns 422 when more than 50 actions are submitted."""
+async def test_batch_rejects_more_than_50_actions(client, auth_headers, mock_db):
+    """POST /api/batch returns 422 when more than 50 actions are submitted.
+
+    Pydantic validation must fire before any business logic — the DB must not be touched.
+    """
     actions = [
         {"action": "region_toggle", "payload": {"country_id": "ch", "region": f"r{i}", "action": "add"}}
         for i in range(51)
     ]
     resp = await client.post("/api/batch", json={"actions": actions}, headers=auth_headers)
     assert resp.status_code == 422
+    mock_db.execute.assert_not_called()
 
 
 async def test_batch_accepts_exactly_50_actions(client, auth_headers, mock_db):

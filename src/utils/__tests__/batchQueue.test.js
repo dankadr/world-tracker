@@ -78,10 +78,10 @@ describe('batchQueue persistence', () => {
     const secondBody = JSON.parse(fetch.mock.calls[1][1].body);
     expect(firstBody.actions).toHaveLength(50);
     expect(secondBody.actions).toHaveLength(25);
-    expect(invalidateBulkCache).toHaveBeenCalledTimes(1);
+    expect(invalidateBulkCache).toHaveBeenCalledTimes(2);
   });
 
-  it('requeues only the failed chunk onward when a mid-flush chunk fails', async () => {
+  it('requeues only the failed chunk onward and invalidates cache for successful chunks', async () => {
     const { flushBatch, addToBatch } = await loadQueueModule();
 
     // First chunk succeeds, second fails
@@ -98,6 +98,26 @@ describe('batchQueue persistence', () => {
     const queued = JSON.parse(localStorage.getItem('swiss-tracker-batch-queue'));
     // Only the 25 items from the failed second chunk should be re-queued
     expect(queued).toHaveLength(25);
-    expect(invalidateBulkCache).not.toHaveBeenCalled();
+    // Cache invalidated after the first successful chunk
+    expect(invalidateBulkCache).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not start a second flush if one is already in flight', async () => {
+    const { flushBatch, addToBatch } = await loadQueueModule();
+
+    let resolveFetch;
+    fetch.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+
+    addToBatch('world_toggle', { country: 'de', action: 'add' }, 'jwt-token');
+    vi.clearAllTimers();
+
+    const first = flushBatch();
+    const second = flushBatch(); // called while first is awaiting fetch
+    resolveFetch({ ok: true });
+
+    await Promise.all([first, second]);
+
+    // Only one fetch should have been made
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });
