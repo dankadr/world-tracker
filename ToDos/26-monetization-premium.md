@@ -163,6 +163,10 @@ track('upgrade_completed', { plan });
 - [ ] Handle `payment_failed` gracefully (grace period of 3 days before deactivation)
 - [ ] Tests: webhook processing, premium status expiry
 
+## Related Plans
+
+- `docs/plans/2026-03-20-buy-me-a-tea.md` — one-time creator-style support flow that complements subscriptions without gating features
+
 ## Notes
 
 - Start by building the infrastructure with Stripe in test mode — don't rush to launch premium

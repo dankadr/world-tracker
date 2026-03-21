@@ -7,6 +7,12 @@
 
 ---
 
+## PR Review Snapshot (2026-03-19)
+
+- **PR #86** cached Fernet instances per user/key fingerprint in `backend/crypto.py`, removing repeated key derivation work from hot encryption/decryption paths.
+- **PR #75** added bundle-analysis support in Vite, which makes future bundle-size work easier to measure.
+- Larger caching, lazy-loading, and API-reduction opportunities in this plan are still open.
+
 ## Overview
 
 The app currently relies heavily on backend API calls and database queries for most operations (visited regions, achievements, friends, challenges, bucket list, etc.). This plan aims to:
