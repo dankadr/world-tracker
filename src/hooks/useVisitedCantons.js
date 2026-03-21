@@ -378,9 +378,16 @@ export default function useVisitedRegions(countryId) {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    // When syncLocalDataToServer() completes (guest → login migration), it
+    // invalidates the bulk cache and emits 'visitedchange'. Re-fetch so the
+    // merged regional data appears immediately without waiting for a tab switch.
+    // The TTL cache guard inside refetch() makes this a no-op for normal
+    // toggles (which don't invalidate the cache).
+    window.addEventListener('visitedchange', refetch);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', refetch);
     };
   }, [countryId, isLoggedIn, token, userId]);
 
