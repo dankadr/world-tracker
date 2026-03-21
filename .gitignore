@@ -72,4 +72,6 @@ scripts/gadm41_USA_1.json curl -L https://geodata.ucdavis.edu/gadm/gadm4.1/json/
 .worktrees/
 
 # Scripts
-/.ne_50m_countries_tmp.geojson
+/.ne_10m_countries_tmp.geojson
+/.ne_dissolve_input_tmp.json
+/.ne_dissolve_output_tmp.json
