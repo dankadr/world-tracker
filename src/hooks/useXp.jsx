@@ -132,6 +132,10 @@ export function XpProvider({ children }) {
   const grantedKeysRef = useRef(loadGrantedKeys(userId));
   const pendingDeltasRef = useRef(loadPendingDeltas(userId));
   const isFlushingRef = useRef(false);
+  // Holds the latest flushPendingDeltas so the cache-warm handler can call it
+  // without needing it as a dependency (which would re-register the listener
+  // on every token change).
+  const flushRef = useRef(null);
 
   // When user changes (login transition), reload user-scoped local state.
   useEffect(() => {
@@ -153,9 +157,16 @@ export function XpProvider({ children }) {
       if (!userId || e.detail?.userId !== userId) return;
       grantedKeysRef.current = loadGrantedKeys(userId);
       pendingDeltasRef.current = loadPendingDeltas(userId);
-      // Reload local XP — it may have been read as 0 before the cache was warm.
+      // Reload local XP — guard against overwriting a server value that already
+      // arrived (fast network / slow decrypt).
       const localXp = loadXp(userId);
-      if (localXp > 0) setTotalXp(localXp);
+      setTotalXp((prev) => (prev === 0 ? localXp : prev));
+      // The server sync effect may have run with an empty pendingDeltasRef
+      // (cold cache) and skipped the flush. Now that the ref is populated,
+      // kick off a flush so offline deltas aren't silently dropped.
+      if (pendingDeltasRef.current.length > 0) {
+        flushRef.current?.();
+      }
     };
     window.addEventListener('auth:cache-warm', handleCacheWarm);
     return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
@@ -193,6 +204,8 @@ export function XpProvider({ children }) {
       isFlushingRef.current = false;
     }
   }, [isLoggedIn, token, userId]);
+  // Keep flushRef in sync so the cache-warm handler always calls the latest version.
+  flushRef.current = flushPendingDeltas;
 
   // Sync from server when logged in.
   useEffect(() => {

@@ -326,7 +326,9 @@ export default function useVisitedRegions(countryId) {
     const handleCacheWarm = (e) => {
       if (!userId || e.detail?.userId !== userId) return;
       const local = loadLocal(countryId, userId);
-      if (local.size > 0) {
+      // Only apply if server data hasn't already arrived — avoids rolling back
+      // a fresher server value when crypto is slow relative to the network.
+      if (local.size > 0 && visitedRef.current.size === 0) {
         setVisited(local);
         setDatesState(loadDates(countryId, userId));
         setNotesState(loadNotes(countryId, userId));
