@@ -13,18 +13,14 @@
 }
 
 .easter-egg-modal {
-  background: white;
+  background: var(--glass-bg-heavy, rgba(255, 255, 255, 0.96));
+  color: var(--text-primary);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   padding: 32px;
   max-width: 400px;
   width: 90%;
   animation: easter-egg-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-[data-theme="dark"] .easter-egg-modal {
-  background: #1e1e1e;
-  color: #fff;
 }
 
 .easter-egg-content {
@@ -40,17 +36,15 @@
 .easter-egg-modal p {
   font-size: 16px;
   margin: 0 0 24px 0;
-  color: #666;
+  color: var(--text-secondary, #666);
   line-height: 1.5;
-}
-
-[data-theme="dark"] .easter-egg-modal p {
-  color: #aaa;
 }
 
 .easter-egg-input {
   width: 100%;
-  border: 2px solid #e0e0e0;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary);
+  border: 2px solid var(--glass-border, #e0e0e0);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 16px;
@@ -58,12 +52,6 @@
   margin-bottom: 12px;
   box-sizing: border-box;
   transition: border-color 0.2s;
-}
-
-[data-theme="dark"] .easter-egg-input {
-  background: #2a2a2a;
-  border-color: #444;
-  color: #fff;
 }
 
 .easter-egg-input:focus {
@@ -117,21 +105,12 @@
 }
 
 .easter-egg-cancel {
-  background: #ecf0f1;
-  color: #333;
-}
-
-[data-theme="dark"] .easter-egg-cancel {
-  background: #333;
-  color: #aaa;
+  background: var(--glass-bg, rgba(0, 0, 0, 0.07));
+  color: var(--text-primary);
 }
 
 .easter-egg-cancel:hover {
-  background: #d5dbdb;
-}
-
-[data-theme="dark"] .easter-egg-cancel:hover {
-  background: #444;
+  background: var(--hover-bg, rgba(0, 0, 0, 0.13));
 }
 
 @keyframes easter-egg-pop {

@@ -8,7 +8,7 @@ import './YearInReview.css';
 
 const CARD_TYPES = ['title', 'regions', 'topTracker', 'activity', 'achievements', 'comparison', 'summary'];
 
-export default function YearInReview({ year, onClose }) {
+export default function YearInReview({ year, onClose, embedded = false, hideClose = false }) {
   const { user } = useAuth();
   const userId = user?.id || null;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -114,19 +114,32 @@ export default function YearInReview({ year, onClose }) {
     return () => { cancelled = true; };
   }, [exportFormat, year]);
 
+  const showCloseButton = !hideClose;
+
   if (!stats.hasData) {
+    const emptyCard = (
+      <div
+        className={`yir-container yir-empty${embedded ? ' yir-embedded-container' : ''}`}
+        onClick={embedded ? undefined : (e) => e.stopPropagation()}
+      >
+        {showCloseButton && <button className="yir-close" onClick={onClose}>&times;</button>}
+        <div className="yir-card">
+          <div className="yir-card-icon">🗺️</div>
+          <h2>No dated visits in {year}</h2>
+          <p className="yir-card-detail">
+            Add dates to your visits to generate a Year in Review!
+          </p>
+        </div>
+      </div>
+    );
+
+    if (embedded) {
+      return <div className="yir-embedded-wrap">{emptyCard}</div>;
+    }
+
     return createPortal(
       <div className="yir-overlay" onClick={onClose}>
-        <div className="yir-container yir-empty" onClick={e => e.stopPropagation()}>
-          <button className="yir-close" onClick={onClose}>&times;</button>
-          <div className="yir-card">
-            <div className="yir-card-icon">🗺️</div>
-            <h2>No dated visits in {year}</h2>
-            <p className="yir-card-detail">
-              Add dates to your visits to generate a Year in Review!
-            </p>
-          </div>
-        </div>
+        {emptyCard}
       </div>,
       document.body
     );
@@ -134,79 +147,85 @@ export default function YearInReview({ year, onClose }) {
 
   const isLastCard = currentIndex === cards.length - 1;
 
+  const reviewCard = (
+    <div
+      className={`yir-container${embedded ? ' yir-embedded-container' : ''}`}
+      ref={containerRef}
+      onClick={embedded ? undefined : (e) => e.stopPropagation()}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {showCloseButton && <button className="yir-close" onClick={onClose}>&times;</button>}
+
+      {/* Progress dots */}
+      <div className="yir-dots">
+        {cards.map((_, i) => (
+          <div
+            key={i}
+            className={`yir-dot ${i === currentIndex ? 'yir-dot-active' : ''} ${i < currentIndex ? 'yir-dot-done' : ''}`}
+            onClick={() => goTo(i, i > currentIndex ? 'left' : 'right')}
+          />
+        ))}
+      </div>
+
+      {/* Card */}
+      <div className={`yir-card-wrapper ${direction ? `yir-slide-${direction}` : 'yir-slide-in'}`}>
+        <YearInReviewCard type={cards[currentIndex]} stats={stats} visible={true} />
+      </div>
+
+      {/* Navigation */}
+      <div className="yir-nav">
+        <button className="yir-nav-btn" onClick={goPrev} disabled={currentIndex === 0} aria-label="Previous">
+          ←
+        </button>
+        <span className="yir-nav-counter">{currentIndex + 1} / {cards.length}</span>
+        {isLastCard ? (
+          <button
+            className="yir-nav-btn yir-nav-share"
+            onClick={() => setShowFormatPicker(p => !p)}
+            disabled={exporting}
+            aria-label="Share"
+          >
+            {exporting ? 'Saving…' : 'Share'}
+          </button>
+        ) : (
+          <button className="yir-nav-btn" onClick={goNext} disabled={currentIndex === cards.length - 1} aria-label="Next">
+            →
+          </button>
+        )}
+      </div>
+
+      {/* Format + theme picker — appears below nav on last card */}
+      {isLastCard && showFormatPicker && (
+        <div className="yir-format-picker">
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => setExportFormat('portrait')} disabled={exporting}>
+              {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
+            </button>
+            <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => setExportFormat('square')} disabled={exporting}>
+              {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
+            </button>
+          </div>
+          <div className="yir-picker-row">
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => setExportTheme('dark')} disabled={exporting}>
+              🌑 Dark
+            </button>
+            <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => setExportTheme('light')} disabled={exporting}>
+              ☀️ Light
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
-      {createPortal(
+      {embedded ? (
+        <div className="yir-embedded-wrap">{reviewCard}</div>
+      ) : createPortal(
         <div className="yir-overlay" onClick={onClose}>
-          <div
-            className="yir-container"
-            ref={containerRef}
-            onClick={e => e.stopPropagation()}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            <button className="yir-close" onClick={onClose}>&times;</button>
-
-            {/* Progress dots */}
-            <div className="yir-dots">
-              {cards.map((_, i) => (
-                <div
-                  key={i}
-                  className={`yir-dot ${i === currentIndex ? 'yir-dot-active' : ''} ${i < currentIndex ? 'yir-dot-done' : ''}`}
-                  onClick={() => goTo(i, i > currentIndex ? 'left' : 'right')}
-                />
-              ))}
-            </div>
-
-            {/* Card */}
-            <div className={`yir-card-wrapper ${direction ? `yir-slide-${direction}` : 'yir-slide-in'}`}>
-              <YearInReviewCard type={cards[currentIndex]} stats={stats} visible={true} />
-            </div>
-
-            {/* Navigation */}
-            <div className="yir-nav">
-              <button className="yir-nav-btn" onClick={goPrev} disabled={currentIndex === 0} aria-label="Previous">
-                ←
-              </button>
-              <span className="yir-nav-counter">{currentIndex + 1} / {cards.length}</span>
-              {isLastCard ? (
-                <button
-                  className="yir-nav-btn yir-nav-share"
-                  onClick={() => setShowFormatPicker(p => !p)}
-                  disabled={exporting}
-                  aria-label="Share"
-                >
-                  {exporting ? 'Saving…' : 'Share'}
-                </button>
-              ) : (
-                <button className="yir-nav-btn" onClick={goNext} disabled={currentIndex === cards.length - 1} aria-label="Next">
-                  →
-                </button>
-              )}
-            </div>
-
-            {/* Format + theme picker — appears below nav on last card */}
-            {isLastCard && showFormatPicker && (
-              <div className="yir-format-picker">
-                <div className="yir-picker-row">
-                  <button className={`yir-format-btn${exportFormat === 'portrait' ? ' active' : ''}`} onClick={() => setExportFormat('portrait')} disabled={exporting}>
-                    {exporting && exportFormat === 'portrait' ? 'Saving…' : '📱 Portrait'}
-                  </button>
-                  <button className={`yir-format-btn${exportFormat === 'square' ? ' active' : ''}`} onClick={() => setExportFormat('square')} disabled={exporting}>
-                    {exporting && exportFormat === 'square' ? 'Saving…' : '⬜ Square'}
-                  </button>
-                </div>
-                <div className="yir-picker-row">
-                  <button className={`yir-format-btn yir-theme-btn${exportTheme === 'dark' ? ' active' : ''}`} onClick={() => setExportTheme('dark')} disabled={exporting}>
-                    🌑 Dark
-                  </button>
-                  <button className={`yir-format-btn yir-theme-btn${exportTheme === 'light' ? ' active' : ''}`} onClick={() => setExportTheme('light')} disabled={exporting}>
-                    ☀️ Light
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {reviewCard}
         </div>,
         document.body
       )}

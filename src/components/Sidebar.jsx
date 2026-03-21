@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -58,6 +58,25 @@ export default function Sidebar({
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
+
+  const tabsRef = useRef(null);
+
+  // Redirect vertical wheel events to horizontal scroll on the tab strip.
+  // Uses addEventListener (not onWheel) so we can pass { passive: false } and
+  // call preventDefault — required for Chrome to honour it.
+  // Trackpad guard: if the user is already scrolling horizontally, let it through.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   // Compute bucket list set for this country
   const bucketListSet = useMemo(
@@ -210,7 +229,10 @@ export default function Sidebar({
             )}
             {!readOnly && onOpenBucketList && (
               <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List">
-                <span style={{ fontSize: '14px' }}>📌</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 17v5" />
+                  <path d="M6 4v4l3 3v5l6-3V8l3-4z" />
+                </svg>
                 {bucketListItems?.length > 0 && (
                   <span className="friends-badge">{bucketListItems.length}</span>
                 )}
@@ -240,7 +262,13 @@ export default function Sidebar({
 
       {onBackToWorld && !readOnly && (
         <button className="back-to-world-btn" onClick={onBackToWorld}>
-          <span className="back-to-world-icon">🌍</span>
+          <span className="back-to-world-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M2 12h20" />
+              <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
+            </svg>
+          </span>
           <span>Back to World Map</span>
         </button>
       )}
@@ -249,7 +277,7 @@ export default function Sidebar({
 
       <OverallProgress />
 
-      <nav className="country-tabs">
+      <nav className="country-tabs" ref={tabsRef}>
         {countryList.map((c) => (
           <button
             key={c.id}
@@ -287,19 +315,19 @@ export default function Sidebar({
         ) : (
           <ul>{regionList.map((r) => renderRegionItem(r))}</ul>
         )}
+        {!isMobile && !readOnly && (
+          <SettingsPanel
+            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+            onShowOnboarding={onShowOnboarding}
+            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
+        )}
       </div>
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
       </div>
-      {!isMobile && !readOnly && (
-        <SettingsPanel
-          onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-          onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
-          onShowOnboarding={onShowOnboarding}
-          onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
-        />
-      )}
       {showAdmin && (
         <SwipeableModal onClose={() => setShowAdmin(false)} maxWidth={480}>
           <AdminPanel />

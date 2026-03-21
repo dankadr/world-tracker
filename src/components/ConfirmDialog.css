@@ -96,13 +96,8 @@
   box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="dark"] .confirm-dialog-message {
-  color: #ecf0f1;
-}
-
 [data-theme="dark"] .confirm-dialog-btn.cancel {
   background: rgba(255, 255, 255, 0.08);
-  color: #ecf0f1;
 }
 
 [data-theme="dark"] .confirm-dialog-btn.cancel:hover {

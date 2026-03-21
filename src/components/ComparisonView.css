@@ -128,6 +128,15 @@
   animation: comp-slide-up 0.25s ease;
 }
 
+.comparison-stats-modal.comparison-stats-embedded {
+  max-width: none;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 16px;
+}
+
 @keyframes comp-slide-up {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }

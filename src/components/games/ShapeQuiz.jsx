@@ -40,7 +40,7 @@ function getScoreKey(filter) {
   return `shape_${filter}`;
 }
 
-export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onPlayAgain }) {
+export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -88,6 +88,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
 
   const gameMode = useMemo(() => ({
     targetId: question?.id ?? null,
+    revealTarget: true,
     correctId,
     incorrectId,
     onCountryClick: null,
@@ -115,16 +116,18 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
-        <WorldMap
-          visited={EMPTY_VISITED}
-          onToggle={() => {}}
-          wishlist={EMPTY_WISHLIST}
-          comparisonMode={false}
-          gameMode={gameMode}
-        />
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <WorldMap
+            visited={EMPTY_VISITED}
+            onToggle={() => {}}
+            wishlist={EMPTY_WISHLIST}
+            comparisonMode={false}
+            gameMode={gameMode}
+          />
+        </div>
       </div>
       <div style={{ padding: '12px 16px 20px', background: 'var(--bg, #fff)' }}>
         {status === 'reviewing' && (

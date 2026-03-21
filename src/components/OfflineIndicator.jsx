@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './OfflineIndicator.css';
 
 export default function OfflineIndicator() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
