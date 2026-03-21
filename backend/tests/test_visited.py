@@ -103,6 +103,32 @@ async def test_get_all_visited_empty(client, auth_headers, mock_db):
     assert data["world"] == []
 
 
+async def test_batch_rejects_more_than_50_actions(client, auth_headers, mock_db):
+    """POST /api/batch returns 422 when more than 50 actions are submitted.
+
+    Pydantic validation must fire before any business logic — the DB must not be touched.
+    """
+    actions = [
+        {"action": "region_toggle", "payload": {"country_id": "ch", "region": f"r{i}", "action": "add"}}
+        for i in range(51)
+    ]
+    resp = await client.post("/api/batch", json={"actions": actions}, headers=auth_headers)
+    assert resp.status_code == 422
+    mock_db.execute.assert_not_called()
+
+
+async def test_batch_accepts_exactly_50_actions(client, auth_headers, mock_db):
+    """POST /api/batch accepts exactly 50 actions without error."""
+    mock_db.execute.return_value.scalar_one_or_none.return_value = None
+    mock_db.execute.return_value.scalars.return_value.all.return_value = []
+    actions = [
+        {"action": "world_toggle", "payload": {"country": f"c{i}", "action": "add"}}
+        for i in range(50)
+    ]
+    resp = await client.post("/api/batch", json={"actions": actions}, headers=auth_headers)
+    assert resp.status_code == 200
+
+
 async def test_batch_region_toggles_use_bounded_db_queries(client, auth_headers, mock_db):
     """50 region_toggle actions on the same country should hit the DB at most 3 times
     (1 bulk SELECT + 1 bulk SELECT for world + commit), not once per action."""

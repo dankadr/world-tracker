@@ -22,7 +22,8 @@ from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
-from pydantic import BaseModel
+from typing import Annotated
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -256,7 +257,7 @@ class BatchAction(BaseModel):
 
 
 class BatchRequest(BaseModel):
-    actions: list[BatchAction]
+    actions: Annotated[list[BatchAction], Field(max_length=50)]
 
 
 class ChallengeCreate(BaseModel):
