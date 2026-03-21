@@ -123,6 +123,25 @@ export default function useVisitedCountries() {
     }
   }, [isLoggedIn]);
 
+  // On page load the user may already be authenticated, but warmCache() runs
+  // asynchronously in AuthContext's mount effect — AFTER the initial render.
+  // This means loadVisitedWorld() returns an empty Set for encrypted user-scoped
+  // keys not yet in the memCache. Once warmCache() completes it fires
+  // 'auth:cache-warm'; reload world data from localStorage so the map is
+  // populated immediately without waiting for the server fetch.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      const local = loadVisitedWorld(userId);
+      if (local.size > 0) {
+        setVisited(local);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [userId]);
+
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
     if (!isLoggedIn || !token) return;

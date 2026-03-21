@@ -390,7 +390,7 @@ async def google_login(body: GoogleLoginRequest, db: AsyncSession = Depends(get_
 
     return GoogleLoginResponse(
         jwt_token=jwt_token,
-        user={"id": uid, "email": user.email, "name": name, "picture": picture, "sub": google_id},  # return plaintext
+        user={"id": uid, "email": user.email, "name": name, "picture": picture, "sub": google_id, "xp": user.xp or 0},  # return plaintext
     )
 
 
