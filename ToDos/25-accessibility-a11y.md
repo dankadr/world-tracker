@@ -1,7 +1,7 @@
 # ToDo: Accessibility (a11y) Audit & Improvements
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Phase 1 🔄 In Progress (PRs #135, #136, #137)
 **Priority:** Medium
 **Scope:** Full accessibility audit and remediation — ARIA roles, keyboard navigation, color contrast, screen reader support, and focus management
 
@@ -165,12 +165,12 @@ import { axe } from 'jest-axe';
 
 ## Implementation Phases
 
-### Phase 1 — Automated audit + quick wins
+### Phase 1 — Automated audit + quick wins (PRs #135, #136, #137 open)
 - [ ] Add `axe-core` to dev dependencies, run against all major screens
-- [ ] Fix all icon-only button `aria-label` attributes
-- [ ] Add skip link
+- [x] Fix all icon-only button `aria-label` attributes (PR #135)
+- [x] Add skip link (PR #137)
 - [ ] Fix `role="tablist"` on BottomTabBar
-- [ ] Add `aria-live` regions for toasts and game feedback
+- [x] Add `aria-live` regions for toasts and game feedback (PR #136)
 
 ### Phase 2 — Color contrast
 - [ ] Run Lighthouse contrast audit

@@ -1,7 +1,7 @@
 # ToDo: Monetization & Premium Tier
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Planning docs open: #113 (King side-brand), #114 (Buy Me a Tea), #115 (monetization ideas)
 **Priority:** Low-Medium (future)
 **Scope:** Define and implement a freemium model with a premium subscription using Stripe, while keeping the core tracker free forever
 

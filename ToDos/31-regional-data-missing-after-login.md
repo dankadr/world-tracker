@@ -1,5 +1,7 @@
 # Bug: Regional Data Not Loaded After Login
 
+**Status:** Fixed — PRs #129 + #134 open
+
 ## Problem
 After user logs in, only the world map progress displays. Regional data (Swiss cantons, US states, etc.) doesn't load — it appears empty or undefined.
 
@@ -30,8 +32,12 @@ The data appears correctly after:
 - Related to bug #29 (XP not loading) — possibly same root cause
 - Related to #87 if auth flow changed significantly
 
+## Fix
+- PR #129: re-fetch regional data immediately after login sync (visitedchange event listener)
+- PR #134: load regional visited data immediately after login
+
 ## Test Plan
-- [ ] Log in and immediately check Swiss cantons data displays
-- [ ] Log in and immediately check US states data displays
-- [ ] Verify no console errors during login or data load
-- [ ] Check network tab for API calls during auth flow
+- [x] Log in and immediately check Swiss cantons data displays
+- [x] Log in and immediately check US states data displays
+- [x] Verify no console errors during login or data load
+- [x] Check network tab for API calls during auth flow

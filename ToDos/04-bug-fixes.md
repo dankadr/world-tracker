@@ -1,7 +1,7 @@
 # ToDo: Bug Fixes & Quality Improvements
 
 **Date:** 2026-03-14
-**Status:** In Progress — bug list is now partially triaged against the current repo
+**Status:** In Progress — PRs open: #130 (confetti dedup), #132 (year-in-review empty state), #133 (challenge region name fallback)
 **Priority:** High (ongoing)
 **Scope:** Fix known bugs, improve stability, establish bug tracking process
 
@@ -153,6 +153,7 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Issue:** Challenge target regions sometimes show raw IDs (e.g., "us-ca") instead of friendly names (e.g., "California") if the GeoJSON data hasn't loaded yet
 - **Impact:** Poor UX in challenge detail view
 - **Fix approach:** Preload region name dictionary, add fallback display for loading state
+- **Status:** Fix open in PR #133
 
 ### Medium Priority
 
@@ -198,11 +199,13 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **File:** `src/components/YearInReview.jsx`
 - **Issue:** If a user has no visits in a year, the Year in Review may show empty cards or crash
 - **Fix approach:** Add guard for empty data, show a "No travels this year" message
+- **Status:** Fix open in PR #132
 
 #### 12. Confetti Firing Multiple Times
 - **File:** `src/components/Confetti.jsx`
 - **Issue:** Reaching a milestone (25/50/75/100%) and then toggling a region off and back on can re-trigger confetti
 - **Fix approach:** Track shown milestones in localStorage, only fire once per milestone per tracker
+- **Status:** Fix open in PR #130
 
 ## Bug Triage Template
 

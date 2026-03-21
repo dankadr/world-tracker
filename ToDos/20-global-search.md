@@ -1,7 +1,7 @@
 # ToDo: Global Search
 
 **Date:** 2026-03-15
-**Status:** Planned
+**Status:** Phases 1–4 🔄 In Progress (PR #141)
 **Priority:** Medium
 **Scope:** A unified search that spans all trackers, countries, regions, bucket list items, and UNESCO sites
 
@@ -103,26 +103,26 @@ When user selects a result:
 
 ## Implementation Phases
 
-### Phase 1 — Index + fuzzy search
-- [ ] `utils/searchIndex.js` — build flat index from all data sources
-- [ ] Fuzzy matching logic (fuse.js or trigram)
-- [ ] `useGlobalSearch` hook with debounce
+### Phase 1 — Index + fuzzy search (PR #141 open)
+- [x] `utils/searchIndex.js` — build flat index from all data sources
+- [x] Fuzzy matching logic (fuse.js or trigram)
+- [x] `useGlobalSearch` hook with debounce
 - [ ] Unit tests for index building and fuzzy matching
 
-### Phase 2 — UI component
-- [ ] `GlobalSearch` overlay component + CSS
-- [ ] Result groups with icons
-- [ ] Keyboard navigation (up/down/enter/escape)
-- [ ] Recently viewed with `useRecentSearches`
+### Phase 2 — UI component (PR #141 open)
+- [x] `GlobalSearch` overlay component + CSS
+- [x] Result groups with icons
+- [x] Keyboard navigation (up/down/enter/escape)
+- [x] Recently viewed with `useRecentSearches`
 
-### Phase 3 — Navigation actions
-- [ ] World country → fly-to on map
-- [ ] Tracker region → navigate + highlight
-- [ ] UNESCO site → activate layer + center
+### Phase 3 — Navigation actions (PR #141 open)
+- [x] World country → fly-to on map
+- [x] Tracker region → navigate + highlight
+- [x] UNESCO site → activate layer + center
 - [ ] Bucket list → open panel filtered
 
-### Phase 4 — Integration + shortcuts
-- [ ] Cmd/Ctrl+K keyboard shortcut (add to `useKeyboardShortcuts`)
+### Phase 4 — Integration + shortcuts (PR #141 open)
+- [x] Cmd/Ctrl+K keyboard shortcut (add to `useKeyboardShortcuts`)
 - [ ] Search button in BottomTabBar (mobile)
 - [ ] Search icon in desktop header
 - [ ] Tests: result navigation, keyboard shortcut

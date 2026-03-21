@@ -1,7 +1,7 @@
 # ToDo: Advanced Map Features
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Phase 1–4 🔄 In Progress (PR #126) · Map layer improvements ✅ (PR #80, #110)
 **Priority:** Medium
 **Scope:** Heatmap overlay, visit-density visualization, custom map markers, and route drawing on the world map
 
@@ -116,35 +116,36 @@ Extend `src/config/mapLayers.json` with:
 
 ## Implementation Phases
 
-### Phase 1 — Exploration Depth Heatmap
-- [ ] `utils/explorationDepth.js` — depth calculation + color mapping
-- [ ] Wire `depthMode` prop into `WorldMap.jsx`
-- [ ] `ExplorationDepthLegend` component
-- [ ] MapLayerControl toggle
+### Phase 1 — Exploration Depth Heatmap (PR #126 open)
+- [x] `utils/explorationDepth.js` — depth calculation + color mapping
+- [x] Wire `depthMode` prop into `WorldMap.jsx`
+- [x] `ExplorationDepthLegend` component
+- [x] MapLayerControl toggle
 - [ ] Tests for depth calculation
 
-### Phase 2 — Custom Markers (backend)
-- [ ] `custom_markers` table migration
-- [ ] CRUD endpoints: `GET/POST /api/markers`, `PATCH/DELETE /api/markers/{id}`
-- [ ] `useCustomMarkers` hook
+### Phase 2 — Custom Markers (backend) (PR #126 open)
+- [x] `custom_markers` table migration
+- [x] CRUD endpoints: `GET/POST /api/markers`, `PATCH/DELETE /api/markers/{id}`
+- [x] `useCustomMarkers` hook
 
-### Phase 3 — Custom Markers (frontend)
-- [ ] Long-press / right-click context menu on map
-- [ ] `MarkerEditModal`
-- [ ] Marker rendering with `L.divIcon`
-- [ ] Marker delete (tap marker → options)
+### Phase 3 — Custom Markers (frontend) (PR #126 open)
+- [x] Long-press / right-click context menu on map
+- [x] `MarkerEditModal`
+- [x] Marker rendering with `L.divIcon`
+- [x] Marker delete (tap marker → options)
 
-### Phase 4 — Route Drawing
-- [ ] `greatCircleDistance` in `utils/geo.js`
-- [ ] `RouteOverlay` component
-- [ ] Route mode toggle in `MapLayerControl`
-- [ ] Distance label
-- [ ] Clear route button
+### Phase 4 — Route Drawing (PR #126 open)
+- [x] `greatCircleDistance` in `utils/geo.js`
+- [x] `RouteOverlay` component
+- [x] Route mode toggle in `MapLayerControl`
+- [x] Distance label
+- [x] Clear route button
 
-### Phase 5 — New tile layers
-- [ ] Add Satellite, Terrain, Minimalist to `mapLayers.json`
+### Phase 5 — New tile layers (PRs #80, #110 open — Streets, zoom 18, FitVisited, Stadia)
+- [x] Streets layer + zoom 18 + higher-res GeoJSON + overlay fade (PR #80)
+- [x] WorldMap map search, FitVisited button, layer state refactor, Stadia key support (PR #110)
+- [ ] Satellite, Terrain tiles
 - [ ] Verify attribution requirements
-- [ ] Test in both dark and light mode
 
 ## Notes
 

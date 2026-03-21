@@ -1,5 +1,7 @@
 # Bug: Settings Section Covers Achievements in Region View (Desktop)
 
+**Status:** Fixed — PR #143 open
+
 ## Problem
 On desktop, when viewing a specific region (e.g., Swiss cantons), the settings panel/section overlaps and covers:
 - Achievements display
@@ -26,7 +28,10 @@ This makes it impossible to see achievements or other regional data without clos
 ## Related
 - Possibly related to #102 (tab scroll + dark mode) if layout changed
 
+## Fix
+- PR #143: move Settings out of scrollable region list — always accessible (sticky positioning)
+
 ## Test Plan
-- [ ] Desktop view of Swiss region → settings, achievements, country list all visible
-- [ ] Resize window → layout reflows correctly
-- [ ] No overlap at standard desktop sizes (1024px, 1440px, 2560px)
+- [x] Desktop view of Swiss region → settings, achievements, country list all visible
+- [x] Resize window → layout reflows correctly
+- [x] No overlap at standard desktop sizes (1024px, 1440px, 2560px)

@@ -1,7 +1,7 @@
 # ToDo: Country Info Cards
 
 **Date:** 2026-03-15
-**Status:** Planned
+**Status:** Phase 1 🔄 In Progress (PR #139) · Phase 2 🔄 In Progress (PR #140)
 **Priority:** Medium
 **Scope:** Show rich contextual information about countries and regions when clicking/tapping them on the map
 
@@ -91,16 +91,17 @@ This is a behavioral change that needs a brief onboarding tooltip the first time
 
 ## Implementation Phases
 
-### Phase 1 — Data
-- [ ] `scripts/fetch-country-info.js` — fetch from RestCountries API and output `src/data/countryInfo.json`
-- [ ] Run the script, commit the JSON
-- [ ] `useCountryInfo` hook with lazy import
+### Phase 1 — Data (PR #139 open)
+- [x] `scripts/fetch-country-info.js` — fetch from RestCountries API and output `src/data/countryInfo.json`
+- [x] Run the script, commit the JSON
+- [x] `useCountryInfo` hook with lazy import
 
-### Phase 2 — Panel component
-- [ ] `CountryInfoPanel` component + CSS
+### Phase 2 — Panel component (PR #140 open)
+- [x] `CountryInfoPanel` component + CSS
+- [x] `WorldSidebar` country list — ℹ info button (search results + continent breakdown)
 - [ ] Mobile bottom sheet integration
 - [ ] Desktop floating card variant
-- [ ] Quick action buttons (Mark Visited, Bucket List, Explore Regions)
+- [ ] Full quick action buttons (Bucket List)
 
 ### Phase 3 — Map integration
 - [ ] Update `WorldMap.jsx` click handler: single tap = open panel, double tap = toggle

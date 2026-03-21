@@ -1,5 +1,7 @@
 # Bug: XP Doesn't Auto-Load After Login
 
+**Status:** Fixed — PRs #127 + #131 open
+
 ## Problem
 After user logs in, XP shows as 0 or doesn't display correctly until page refresh. The XP value should be loaded immediately from the backend during authentication flow.
 
@@ -22,7 +24,11 @@ After user logs in, XP shows as 0 or doesn't display correctly until page refres
 ## Related
 - Possibly related to #87 (JWT expiry + auto-logout) if auth flow changed
 
+## Fix
+- PR #127: load XP immediately from auth response on login
+- PR #131: fetch XP immediately on login (follow-up fix)
+
 ## Test Plan
-- [ ] Log in and check XP displays immediately
-- [ ] Verify no console errors during login
-- [ ] Compare XP value before/after page refresh
+- [x] Log in and check XP displays immediately
+- [x] Verify no console errors during login
+- [x] Compare XP value before/after page refresh
