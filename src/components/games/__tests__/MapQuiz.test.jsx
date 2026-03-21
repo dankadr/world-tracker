@@ -29,14 +29,13 @@ vi.mock('../../../hooks/useGeographyGame', () => ({
 }));
 
 describe('MapQuiz layout', () => {
-  it('outer container uses flex:1 so it fills its flex parent', () => {
+  it('outer container uses height:100% so it fills its containing block', () => {
     const { container } = render(
       <MapQuiz worldVisited={new Set()} onBack={vi.fn()} />,
     );
 
     const root = container.firstChild;
-    // jsdom expands `flex: 1` to the canonical shorthand `1 1 0%`
-    expect(root.style.flex).toMatch(/^1/);
+    expect(root.style.height).toBe('100%');
   });
 });
 

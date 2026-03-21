@@ -166,6 +166,7 @@ export default function useVisitedRegions(countryId) {
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+  const prevCountryIdRef = useRef(countryId);
 
   // Debounce state for saveVisitedRemote
   const debounceTimerRef = useRef(null);
@@ -241,8 +242,16 @@ export default function useVisitedRegions(countryId) {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
+    // Show loading when we don't have data yet (fresh login) OR when the country
+    // just changed — the current visitedRef may hold the previous country's data
+    // (from a warm memCache hit in the render-time reset) which would be wrong.
+    const countryChanged = prevCountryIdRef.current !== countryId;
+    prevCountryIdRef.current = countryId;
+    if (visitedRef.current.size === 0 || countryChanged) setIsLoading(true);
+
     fetchAllVisited(token).then((bulk) => {
-      if (cancelled || !bulk) return;
+      if (cancelled) return;
+      if (!bulk) { setIsLoading(false); return; }
       const countryData = bulk.regions[countryId];
       const remote = countryData
         ? {

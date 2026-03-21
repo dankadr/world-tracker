@@ -1,7 +1,7 @@
 # ToDo: More Country Sub-Trackers
 
 **Date:** 2026-03-06
-**Status:** Not Started
+**Status:** Partially complete — 9 additional trackers are now live, with only the next-wave countries still pending
 **Priority:** Medium
 **Scope:** Add sub-region trackers for more countries, following the exact same pattern as the existing trackers (CH, US, NO, CA, JP, AU, PH, BR)
 
@@ -10,6 +10,15 @@
 ## Overview
 
 The app already supports sub-region tracking for Switzerland, USA, Norway, Canada, Japan, Australia, Philippines, and Brazil via `src/config/countries.json` and the corresponding GeoJSON files. This plan extends that to cover major popular destinations: England (UK regions), France, Germany, Italy, Spain, India, China, Mexico, New Zealand, and Argentina.
+
+## Reality Check (2026-03-14)
+
+- Already landed in `src/config/countries.json`: France, Germany, Italy, Spain, Mexico, United Kingdom, India, and New Zealand
+- PR #92 completed the missing runtime wiring in `src/components/WorldMap.jsx` and `backend/main.py`, so those trackers are now actually usable instead of being config-only
+- Corresponding GeoJSON/data wiring exists in `src/data/` for the shipped set
+- The implementation diverged slightly from the original plan: UK shipped as `gb` with `uk.json`, not `gb-eng`
+- China and Argentina are still missing from the repo
+- The remaining work is now about the next batch of trackers and cleanup of the backend/frontend shared tracker-source architecture
 
 Each new tracker requires:
 1. A GeoJSON file in `src/data/`
@@ -174,11 +183,11 @@ Add new tracker IDs to `VALID_TRACKERS` (or equivalent list).
 
 | File | Change |
 |------|--------|
-| `src/config/countries.json` | Add 10 new tracker entries |
-| `src/data/countries.js` | Import 10 new GeoJSON files |
-| `src/components/WorldMap.jsx` | Add 10 new entries to `TRACKED_COUNTRY_IDS` |
-| `backend/main.py` | Register new tracker IDs |
-| `scripts/generate_geojson.py` | Use/extend to filter and prep new GeoJSON files |
+| `src/config/countries.json` | Add the remaining tracker entries not already shipped |
+| `src/data/countries.js` | Import the remaining GeoJSON files not already shipped |
+| `src/components/WorldMap.jsx` | Keep world-map tracker wiring in sync for the next batch |
+| `backend/main.py` | Replace hardcoded tracker allowlist with shared config or format validation |
+| `scripts/generate_geojson.py` | Use/extend to filter and prep the still-missing countries |
 
 ## Files to Create
 
@@ -232,3 +241,19 @@ Process all files through mapshaper.org to simplify and reduce file size before 
 - Testing per country: ~30 min each
 - **Per country total: ~1.5–2 hours**
 - **All 10 countries: ~15–20 hours**
+
+## Shipped via Recent PR Review
+
+- [x] France tracker enabled in runtime
+- [x] Germany tracker enabled in runtime
+- [x] Italy tracker enabled in runtime
+- [x] Spain tracker enabled in runtime
+- [x] Mexico tracker enabled in runtime
+- [x] United Kingdom tracker enabled in runtime (`gb` / `uk.json`)
+- [x] India tracker enabled in runtime
+- [x] New Zealand tracker enabled in runtime
+- [x] Brazil tracker confirmed in the shipped tracker set
+- [ ] China tracker
+- [ ] Argentina tracker
+- [ ] Decide whether England should remain folded into `gb` or ship as a dedicated `gb-eng` tracker later
+- [ ] Remove hardcoded backend tracker allowlist so future tracker launches do not require touching two codepaths

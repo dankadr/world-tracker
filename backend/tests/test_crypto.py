@@ -80,3 +80,28 @@ def test_dec_str_safe_handles_plaintext():
 def test_dec_str_safe_handles_none():
     from crypto import dec_str_safe
     assert dec_str_safe(1, None) is None
+
+
+def test_fernet_cache_avoids_redundant_key_derivation():
+    """Calling enc() twice for the same user reuses the cached Fernet instance."""
+    from crypto import enc, _FERNET_CACHE
+    _FERNET_CACHE.clear()
+
+    enc(99, "first call")
+    assert len(_FERNET_CACHE) == 1, "Cache should have one entry after first call"
+
+    enc(99, "second call")
+    assert len(_FERNET_CACHE) == 1, "Cache should still have one entry (reused)"
+
+
+def test_fernet_cache_is_keyed_by_user_and_fingerprint():
+    """Different users get separate cache entries; same user reuses the same entry."""
+    from crypto import enc, _FERNET_CACHE
+    _FERNET_CACHE.clear()
+
+    enc(1, "user 1")
+    enc(2, "user 2")
+    assert len(_FERNET_CACHE) == 2, "Each user should have a separate cache entry"
+
+    enc(1, "user 1 again")
+    assert len(_FERNET_CACHE) == 2, "No new entry for existing user"
