@@ -10,8 +10,9 @@
 //   1. Fetch 10m GeoJSON (~13MB) from Natural Earth
 //   2. Normalize properties to { id, name } schema
 //   3. Deduplicate territories (keep sovereign country)
-//   4. Apply Douglas-Peucker simplification (tolerance=0.05°) → ~3-4MB output
+//   4. Apply Douglas-Peucker simplification (tolerance=0.01°) → ~3-5MB output
 //   5. Dissolve Israel + Palestine into a single unified polygon via shapely
+//   6. Dissolve Somalia + Somaliland to fill the blank gap Somaliland leaves
 
 const { writeFileSync, readFileSync, existsSync, unlinkSync } = require('fs');
 const { join } = require('path');
@@ -22,8 +23,9 @@ function assert(condition, message) {
 }
 
 // ─── Douglas-Peucker simplification ──────────────────────────────────────────
-// Tolerance in degrees. 0.05° ≈ 5.5km at the equator.
-const SIMPLIFY_TOLERANCE = 0.05;
+// Tolerance in degrees. 0.01° ≈ 1.1km at the equator — keeps coastline detail
+// visible at zoom 5–9 before the overlay fades out.
+const SIMPLIFY_TOLERANCE = 0.01;
 
 function perpDist(pt, a, b) {
   const dx = b[0] - a[0], dy = b[1] - a[1];
@@ -63,76 +65,16 @@ function simplifyGeometry(geom) {
   return geom;
 }
 
-// ─── Fetch 10m source ─────────────────────────────────────────────────────────
-const SRC_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_countries.geojson';
-const TMP_PATH = join(__dirname, '../.ne_10m_countries_tmp.geojson');
+// ─── Shapely dissolve helper ──────────────────────────────────────────────────
+// Takes an array of GeoJSON polygon coordinate arrays (each is [outerRing, ...holes]),
+// dissolves them into a single unified geometry, returns a GeoJSON geometry object.
+function dissolvePolygons(polygonCoordArrays, label) {
+  console.log(`  Dissolving ${label} via shapely...`);
+  const inputPath  = join(__dirname, '../.ne_dissolve_input_tmp.json');
+  const outputPath = join(__dirname, '../.ne_dissolve_output_tmp.json');
 
-if (!existsSync(TMP_PATH)) {
-  console.log('Downloading Natural Earth 1:10m countries data (~13MB)...');
-  execFileSync('curl', ['-L', '-o', TMP_PATH, SRC_URL], { stdio: 'inherit' });
-}
+  writeFileSync(inputPath, JSON.stringify(polygonCoordArrays));
 
-const src = JSON.parse(readFileSync(TMP_PATH, 'utf8'));
-
-assert(src.type === 'FeatureCollection', 'Expected FeatureCollection');
-assert(src.features.length > 150, `Expected 150+ features, got ${src.features.length}`);
-
-// ─── Normalize + deduplicate ──────────────────────────────────────────────────
-// Natural Earth uses ISO_A2; some countries (France, Norway, Kosovo) have '-99'
-// due to disputed-borders encoding — ISO_A2_EH is the fallback.
-// Territories share their sovereign's code; keep lowest scalerank entry.
-const seen = new Set();
-const israelPolygons = [];    // collect all IL + PS polygon rings for geometric dissolve
-const palestinePolygons = [];
-
-const features = src.features
-  .sort((a, b) => a.properties.scalerank - b.properties.scalerank)
-  .reduce((acc, f) => {
-    let isoA2 = f.properties.ISO_A2;
-    if (isoA2 === '-99') isoA2 = f.properties.ISO_A2_EH;
-    if (!isoA2 || isoA2 === '-99') return acc;
-
-    const id = isoA2.toLowerCase();
-
-    // Collect all Israel + Palestine geometries for geometric union
-    if (id === 'il') {
-      const g = f.geometry;
-      const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-      israelPolygons.push(...polys);
-    }
-    if (id === 'ps') {
-      const g = f.geometry;
-      const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-      palestinePolygons.push(...polys);
-      return acc; // skip Palestine as a standalone feature
-    }
-
-    if (seen.has(isoA2)) return acc;
-    seen.add(isoA2);
-
-    acc.push({
-      type: 'Feature',
-      properties: { id, name: f.properties.ADMIN },
-      geometry: simplifyGeometry(f.geometry),
-    });
-    return acc;
-  }, []);
-
-// ─── Dissolve Israel + Palestine via shapely ──────────────────────────────────
-// Naive polygon concatenation produces internal borders wherever adjacent
-// polygons share an edge. shapely.unary_union does a proper geometric dissolve,
-// yielding a single borderless shape.
-if (israelPolygons.length > 0) {
-  console.log(`Dissolving Israel (${israelPolygons.length} parts) + Palestine (${palestinePolygons.length} parts) via shapely...`);
-
-  const allPolygons = [...israelPolygons, ...palestinePolygons];
-  const dissolveInputPath = join(__dirname, '../.ne_dissolve_input_tmp.json');
-  const dissolveOutputPath = join(__dirname, '../.ne_dissolve_output_tmp.json');
-
-  writeFileSync(dissolveInputPath, JSON.stringify(allPolygons));
-
-  // Python reads polygon rings from file, dissolves with shapely, writes result to file.
-  // Using execFileSync (not execSync) to avoid shell injection.
   const pyScript = `
 import json, sys
 from shapely.geometry import Polygon, mapping
@@ -155,16 +97,107 @@ with open(sys.argv[2], 'w') as f:
     json.dump(mapping(result), f)
 `;
 
-  execFileSync('python3', ['-c', pyScript, dissolveInputPath, dissolveOutputPath]);
+  execFileSync('python3', ['-c', pyScript, inputPath, outputPath]);
+  const result = JSON.parse(readFileSync(outputPath, 'utf8'));
 
-  const dissolved = JSON.parse(readFileSync(dissolveOutputPath, 'utf8'));
+  unlinkSync(inputPath);
+  unlinkSync(outputPath);
+  return result;
+}
 
-  // Replace Israel's geometry with the dissolved result (already simplified by shapely)
-  const israelFeature = features.find(f => f.properties.id === 'il');
-  if (israelFeature) israelFeature.geometry = dissolved;
+// ─── Fetch 10m source ─────────────────────────────────────────────────────────
+const SRC_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_countries.geojson';
+const TMP_PATH = join(__dirname, '../.ne_10m_countries_tmp.geojson');
 
-  unlinkSync(dissolveInputPath);
-  unlinkSync(dissolveOutputPath);
+if (!existsSync(TMP_PATH)) {
+  console.log('Downloading Natural Earth 1:10m countries data (~13MB)...');
+  execFileSync('curl', ['-L', '-o', TMP_PATH, SRC_URL], { stdio: 'inherit' });
+}
+
+const src = JSON.parse(readFileSync(TMP_PATH, 'utf8'));
+
+assert(src.type === 'FeatureCollection', 'Expected FeatureCollection');
+assert(src.features.length > 150, `Expected 150+ features, got ${src.features.length}`);
+
+// ─── Normalize + deduplicate ──────────────────────────────────────────────────
+// Natural Earth uses ISO_A2; some countries (France, Norway, Kosovo) have '-99'
+// due to disputed-borders encoding — ISO_A2_EH is the fallback.
+// Territories share their sovereign's code; keep lowest scalerank entry.
+const seen = new Set();
+
+// Polygons collected for geometric dissolves (prevents internal border lines)
+const israelPolygons     = [];  // IL + PS → merge into Israel feature
+const palestinePolygons  = [];
+const somaliaPolygons    = [];  // SO + Somaliland → merge into Somalia feature
+const somalilandPolygons = [];
+
+const features = src.features
+  .sort((a, b) => a.properties.scalerank - b.properties.scalerank)
+  .reduce((acc, f) => {
+    let isoA2 = f.properties.ISO_A2;
+    if (isoA2 === '-99') isoA2 = f.properties.ISO_A2_EH;
+
+    const adminName = f.properties.ADMIN || '';
+
+    // Somaliland: ISO_A2='-99' on both fields so it's normally skipped, leaving a
+    // blank white gap in northern Somalia. Capture it for merging into Somalia.
+    if (adminName === 'Somaliland') {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      somalilandPolygons.push(...polys);
+      return acc;
+    }
+
+    if (!isoA2 || isoA2 === '-99') return acc; // skip truly unidentifiable features
+
+    const id = isoA2.toLowerCase();
+
+    // Israel + Palestine: collect for dissolve to avoid internal border lines
+    if (id === 'il') {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      israelPolygons.push(...polys);
+    }
+    if (id === 'ps') {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      palestinePolygons.push(...polys);
+      return acc; // skip Palestine as standalone feature
+    }
+
+    // Somalia: collect alongside Somaliland for dissolve
+    if (id === 'so') {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      somaliaPolygons.push(...polys);
+    }
+
+    if (seen.has(isoA2)) return acc;
+    seen.add(isoA2);
+
+    acc.push({
+      type: 'Feature',
+      properties: { id, name: f.properties.ADMIN },
+      geometry: simplifyGeometry(f.geometry),
+    });
+    return acc;
+  }, []);
+
+// ─── Geometric dissolves ──────────────────────────────────────────────────────
+console.log('Running geometric dissolves...');
+
+if (israelPolygons.length > 0) {
+  const dissolved = dissolvePolygons(
+    [...israelPolygons, ...palestinePolygons],
+    `Israel (${israelPolygons.length}p) + Palestine (${palestinePolygons.length}p)`
+  );
+  const feat = features.find(f => f.properties.id === 'il');
+  if (feat) feat.geometry = dissolved;
+}
+
+if (somalilandPolygons.length > 0) {
+  const dissolved = dissolvePolygons(
+    [...somaliaPolygons, ...somalilandPolygons],
+    `Somalia (${somaliaPolygons.length}p) + Somaliland (${somalilandPolygons.length}p)`
+  );
+  const feat = features.find(f => f.properties.id === 'so');
+  if (feat) feat.geometry = dissolved;
 }
 
 // ─── Output ───────────────────────────────────────────────────────────────────
