@@ -81,6 +81,10 @@ export function AuthProvider({ children }) {
           const key = await deriveKey(auth.user.sub);
           setActiveKey(key);
           await warmCache(auth.user.id);
+          // Signal that the encrypted memCache is now ready so hooks that read
+          // user-scoped data synchronously (e.g. useXp's grantedKeysRef) can
+          // reload their state from the now-decrypted localStorage values.
+          window.dispatchEvent(new CustomEvent('auth:cache-warm', { detail: { userId: auth.user.id } }));
         } catch (e) {
           console.error('[auth] key derivation failed on mount:', e);
         }
@@ -102,10 +106,13 @@ export function AuthProvider({ children }) {
         throw new Error(err.detail || 'Login failed');
       }
       const data = await res.json();
-      setAuth(data);
-      saveAuth(data);
 
-      // Derive encryption key and warm the cache BEFORE syncing
+      // Derive the encryption key and warm the in-memory cache BEFORE calling
+      // setAuth(). setAuth() triggers an immediate React re-render (this is an
+      // async function, so React 18 does NOT batch the update). If warmCache
+      // runs after setAuth(), hooks that read user-scoped encrypted localStorage
+      // keys synchronously (e.g. loadXp, loadGrantedKeys) get null back because
+      // the memCache isn't ready yet — causing XP and other state to flash to 0.
       if (data.jwt_token && data.user?.id && data.user?.sub) {
         try {
           const key = await deriveKey(data.user.sub);
@@ -114,6 +121,12 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.error('[auth] key derivation failed on login:', e);
         }
+      }
+
+      setAuth(data);
+      saveAuth(data);
+
+      if (data.jwt_token && data.user?.id) {
         syncLocalDataToServer(data.jwt_token, data.user.id).catch(() => {});
       }
     } catch (err) {
