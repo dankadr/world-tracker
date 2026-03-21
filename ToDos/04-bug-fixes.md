@@ -130,6 +130,13 @@ These changes mean several previously-open bugs are now closed or downgraded to 
 - **Verification:** `src/context/__tests__/AuthContext.test.jsx`, `src/hooks/__tests__/useVisitedCountries.test.jsx`, full Vitest, and full Playwright smoke.
 - **Status:** Fixed
 
+#### F. Map Quiz reveals correct country before user selects
+- **Severity:** High
+- **Component:** Map Quiz mini-game
+- **Issue:** The correct country is highlighted/marked on the map before the user clicks, spoiling the answer.
+- **Required behavior:** No country should be visually indicated as correct until after the user makes their selection.
+- **Status:** Open
+
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
@@ -188,7 +195,15 @@ These changes mean several previously-open bugs are now closed or downgraded to 
 - **Current repo status:** Fixed by PR #77 using `lz-string` encoded URI compression with backward-compatible legacy decode support.
 - **Remaining gap:** If share payloads grow substantially again, a server-generated short-link flow may still be worth adding later.
 
-#### 8. Dark Mode Inconsistencies
+#### 8. Country Tabs Not Horizontally Scrollable on Desktop
+- **Severity:** Medium
+- **Component:** Country/tracker tab bar (desktop)
+- **Issue:** The horizontal tab bar (e.g., Switzerland, United States, US Nat. Parks, NYC…) cannot be scrolled sideways on desktop, so tabs that overflow off-screen are inaccessible.
+- **Screenshot:** User-reported — tabs cut off on right side, no scroll affordance visible.
+- **Required behavior:** The tab row should be horizontally scrollable on desktop (mouse wheel or drag), or show prev/next arrow controls when tabs overflow.
+- **Status:** Open
+
+#### 9. Dark Mode Inconsistencies
 - **File:** `src/App.css`, various component CSS files
 - **Issue:** Some components have hardcoded colors that don't respond to the dark mode CSS variables. Particularly:
   - `src/components/ChallengesPanel.css`
