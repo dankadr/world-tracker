@@ -34,11 +34,10 @@ registerRoute(
 // API routes — NetworkFirst with per-user cache key
 // Note: localStorage is NOT available in SW scope.
 // We decode the user ID from the JWT in the Authorization header.
-// URL pattern restricted to production domain to avoid accidentally caching
-// third-party HTTPS requests that happen to contain /api/ in the path.
-// Local dev uses HTTP so this rule does not fire in development.
+// Match function: same-origin /api/* only — works on any hostname
+// (production, preview deployments, local dev) without hard-coding a domain.
 registerRoute(
-  /^https:\/\/rightworld\.io\/api\/.*/,
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'api-cache',
     networkTimeoutSeconds: 5,
