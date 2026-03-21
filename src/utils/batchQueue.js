@@ -7,6 +7,7 @@ import { invalidateBulkCache } from './api';
 const queue = [];
 let timer = null;
 const BATCH_INTERVAL = 2000; // ms
+const BATCH_CHUNK_SIZE = 50; // must match server-side Field(max_length=50)
 const QUEUE_STORAGE_KEY = 'swiss-tracker-batch-queue';
 
 function persistQueue() {
@@ -70,25 +71,39 @@ export async function flushBatch() {
 
   // Use the first available token in this batch
   const token = batch.find((item) => item.token)?.token;
-  const actions = batch.map(({ action, payload }) => ({ action, payload }));
 
-  try {
-    await fetch('/api/batch', {
-      method: 'POST',
-      keepalive: true,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ actions }),
-    });
-    // Invalidate bulk cache so next background revalidation picks up server state
-    if (token) invalidateBulkCache(token);
-  } catch (err) {
-    console.error('flushBatch error:', err);
-    queue.unshift(...batch);
-    persistQueue();
+  // Send in chunks of ≤BATCH_CHUNK_SIZE to satisfy the server-side validation limit.
+  // Re-queue only from the failed chunk onward — already-committed chunks stay committed
+  // (actions like region_toggle are not idempotent so we must not re-send them).
+  for (let i = 0; i < batch.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = batch.slice(i, i + BATCH_CHUNK_SIZE);
+    const actions = chunk.map(({ action, payload }) => ({ action, payload }));
+    try {
+      const res = await fetch('/api/batch', {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ actions }),
+      });
+      if (!res.ok) {
+        console.error('flushBatch error:', res.status);
+        queue.unshift(...batch.slice(i));
+        persistQueue();
+        return;
+      }
+    } catch (err) {
+      console.error('flushBatch error:', err);
+      queue.unshift(...batch.slice(i));
+      persistQueue();
+      return;
+    }
   }
+
+  // Invalidate bulk cache so next background revalidation picks up server state
+  if (token) invalidateBulkCache(token);
 }
 
 export function clearBatch() {
