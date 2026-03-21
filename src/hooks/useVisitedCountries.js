@@ -82,8 +82,13 @@ export default function useVisitedCountries() {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
+    // Cover the fresh-login case: isLoading was initialized false when the user
+    // wasn't yet authenticated, so flip it to true while the fetch is in-flight.
+    if (visitedRef.current.size === 0) setIsLoading(true);
+
     fetchAllVisited(token).then((bulk) => {
-      if (cancelled || !bulk) return;
+      if (cancelled) return;
+      if (!bulk) { setIsLoading(false); return; }
       const remote = new Set(bulk.world || []);
       const local = loadVisitedWorld(userId);
       // Merge: if user had local data before logging in, push it up

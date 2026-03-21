@@ -1,7 +1,7 @@
 # ToDo: PWA & Offline Support
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — manifest, PWA plugin, install prompt, offline UI, and cache/queue infrastructure are in place
 **Priority:** Medium-High
 **Scope:** Make the app a Progressive Web App with offline support, home screen install, and background sync
 
@@ -9,17 +9,18 @@
 
 ## Overview
 
-The app currently has zero PWA support — no `manifest.json`, no service worker, no offline capability, and only a single static asset (`public/logo.png`). Users on mobile must open a browser and navigate to the URL every time. Adding PWA support enables "Add to Home Screen", offline map viewing, and a near-native experience without app store submission.
+The app now has the first layer of PWA support — a manifest, service worker wiring through Vite PWA, install prompts, and offline/cache helpers — but it is not yet mature enough to call the experience fully offline-ready. Finishing this work enables "Add to Home Screen", stronger offline map viewing, and a near-native experience without app store submission.
 
 ## Current State
 
-- **Static assets:** Only `public/logo.png`
-- **No manifest.json** — browsers can't detect the app is installable
-- **No service worker** — no caching, no offline, no background sync
-- **Data storage:** localStorage for guest mode, API calls for authenticated users
-- **GeoJSON files:** Large JSON files in `src/data/` (bundled by Vite into the JS bundle)
-- **Hosting:** Vercel CDN (good caching headers by default)
-- **Map tiles:** Loaded from external tile servers (OpenStreetMap, CartoDB, etc.)
+- **Manifest shipped:** `public/manifest.json` is present and linked from `index.html`
+- **PWA build integration shipped:** `vite-plugin-pwa` is configured in `vite.config.js`
+- **Install UX shipped:** `src/components/InstallPrompt.jsx` handles Android install events and iOS manual install guidance
+- **Offline UX shipped:** `src/components/OfflineIndicator.jsx` exists
+- **Offline infra partially shipped:** `src/utils/syncQueue.js`, `src/utils/cache.js`, and runtime tile/API caching are present
+- **Data storage:** localStorage / secureStorage for guest mode and offline-friendly fallbacks, API sync for authenticated users
+- **GeoJSON files:** Large JSON files in `src/data/` remain bundled into the app
+- **Still missing:** strong end-to-end offline verification, richer background sync behavior, and polished install/offline assets
 
 ## Implementation Plan
 
