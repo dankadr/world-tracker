@@ -10,7 +10,7 @@ import StatsModal from './StatsModal';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
-import ConfirmDialog from './ConfirmDialog';
+import { useActionSheet } from '../context/ActionSheetContext';
 import AddToBucketListModal from './AddToBucketListModal';
 import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
@@ -49,11 +49,11 @@ export default function Sidebar({
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { showActionSheet } = useActionSheet();
   const [editingDate, setEditingDate] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
@@ -317,8 +317,16 @@ export default function Sidebar({
         )}
         {!isMobile && !readOnly && (
           <SettingsPanel
-            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+            onReset={() => showActionSheet({
+              title: 'Reset Progress',
+              message: `Reset all ${country.regionLabel} progress?`,
+              actions: [{ label: 'Reset', destructive: true, onPress: onReset }],
+            })}
+            onResetAll={() => showActionSheet({
+              title: 'Reset All Countries',
+              message: 'Reset ALL countries? This cannot be undone.',
+              actions: [{ label: 'Reset All', destructive: true, onPress: onResetAll }],
+            })}
             onShowOnboarding={onShowOnboarding}
             onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
           />
@@ -343,17 +351,6 @@ export default function Sidebar({
           onClose={() => setShowAvatar(false)}
         />
       )}
-      <ConfirmDialog
-        isOpen={!!confirmAction}
-        message={confirmAction?.message || ''}
-        confirmLabel="Reset"
-        onConfirm={() => {
-          if (confirmAction?.type === 'reset') onReset();
-          else if (confirmAction?.type === 'resetAll') onResetAll();
-          setConfirmAction(null);
-        }}
-        onCancel={() => setConfirmAction(null)}
-      />
       <AddToBucketListModal
         isOpen={!!bucketListModal}
         onClose={() => setBucketListModal(null)}
