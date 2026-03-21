@@ -60,9 +60,18 @@ test-results/
 .claude/
 .vercel
 
+# Brainstorm sessions
+.superpowers/
+
 # Git worktrees
 .worktrees/
 scripts/gadm41_NOR_1.json
 scripts/gadm41_SJM_0.json
 scripts/gadm41_SJM_1.json
 scripts/gadm41_USA_1.json curl -L https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_USA_1.json -o /Users/dankadr/swiss-tracker/scripts/gadm41_USA_1.json
+.worktrees/
+
+# Scripts
+/.ne_10m_countries_tmp.geojson
+/.ne_dissolve_input_tmp.json
+/.ne_dissolve_output_tmp.json

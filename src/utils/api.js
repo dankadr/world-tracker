@@ -8,6 +8,14 @@
 
 import { cacheGet, cacheSet, cacheInvalidate } from './cache';
 
+// Dispatch a global event so AuthContext can auto-logout on 401.
+function notifyIfExpired(res) {
+  if (res.status === 401) {
+    window.dispatchEvent(new CustomEvent('auth:expired'));
+  }
+  return res;
+}
+
 const VISITED_TTL = 5 * 60 * 1000; // 5 minutes
 
 function visitedCacheKey(token) {
@@ -48,7 +56,7 @@ export async function fetchAllVisited(token, force = false) {
   _bulkPromise = fetch('/api/visited/all', {
     headers: { Authorization: `Bearer ${token}` },
   })
-    .then((res) => (res.ok ? res.json() : null))
+    .then((res) => (notifyIfExpired(res).ok ? res.json() : null))
     .then((data) => {
       _bulkCache = data;
       _bulkPromise = null;
@@ -83,7 +91,7 @@ export async function deleteAllVisited(token) {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) console.error(`deleteAllVisited failed: ${res.status}`);
+    if (!notifyIfExpired(res).ok) console.error(`deleteAllVisited failed: ${res.status}`);
   } catch (err) {
     console.error('deleteAllVisited network error:', err);
   }
@@ -95,7 +103,7 @@ export async function fetchMe(token) {
   const res = await fetch('/api/me', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch profile');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch profile');
   return res.json();
 }
 
@@ -103,7 +111,7 @@ export async function lookupFriendCode(token, friendCode) {
   const res = await fetch(`/api/user/${friendCode}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('User not found');
+  if (!notifyIfExpired(res).ok) throw new Error('User not found');
   return res.json();
 }
 
@@ -113,6 +121,7 @@ export async function sendFriendRequest(token, friendCode) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ friend_code: friendCode }),
   });
+  notifyIfExpired(res);
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || 'Failed to send request');
@@ -124,7 +133,7 @@ export async function fetchFriendRequests(token) {
   const res = await fetch('/api/friends/requests', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch requests');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch requests');
   return res.json();
 }
 
@@ -133,7 +142,7 @@ export async function acceptFriendRequest(token, requestId) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to accept request');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to accept request');
   return res.json();
 }
 
@@ -142,7 +151,7 @@ export async function declineFriendRequest(token, requestId) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to decline request');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to decline request');
   return res.json();
 }
 
@@ -151,7 +160,7 @@ export async function cancelFriendRequest(token, requestId) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to cancel request');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to cancel request');
   return res.json();
 }
 
@@ -159,7 +168,7 @@ export async function fetchFriends(token) {
   const res = await fetch('/api/friends', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch friends');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch friends');
   return res.json();
 }
 
@@ -168,7 +177,7 @@ export async function removeFriend(token, friendId) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to remove friend');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to remove friend');
   return res.json();
 }
 
@@ -176,7 +185,7 @@ export async function fetchFriendVisited(token, friendId) {
   const res = await fetch(`/api/friends/${friendId}/visited`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch friend data');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch friend data');
   return res.json();
 }
 
@@ -184,7 +193,7 @@ export async function fetchLeaderboard(token) {
   const res = await fetch('/api/friends/leaderboard', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch leaderboard');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch leaderboard');
   return res.json();
 }
 
@@ -192,7 +201,7 @@ export async function fetchActivity(token) {
   const res = await fetch('/api/friends/activity', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch activity');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch activity');
   return res.json();
 }
 
@@ -202,7 +211,7 @@ export async function fetchWishlist(token) {
   const res = await fetch('/api/wishlist', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch wishlist');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch wishlist');
   return res.json();
 }
 
@@ -210,7 +219,7 @@ export async function fetchWishlistForTracker(token, trackerId) {
   const res = await fetch(`/api/wishlist/${trackerId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch wishlist');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch wishlist');
   return res.json();
 }
 
@@ -220,7 +229,7 @@ export async function upsertWishlistItem(token, trackerId, regionId, data = {}) 
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to save wishlist item');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to save wishlist item');
   return res.json();
 }
 
@@ -230,7 +239,7 @@ export async function updateWishlistItem(token, trackerId, regionId, updates) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
   });
-  if (!res.ok) throw new Error('Failed to update wishlist item');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to update wishlist item');
   return res.json();
 }
 
@@ -239,7 +248,7 @@ export async function deleteWishlistItem(token, trackerId, regionId) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to delete wishlist item');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to delete wishlist item');
   return res.json();
 }
 
@@ -249,7 +258,7 @@ export async function fetchChallenges(token) {
   const res = await fetch('/api/challenges', {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch challenges');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch challenges');
   return res.json();
 }
 
@@ -259,6 +268,7 @@ export async function createChallenge(token, data) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  notifyIfExpired(res);
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || 'Failed to create challenge');
@@ -270,7 +280,7 @@ export async function fetchChallengeDetail(token, challengeId) {
   const res = await fetch(`/api/challenges/${challengeId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to fetch challenge detail');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch challenge detail');
   return res.json();
 }
 
@@ -279,6 +289,7 @@ export async function joinChallenge(token, challengeId) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
+  notifyIfExpired(res);
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || 'Failed to join challenge');
@@ -291,7 +302,7 @@ export async function leaveChallenge(token, challengeId) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to leave challenge');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to leave challenge');
   return res.json();
 }
 
@@ -300,7 +311,7 @@ export async function deleteChallenge(token, challengeId) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Failed to delete challenge');
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to delete challenge');
   return res.json();
 }
 
@@ -309,6 +320,7 @@ export async function triggerEncrypt(token) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
+  notifyIfExpired(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Encrypt failed');
@@ -321,6 +333,7 @@ export async function triggerDecrypt(token) {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
+  notifyIfExpired(res);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Decrypt failed');

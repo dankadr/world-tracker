@@ -97,6 +97,8 @@
 /* Screen content area — scrolls independently */
 .screen-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
