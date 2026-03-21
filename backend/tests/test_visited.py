@@ -127,3 +127,27 @@ async def test_batch_accepts_exactly_50_actions(client, auth_headers, mock_db):
     ]
     resp = await client.post("/api/batch", json={"actions": actions}, headers=auth_headers)
     assert resp.status_code == 200
+
+
+async def test_batch_region_toggles_use_bounded_db_queries(client, auth_headers, mock_db):
+    """50 region_toggle actions on the same country should hit the DB at most 3 times
+    (1 bulk SELECT + 1 bulk SELECT for world + commit), not once per action."""
+    call_count = 0
+    original_execute = mock_db.execute
+
+    async def counting_execute(stmt, *args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return await original_execute(stmt, *args, **kwargs)
+
+    mock_db.execute = counting_execute
+
+    actions = [
+        {"action": "region_toggle", "payload": {"country_id": "ch", "region": f"r{i}", "action": "add"}}
+        for i in range(10)
+    ]
+    resp = await client.post("/api/batch", json={"actions": actions}, headers=auth_headers)
+    assert resp.status_code == 200
+    # Pre-fetch pattern: 1 SELECT for all ch VisitedRegions rows (no world actions)
+    # Without the fix: 10 SELECT queries
+    assert call_count <= 3, f"Expected at most 3 DB queries, got {call_count}"
