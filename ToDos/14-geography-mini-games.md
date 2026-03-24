@@ -1,7 +1,7 @@
 # ToDo: Geography Mini Games
 
 **Date:** 2026-03-06
-**Status:** In Progress — active branch `feat/geography-mini-games`; implementation plan at `docs/plans/2026-03-08-mini-games.md`
+**Status:** In Progress — core game suite shipped, stabilization and expansion still pending
 **Priority:** Medium
 **Scope:** Add interactive geography mini games where users test their knowledge on blank maps by guessing countries, states, cantons, and regions
 
@@ -10,6 +10,16 @@
 ## Overview
 
 Add a "Games" section to the app where users can play geography quiz games using the existing map infrastructure (WorldMap, SwissMap). The core mechanic: show a blank/unlabeled map, highlight a random region, and ask the user to type or select its name. Games should integrate with the user's tracker data for personalized challenges (e.g., "Guess the countries you haven't visited yet").
+
+## Current State
+
+- `src/components/GamesPanel.jsx` is integrated into the app
+- Implemented modes today: Map Quiz, Flag Quiz, Capital Quiz, and Shape Quiz
+- Shared game engine exists in `src/hooks/useGeographyGame.js`
+- Game achievements already exist in `src/config/achievements.json`
+- Unit tests exist for the engine and related helpers
+- Not yet shipped from this plan: daily challenge, streak mode, place-the-pin, neighbor challenge, custom region quiz, and backend score storage
+- Current smoke-test artifacts indicate ongoing crash/regression work is still needed before calling the feature stable
 
 ---
 

@@ -166,6 +166,7 @@ export default function useVisitedRegions(countryId) {
   const [currentCountry, setCurrentCountry] = useState(countryId);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
+  const prevCountryIdRef = useRef(countryId);
 
   // Debounce state for saveVisitedRemote
   const debounceTimerRef = useRef(null);
@@ -241,9 +242,12 @@ export default function useVisitedRegions(countryId) {
     if (!isLoggedIn || !token) return;
     let cancelled = false;
 
-    // Cover the fresh-login case: isLoading was initialized false when the user
-    // wasn't yet authenticated, so flip it to true while the fetch is in-flight.
-    if (visitedRef.current.size === 0) setIsLoading(true);
+    // Show loading when we don't have data yet (fresh login) OR when the country
+    // just changed — the current visitedRef may hold the previous country's data
+    // (from a warm memCache hit in the render-time reset) which would be wrong.
+    const countryChanged = prevCountryIdRef.current !== countryId;
+    prevCountryIdRef.current = countryId;
+    if (visitedRef.current.size === 0 || countryChanged) setIsLoading(true);
 
     fetchAllVisited(token).then((bulk) => {
       if (cancelled) return;
@@ -311,6 +315,31 @@ export default function useVisitedRegions(countryId) {
     }
   }, [isLoggedIn]);
 
+  // On page load the user may already be authenticated, but warmCache() runs
+  // asynchronously in AuthContext's mount effect — AFTER the initial render.
+  // This means loadLocal() in initFromCache / the render-time reset returns an
+  // empty Set for encrypted user-scoped keys that haven't been decrypted yet.
+  // Once warmCache() completes it fires 'auth:cache-warm'; we reload from
+  // localStorage so regional data shows immediately without waiting for the
+  // server fetch that the sync effect would otherwise trigger.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      const local = loadLocal(countryId, userId);
+      // Only apply if server data hasn't already arrived — avoids rolling back
+      // a fresher server value when crypto is slow relative to the network.
+      if (local.size > 0 && visitedRef.current.size === 0) {
+        setVisited(local);
+        setDatesState(loadDates(countryId, userId));
+        setNotesState(loadNotes(countryId, userId));
+        setWishlist(loadWishlist(countryId, userId));
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [countryId, userId]);
+
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
     if (!isLoggedIn || !token) return;
@@ -349,9 +378,16 @@ export default function useVisitedRegions(countryId) {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    // When syncLocalDataToServer() completes (guest → login migration), it
+    // invalidates the bulk cache and emits 'visitedchange'. Re-fetch so the
+    // merged regional data appears immediately without waiting for a tab switch.
+    // The TTL cache guard inside refetch() makes this a no-op for normal
+    // toggles (which don't invalidate the cache).
+    window.addEventListener('visitedchange', refetch);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', refetch);
     };
   }, [countryId, isLoggedIn, token, userId]);
 

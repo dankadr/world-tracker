@@ -1,7 +1,7 @@
 # ToDo: Data Export & Import
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — JSON export/import and CSV export UI are already implemented
 **Priority:** Medium
 **Scope:** Enable users to export all their travel data (visited regions, achievements, avatar config, bucket list, challenges, trips) as CSV/JSON, and import from other apps or backups
 
@@ -9,18 +9,17 @@
 
 ## Overview
 
-Currently, users can only export a map image (via `html2canvas` in `src/components/ExportButton.jsx`). There is no way to export their full travel history, achievements, avatar config, bucket list, challenge history, or trip plans. This plan adds full data export (CSV/JSON), import, and privacy compliance (GDPR data portability).
+The app now supports map image export plus a first-pass JSON/CSV export-import flow in Settings, but it still falls short of full account portability. This plan covers the remaining work for fuller CSV/JSON export, import, and privacy compliance (GDPR data portability).
 
 ## Current State
 
 - **Map export:** `src/components/ExportButton.jsx` — exports map as PNG
-- **Visited data:** stored in localStorage (guest mode) or server (authenticated)
-- **Achievements:** `src/config/achievements.json` + user progress
-- **Avatar config:** `src/hooks/useAvatar.js` + `src/config/avatarParts.js`
-- **Bucket list:** `src/hooks/useWishlist.js` + API
-- **Challenges:** `src/hooks/useChallenges.js` + API
-- **Trips:** planned in `10-trip-itinerary-planner.md`
-- **No export/import endpoints**
+- **Data export UI shipped:** `src/components/DataExport.jsx` is wired into `src/components/SettingsPanel.jsx`
+- **Data import UI shipped:** `src/components/DataImport.jsx` is wired into `src/components/SettingsPanel.jsx`
+- **JSON export shipped:** `src/utils/dataExport.js` exports visited data, user profile basics, wishlist, and challenges
+- **CSV export shipped:** tracker CSV export and wishlist CSV export exist
+- **JSON import partially shipped:** visited-world and per-tracker visited data can be merged or overwritten for guest/auth users
+- **Still missing from the original scope:** backend-first export/import endpoints, CSV import, avatar/achievement/friends/full-account portability, and trip data support
 
 ## Export Formats
 

@@ -1,11 +1,17 @@
 # ToDo: Performance & Cost Optimization
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Early infrastructure landed — caching and batching exist, deeper performance/cost work is still open
 **Priority:** High
 **Scope:** Improve app performance and reduce backend/database costs through frontend offloading, caching, batching, and advanced algorithms
 
 ---
+
+## PR Review Snapshot (2026-03-19)
+
+- **PR #86** cached Fernet instances per user/key fingerprint in `backend/crypto.py`, removing repeated key derivation work from hot encryption/decryption paths.
+- **PR #75** added bundle-analysis support in Vite, which makes future bundle-size work easier to measure.
+- Larger caching, lazy-loading, and API-reduction opportunities in this plan are still open.
 
 ## Overview
 
@@ -18,10 +24,13 @@ The app currently relies heavily on backend API calls and database queries for m
 
 ## Current State
 
-- **Frontend:** React 18, Vite, localStorage for guest mode, all state managed in App.jsx
-- **Backend:** FastAPI, PostgreSQL (Neon serverless), no Redis/memcache, no batching, no advanced caching
-- **API:** CRUD endpoints for all features, no rate limiting, no cache headers
-- **Database:** All user data stored in PostgreSQL, no denormalization, no partitioning
+- **Frontend:** React 18, Vite, localStorage / secureStorage for guest mode, substantial state still managed in `App.jsx`
+- **Frontend caching exists:** `src/utils/cache.js`, `src/hooks/useSWRCache.js`, and `src/utils/api.js`
+- **Frontend batching exists:** `src/utils/batchQueue.js` plus `/api/batch` in the backend
+- **Offline queue exists:** `src/utils/syncQueue.js`
+- **Backend:** FastAPI, PostgreSQL (Neon serverless), still no Redis/memcache layer
+- **API:** CRUD endpoints plus batch endpoint, but no serious rate limiting or backend cache layer
+- **Database:** Still primarily normalized PostgreSQL tables, with no partitioning or advanced cost-focused redesign yet
 
 ## Optimization Strategies
 

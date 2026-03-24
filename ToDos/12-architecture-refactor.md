@@ -1,7 +1,7 @@
 # ToDo: Performance & Architecture Refactor
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — test infrastructure, navigation context, caching, and batching exist, but the major shell/router split has not happened
 **Priority:** High
 **Scope:** Refactor frontend and backend for maintainability, performance, and testability
 
@@ -9,19 +9,20 @@
 
 ## Overview
 
-The app's architecture has grown organically — `src/App.jsx` is 823 lines, managing all state for all views, and the backend is a single 1,691-line file. There is no routing library, no code splitting, and no test suite. This plan covers a full refactor to split concerns, add routing, code splitting, and testing infrastructure.
+The app's architecture has grown organically — `src/App.jsx` and `backend/main.py` are still large coordination points, routing is still local-state driven, and code splitting is still minimal. Some testing and infrastructure work has landed, but the core separation of concerns has not. This plan covers the remaining refactor to split concerns, add routing, improve bundle structure, and keep strengthening the test setup.
 
 ## Current State
 
 - **Frontend:**
-  - `src/App.jsx` — all state, all views, all modals
-  - No routing library (view state managed in App.jsx)
-  - No code splitting (all components loaded at once)
-  - No test suite (no Vitest, Jest, Playwright)
-  - All CSS is hand-written (no utility classes)
+  - `src/App.jsx` is still the main shell and is now 948 lines
+  - No routing library yet; navigation is still mostly local state plus `NavigationContext`
+  - No meaningful code splitting yet
+  - Test suite now exists: Vitest, Playwright, and multiple frontend unit tests
+  - Supporting infra now exists: `NavigationContext`, cache helpers, batch queue, offline queue, and several domain hooks
 - **Backend:**
-  - `backend/main.py` — all endpoints, models, logic in one file
-  - No modular routers, no test suite
+  - `backend/main.py` is still the main API entry point and is now 1,804 lines
+  - Backend tests now exist under `backend/tests/`
+  - Routers/modules have not been split out yet
 
 ## Refactor Goals
 

@@ -1,11 +1,16 @@
 # ToDo: Accessibility (a11y) Audit & Improvements
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** In Progress — some accessibility-oriented component cleanup has shipped, but there has not yet been a full audit
 **Priority:** Medium
 **Scope:** Full accessibility audit and remediation — ARIA roles, keyboard navigation, color contrast, screen reader support, and focus management
 
 ---
+
+## PR Review Snapshot (2026-03-19)
+
+- **PR #78** removed some emoji-only controls, improved mobile screen wiring, and added more touch-feedback polish in profile/social flows.
+- Those changes help, but they do **not** replace the full keyboard, contrast, focus-management, and screen-reader audit outlined below.
 
 ## Overview
 
