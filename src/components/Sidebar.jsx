@@ -57,6 +57,7 @@ export default function Sidebar({
   const [showAdmin, setShowAdmin] = useState(false);
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
+  const [showSettings, setShowSettings] = useState(false);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const tabsRef = useRef(null);
@@ -315,15 +316,32 @@ export default function Sidebar({
         ) : (
           <ul>{regionList.map((r) => renderRegionItem(r))}</ul>
         )}
-        {!isMobile && !readOnly && (
-          <SettingsPanel
-            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
-            onShowOnboarding={onShowOnboarding}
-            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
-          />
-        )}
       </div>
+
+      {!isMobile && !readOnly && (
+        <div className="sidebar-settings-footer">
+          <button
+            className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}
+            onClick={() => setShowSettings((v) => !v)}
+            aria-expanded={showSettings}
+            aria-controls="sidebar-settings-panel"
+            type="button"
+          >
+            <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
+            <span className="sidebar-settings-toggle-arrow" aria-hidden="true">{showSettings ? '▲' : '▼'}</span>
+          </button>
+          {showSettings && (
+            <div id="sidebar-settings-panel">
+              <SettingsPanel
+                onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+                onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+                onShowOnboarding={onShowOnboarding}
+                onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
