@@ -40,7 +40,7 @@ function getScoreKey(filter) {
   return `shape_${filter}`;
 }
 
-export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onPlayAgain }) {
+export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -91,6 +91,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
     correctId,
     incorrectId,
     onCountryClick: null,
+    revealTarget: true,
   }), [question?.id, correctId, incorrectId]);
 
   if (status === 'finished') {
@@ -115,7 +116,7 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0 }}>

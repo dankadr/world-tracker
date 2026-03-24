@@ -84,7 +84,7 @@ function getScoreKey(filter) {
   return `map_${filter}`;
 }
 
-export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack, onPlayAgain }) {
+export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(filter, worldVisited), [filter, worldVisited]);
   const isNewBestRef = useRef(false);
 
@@ -137,6 +137,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
     targetId: question?.id,
     correctId,
     incorrectId,
+    revealTarget: true,
   }), [handleCountryClick, question?.id, correctId, incorrectId]);
 
   if (status === 'finished') {
@@ -161,7 +162,7 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{
         position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)',

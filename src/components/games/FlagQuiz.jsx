@@ -25,7 +25,7 @@ function buildPool() {
 
 const SCORE_KEY = 'flag';
 
-export default function FlagQuiz({ onBack, onPlayAgain }) {
+export default function FlagQuiz({ onBack, onQuit, onPlayAgain }) {
   const pool = useMemo(() => buildPool(), []);
   const isNewBestRef = useRef(false);
 
@@ -69,7 +69,7 @@ export default function FlagQuiz({ onBack, onPlayAgain }) {
         total={total}
         score={score}
         timeLeft={timeLeft}
-        onQuit={onBack}
+        onQuit={onQuit ?? onBack}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', gap: 20 }}>
         <div style={{ fontSize: '5rem', lineHeight: 1 }} data-testid="flag-quiz-prompt">{question.flag}</div>
