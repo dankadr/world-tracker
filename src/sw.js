@@ -34,13 +34,17 @@ registerRoute(
 // API routes — NetworkFirst with per-user cache key
 // Note: localStorage is NOT available in SW scope.
 // We decode the user ID from the JWT in the Authorization header.
+// Match function: same-origin /api/* only — works on any hostname
+// (production, preview deployments, local dev) without hard-coding a domain.
 registerRoute(
-  /^https?:\/\/.*\/api\/.*/,
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'api-cache',
     networkTimeoutSeconds: 5,
     plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 }),
+      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 5 * 60 }), // 5 min (was 24h)
+      // Only cache successful responses — never cache 401/403/500 errors
+      new CacheableResponsePlugin({ statuses: [200] }),
       {
         // Skip caching unauthenticated responses — prevents guest data
         // from entering the cache and bleeding to authenticated users.
