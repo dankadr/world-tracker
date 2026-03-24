@@ -324,18 +324,21 @@ export default function Sidebar({
             className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}
             onClick={() => setShowSettings((v) => !v)}
             aria-expanded={showSettings}
+            aria-controls="sidebar-settings-panel"
             type="button"
           >
-            <span className="sidebar-settings-toggle-label">⚙ Settings</span>
-            <span className="sidebar-settings-toggle-arrow">{showSettings ? '▲' : '▼'}</span>
+            <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
+            <span className="sidebar-settings-toggle-arrow" aria-hidden="true">{showSettings ? '▲' : '▼'}</span>
           </button>
           {showSettings && (
-            <SettingsPanel
-              onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-              onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
-              onShowOnboarding={onShowOnboarding}
-              onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
-            />
+            <div id="sidebar-settings-panel">
+              <SettingsPanel
+                onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+                onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+                onShowOnboarding={onShowOnboarding}
+                onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+              />
+            </div>
           )}
         </div>
       )}

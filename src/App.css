@@ -1163,11 +1163,40 @@ body {
 .sidebar-settings-footer {
   border-top: 1px solid var(--divider);
   flex-shrink: 0;
-  /* Limit expansion height so it doesn't swallow the whole sidebar */
-  max-height: 50vh;
+  /* Cap at 240px so the region list (flex: 1) always retains usable height on short viewports */
+  max-height: min(50vh, 240px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--glass-border) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.sidebar-settings-footer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-settings-footer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-settings-footer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.sidebar-settings-footer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .sidebar-settings-footer {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+[data-theme="dark"] .sidebar-settings-footer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .sidebar-settings-footer::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .sidebar-settings-toggle {
