@@ -137,8 +137,8 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
     targetId: question?.id,
     correctId,
     incorrectId,
-    revealTarget: true,
-  }), [handleCountryClick, question?.id, correctId, incorrectId]);
+    revealTarget: status === 'reviewing',
+  }), [handleCountryClick, status, question?.id, correctId, incorrectId]);
 
   if (status === 'finished') {
     return (
