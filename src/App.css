@@ -2968,7 +2968,7 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .mobile-bottom-sheet[data-snap="92"] {
+  .mobile-bottom-sheet[data-snap-key="full"] {
     padding-top: env(safe-area-inset-top, 44px);
   }
 
@@ -4715,8 +4715,6 @@ body {
 /* Bottom sheet sits above the tab bar */
 .app.is-mobile .mobile-bottom-sheet {
   bottom: var(--tab-bar-safe-height);
-  /* Cap so the sheet never overflows above the safe area regardless of vh% set by JS */
-  max-height: calc(100dvh - var(--tab-bar-safe-height) - env(safe-area-inset-top, 44px) - 8px);
 }
 
 /* Map controls shift up to stay above the tab bar on mobile */
@@ -4732,6 +4730,11 @@ body {
 
   .app.is-mobile .swiss-map .leaflet-control-zoom {
     bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 108px) !important;
+  }
+
+  .app.is-mobile .swiss-map .leaflet-control-attribution {
+    bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height) + 12px) !important;
+    transition: bottom 0.45s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .app.is-mobile .friend-overlay-legend {
