@@ -71,37 +71,53 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Current repo status:** Could not reproduce in current desktop smoke. Flag Quiz renders the main flag prompt and keeps flag + country feedback visible on wrong answers.
 - **Status:** Verified not currently reproducing
 
+#### F. Desktop settings menu is missing
+- **Severity:** High
+- **Component:** Desktop navigation / settings entry point
+- **Issue:** On desktop, there is no visible settings menu or settings entry point.
+- **Required behavior:** Desktop users should have a clear, accessible way to open settings without relying on the mobile-only UI.
+- **Current repo status:** Newly reported; not yet triaged against the current desktop layout.
+- **Status:** Open
+
+#### G. Achievement popups replay on every app reopen
+- **Severity:** Critical
+- **Component:** Achievement unlock persistence / popup queue
+- **Issue:** When reopening the site/app, all previously earned achievement popups appear again at once every time.
+- **Required behavior:** Achievement popups should only appear when an achievement is newly unlocked, and previously shown unlocks should stay dismissed across app restarts.
+- **Current repo status:** Newly reported; persistence and popup replay behavior not yet triaged.
+- **Status:** Open
+
 ### Confirmed and Recently Fixed
 
-#### F. Root Vitest run picks up unrelated tests and worktrees
+#### H. Root Vitest run picks up unrelated tests and worktrees
 - **Severity:** High
 - **Component:** `vitest.config.js`
 - **Issue:** Root `npm run test` was discovering tests from `.worktrees/`, stale E2E files, and non-unit test paths, producing false failures and noisy triage.
 - **Fix:** Scope Vitest to frontend unit/spec files under `src/` and explicitly exclude `.worktrees/`, `e2e/`, `dist/`, `test-results/`, and `node_modules/`.
 - **Status:** Fixed
 
-#### G. Map Quiz target country was not highlighted in click mode
+#### I. Map Quiz target country was not highlighted in click mode
 - **Severity:** High
 - **Component:** `src/components/games/MapQuiz.jsx`
 - **Issue:** `WorldMap` never received the active `targetId`, so the click-the-country game could ask for a country without actually marking the live target state on the map.
 - **Fix:** Pass `targetId: question?.id ?? null` into `gameMode`.
 - **Status:** Fixed
 
-#### H. Smoke coverage was desktop-only
+#### J. Smoke coverage was desktop-only
 - **Severity:** Medium
 - **Component:** `playwright.config.js`, `e2e/mobile.spec.js`
 - **Issue:** Bug reports around mobile behavior were not backed by automated verification.
 - **Fix:** Split Playwright into desktop and mobile Chromium projects and add mobile smoke coverage for Explore tab -> Games -> Map Quiz -> Quit and compact XP toast behavior.
 - **Status:** Fixed
 
-#### I. Text-answer game feedback lacked regression coverage
+#### K. Text-answer game feedback lacked regression coverage
 - **Severity:** Medium
 - **Component:** `e2e/smoke.spec.js`
 - **Issue:** Reported regressions around Shape Quiz and Flag Quiz feedback were not covered by any automated test, so stale bug reports were hard to distinguish from current failures.
 - **Fix:** Add desktop smoke assertions for Shape Quiz wrong-answer review visibility and Flag Quiz prompt/feedback visibility.
 - **Status:** Fixed
 
-#### J. Mobile bottom sheet snap behavior was brittle across interruptions and rotation
+#### L. Mobile bottom sheet snap behavior was brittle across interruptions and rotation
 - **Severity:** High
 - **Component:** `src/components/MobileBottomSheet.jsx`, `src/App.css`
 - **Issue:** The sheet used raw `vh` heights, had no `touchcancel` recovery path, and did not adapt its current snap cleanly across orientation changes. The mobile Leaflet attribution also stayed underneath the sheet.
@@ -109,7 +125,7 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Verification:** `src/components/__tests__/MobileBottomSheet.test.jsx` plus full Playwright smoke.
 - **Status:** Fixed
 
-#### K. Login-time local data migration could race authenticated fetches
+#### M. Login-time local data migration could race authenticated fetches
 - **Severity:** High
 - **Component:** `src/context/AuthContext.jsx`, `src/hooks/useVisitedCountries.js`, `src/hooks/useVisitedCantons.js`, `src/App.jsx`
 - **Issue:** Login previously kicked off `syncLocalDataToServer()` without awaiting it, while the rest of the app immediately switched into authenticated mode. That allowed visited hooks to fetch server state before migration finished and left a window for user interaction during the merge.
