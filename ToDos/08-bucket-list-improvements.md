@@ -1,7 +1,7 @@
 # ToDo: Bucket List Feature Improvements
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — bucket list CRUD shipped, but the planning/collaboration upgrades are still open
 **Priority:** Medium
 **Scope:** Enhance the bucket list from a simple wishlist to a full trip planning & inspiration tool
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The current bucket list feature was implemented per `plans/15-bucket-list-planner.md` and provides basic CRUD with priorities, target dates, notes, and categories. This plan takes it to the next level with trip grouping, collaborative lists, cost estimates, auto-suggestions, photo attachments, and richer map visualization.
+
+## Reality Check (2026-03-25)
+
+- `BucketListPanel.jsx`, `BucketListItem.jsx`, `AddToBucketListModal.jsx`, and `useWishlist.js` are live
+- Bucket list items already support notes, dates, categories, priorities, and map overlay integration
+- Trip grouping, budgets, collaboration, suggestions, routes, and photo attachments are still unbuilt
 
 ## Current State
 
