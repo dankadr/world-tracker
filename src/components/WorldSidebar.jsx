@@ -17,6 +17,8 @@ import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs
 import { ADMIN_EMAIL } from '../utils/adminConfig';
 import AdminPanel from './AdminPanel';
 import SwipeableModal from './SwipeableModal';
+import SettingsPanel from './SettingsPanel';
+import ConfirmDialog from './ConfirmDialog';
 
 const CONTINENT_EMOJI = {
   'Africa': '🌍',
@@ -58,6 +60,8 @@ export default function WorldSidebar({
   onOpenFriends,
   friendsPendingCount,
   isMobile,
+  onResetAll,
+  onShowOnboarding,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();
@@ -69,6 +73,8 @@ export default function WorldSidebar({
   const [showStats, setShowStats] = useState(false);
   const [showUnesco, setShowUnesco] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -364,6 +370,30 @@ export default function WorldSidebar({
 
       </div>
 
+      {!isMobile && (
+        <div className="sidebar-settings-footer">
+          <button
+            className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}
+            onClick={() => setShowSettings((v) => !v)}
+            aria-expanded={showSettings}
+            aria-controls="world-sidebar-settings-panel"
+            type="button"
+          >
+            <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
+            <span className="sidebar-settings-toggle-arrow" aria-hidden="true">{showSettings ? '▲' : '▼'}</span>
+          </button>
+          {showSettings && (
+            <div id="world-sidebar-settings-panel">
+              <SettingsPanel
+                onResetAll={onResetAll ? () => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' }) : undefined}
+                onShowOnboarding={onShowOnboarding}
+                onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showUnesco && createPortal(
         <UnescoPanel onClose={() => setShowUnesco(false)} />,
@@ -382,6 +412,16 @@ export default function WorldSidebar({
           <AdminPanel />
         </SwipeableModal>
       )}
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        message={confirmAction?.message || ''}
+        confirmLabel="Reset"
+        onConfirm={() => {
+          if (confirmAction?.type === 'resetAll') onResetAll?.();
+          setConfirmAction(null);
+        }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </aside>
   );
 }
