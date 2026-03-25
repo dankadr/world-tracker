@@ -1,7 +1,7 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Partially complete — encryption and some hardening are live, but several security tasks remain open
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 
@@ -10,6 +10,12 @@
 ## Overview
 
 A code review of the current stack reveals several security improvements that should be addressed before the user base grows significantly. None of these are critical vulnerabilities (the encryption layer is solid), but they are best-practice gaps that could be exploited at scale.
+
+## Reality Check (2026-03-25)
+
+- The repo now has encrypted-at-rest data handling, request IDs, JWT secret validation in production, and several security headers in `vercel.json`
+- `secureStorage.js` already documents intentional legacy/plaintext fallback behavior in code comments
+- Missing pieces from this plan still include CSP, broader rate limiting, stronger request/input validation, `security.txt`, and dependency-audit automation
 
 ## Identified Issues
 

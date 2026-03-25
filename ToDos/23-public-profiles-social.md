@@ -1,7 +1,7 @@
 # ToDo: Public Profiles & Enhanced Social Sharing
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Planned — social foundations exist, but public profiles and feed-backed sharing do not
 **Priority:** Medium
 **Scope:** Public profile pages, shareable profile links, activity feed between friends, and social proof on the landing/onboarding experience
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Sharing is currently limited to a hash-based URL that encodes raw visited data. There are no persistent public profiles — sharing your friend code is the only social entry point. This plan adds real public profile pages (opt-in), a live activity feed between friends, and a better sharing flow that drives new user acquisition.
+
+## Reality Check (2026-03-25)
+
+- The app already has friend codes, friendships, leaderboard/comparison UI, `ShareCard`, and an `ActivityFeed` component
+- `ActivityFeed` is currently driven by existing friend data loading, not a dedicated public feed backend
+- There is no public profile route, username model, or opt-in profile visibility system in the repo
 
 ## Current State
 
