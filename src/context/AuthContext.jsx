@@ -58,6 +58,7 @@ function saveAuth(data) {
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadAuth());
   const [loading, setLoading] = useState(false);
+  const [cacheReady, setCacheReady] = useState(() => !loadAuth()?.jwt_token);
 
   // Auto-logout when any API call receives a 401 (expired/invalid token).
   // api.js dispatches 'auth:expired' on every 401 response.
@@ -66,6 +67,7 @@ export function AuthProvider({ children }) {
       if (!loadAuth()) return; // already logged out
       clearActiveKey();
       clearBatch();
+      setCacheReady(true);
       setAuth(null);
       saveAuth(null);
     };
@@ -76,6 +78,7 @@ export function AuthProvider({ children }) {
   // On mount, if already logged in, check for any leftover anonymous data
   useEffect(() => {
     if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
+      setCacheReady(false);
       (async () => {
         try {
           const key = await deriveKey(auth.user.sub);
@@ -87,14 +90,19 @@ export function AuthProvider({ children }) {
           window.dispatchEvent(new CustomEvent('auth:cache-warm', { detail: { userId: auth.user.id } }));
         } catch (e) {
           console.error('[auth] key derivation failed on mount:', e);
+        } finally {
+          setCacheReady(true);
         }
         syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
       })();
+    } else {
+      setCacheReady(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback(async (googleToken) => {
     setLoading(true);
+    setCacheReady(false);
     try {
       const res = await fetch('/auth/google', {
         method: 'POST',
@@ -118,9 +126,14 @@ export function AuthProvider({ children }) {
           const key = await deriveKey(data.user.sub);
           setActiveKey(key);
           await warmCache(data.user.id);
+          window.dispatchEvent(new CustomEvent('auth:cache-warm', { detail: { userId: data.user.id } }));
         } catch (e) {
           console.error('[auth] key derivation failed on login:', e);
+        } finally {
+          setCacheReady(true);
         }
+      } else {
+        setCacheReady(true);
       }
 
       setAuth(data);
@@ -150,6 +163,7 @@ export function AuthProvider({ children }) {
       cacheInvalidatePrefix(`friend-visited:${currentToken.slice(-16)}`);
       cacheInvalidatePrefix(`challenges:${currentToken.slice(-16)}`);
     }
+    setCacheReady(true);
     setAuth(null);
     saveAuth(null);
   }, [auth]);
@@ -159,6 +173,7 @@ export function AuthProvider({ children }) {
     token: auth?.jwt_token || null,
     isLoggedIn: !!auth?.jwt_token,
     loading,
+    cacheReady,
     login,
     logout,
   };

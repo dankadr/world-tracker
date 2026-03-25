@@ -73,6 +73,7 @@ export default function WorldSidebar({
   const [showStats, setShowStats] = useState(false);
   const [showUnesco, setShowUnesco] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
@@ -178,6 +179,19 @@ export default function WorldSidebar({
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </button>
+            )}
+            {!isMobile && (
+              <button
+                className="header-icon-btn"
+                onClick={() => setShowSettingsModal(true)}
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.4.58.92.6 1.46V11a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
               </button>
             )}
@@ -398,6 +412,15 @@ export default function WorldSidebar({
       {showUnesco && createPortal(
         <UnescoPanel onClose={() => setShowUnesco(false)} />,
         document.body
+      )}
+      {showSettingsModal && (
+        <SwipeableModal onClose={() => setShowSettingsModal(false)} maxWidth={480}>
+          <SettingsPanel
+            onResetAll={onResetAll ? () => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' }) : undefined}
+            onShowOnboarding={onShowOnboarding}
+            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
+        </SwipeableModal>
       )}
       {showAvatar && (
         <AvatarEditor
