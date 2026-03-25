@@ -1,5 +1,11 @@
 # Bug: Regional Tracker Data Missing Until Tracker Is Opened
 
+**Date:** 2026-03-25
+**Status:** Needs re-verification — related auth/data-loading paths changed, but the current repo does not prove the bug is fully closed
+**Priority:** Critical
+
+---
+
 ## Problem
 On first login on a new device, the app restores the world map correctly but does not fully hydrate regional trackers from the authenticated account data.
 
@@ -96,4 +102,17 @@ In practice, the first authenticated device render has this gap:
 - [ ] Confirm logout still clears in-memory decrypted cache and does not leak prior user data.
 
 ## Related
-- Related to `ToDos/29-xp-not-loading-after-login.md` because both bugs come from partial post-login hydration.
+- Related to bug #29 (XP not loading) — possibly same root cause
+- Related to #87 if auth flow changed significantly
+
+## Current Repo Status
+
+- The repo has stronger visited-data hooks, cache handling, and auth bootstrapping than when this bug was originally reported
+- I did not find a dedicated regression test or an unambiguous code path proving all regional tracker data is blocked from rendering until auth hydration completes
+- Keep this as a verification item until login is exercised against multiple regional trackers without a page refresh
+
+## Test Plan
+- [ ] Log in and immediately check Swiss cantons data displays
+- [ ] Log in and immediately check US states data displays
+- [ ] Verify no console errors during login or data load
+- [ ] Check network tab for API calls during auth flow
