@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { haptics } from '../utils/haptics';
 
 /**
  * MobileBottomSheet — a draggable bottom-sheet container for mobile.
@@ -64,6 +65,7 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
 
   const animateTo = useCallback((targetKey) => {
     const heightPx = getSnapHeightPx(targetKey);
+    haptics.selection();
     setSnapKey(targetKey);
     onSnapChange?.(getSnapPercent(targetKey));
     applyHeight(heightPx, true);
