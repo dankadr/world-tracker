@@ -1,7 +1,7 @@
 # ToDo: Accessibility (a11y) Audit & Improvements
 
 **Date:** 2026-03-16
-**Status:** In Progress — some accessibility-oriented component cleanup has shipped, but there has not yet been a full audit
+**Status:** Partially complete — some accessibility groundwork landed, but there has been no full audit/remediation pass
 **Priority:** Medium
 **Scope:** Full accessibility audit and remediation — ARIA roles, keyboard navigation, color contrast, screen reader support, and focus management
 
@@ -15,6 +15,12 @@
 ## Overview
 
 The app has been built mobile-first with heavy touch interactions but has not undergone a systematic accessibility review. Many interactive elements lack proper ARIA labels, focus management is broken in modals, and color contrast in the warm gold palette may not meet WCAG AA requirements. This is both a legal risk (WCAG compliance is increasingly mandated) and a user reach issue — ~15% of users have some form of disability.
+
+## Reality Check (2026-03-25)
+
+- `useReducedMotion` exists and `BottomTabBar.jsx` already uses proper `tablist` / `tab` roles
+- Many icon buttons already have `aria-label`, but coverage is inconsistent across the app
+- There is still no formal axe/Lighthouse workflow, no focus-trap utility, and no systematic contrast pass
 
 ## Current State
 

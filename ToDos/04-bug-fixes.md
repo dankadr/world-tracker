@@ -152,7 +152,6 @@ These changes mean several previously-open bugs are now closed or downgraded to 
 - **Issue:** The correct country is highlighted/marked on the map before the user clicks, spoiling the answer.
 - **Required behavior:** No country should be visually indicated as correct until after the user makes their selection.
 - **Status:** Open
-
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
