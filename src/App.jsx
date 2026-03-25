@@ -61,7 +61,7 @@ import {
 
 
 function AchievementToasts() {
-  const { user } = useAuth();
+  const { user, cacheReady } = useAuth();
   const userId = user?.id || null;
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
@@ -112,10 +112,11 @@ function AchievementToasts() {
   }, [seenKey]);
 
   useEffect(() => {
+    if (userId && !cacheReady) return;
     checkAchievements();
     window.addEventListener('visitedchange', checkAchievements);
     return () => window.removeEventListener('visitedchange', checkAchievements);
-  }, [checkAchievements]);
+  }, [checkAchievements, cacheReady, userId]);
 
   useEffect(() => {
     if (toasts.length === 0) return;
