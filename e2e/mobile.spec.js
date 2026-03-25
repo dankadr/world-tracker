@@ -13,8 +13,8 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('tab', { name: 'Explore' })).toBeVisible();
 });
 
-test('mobile explore tab opens games and quit returns to the games home', async ({ page }) => {
-  await page.getByRole('tab', { name: 'Explore' }).click();
+test('mobile map games entry opens games and quit returns to the games home', async ({ page }) => {
+  await page.getByRole('button', { name: /games/i }).click();
   await expect(page.getByTestId('games-panel')).toBeVisible();
 
   await page.getByTestId('play-map-quiz').click();
