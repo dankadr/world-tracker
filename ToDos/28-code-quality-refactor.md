@@ -1,7 +1,7 @@
 # ToDo: Code Quality & Incremental Refactor
 
 **Date:** 2026-03-16
-**Status:** In Progress — several quick wins and tests have landed, but the core refactor work is still open
+**Status:** Partially complete — some cleanup items already landed, but the larger refactor backlog remains
 **Priority:** Medium (ongoing)
 **Scope:** Fix identified code quality issues: App.jsx god component, duplicate hook files, hardcoded backend config, missing error boundaries, and test coverage gaps
 
@@ -22,6 +22,12 @@ So this ToDo should now focus on the remaining structural cleanup rather than pr
 ## Overview
 
 The codebase is in good shape overall but has accumulated several quality issues that will compound as new features are added. This is a collection of small, targeted improvements that don't require a big-bang rewrite — each can be done independently.
+
+## Reality Check (2026-03-25)
+
+- The root app already has an `ErrorBoundary`, a meaningful test suite, logger utilities, and some extracted hooks/contexts
+- The duplicate `useXp.js` wrapper still exists, `App.jsx` is still very large, and lazy loading is still limited
+- This ToDo should now focus on reducing `App.jsx` complexity and aligning duplicated/shared config, not on redoing already-landed basics
 
 ## Identified Issues
 
