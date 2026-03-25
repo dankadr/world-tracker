@@ -1,7 +1,7 @@
 # ToDo: Bug Fixes & Quality Improvements
 
 **Date:** 2026-03-14
-**Status:** In Progress — bug list is now partially triaged against the current repo
+**Status:** In Progress — resolved items removed after repo triage
 **Priority:** High (ongoing)
 **Scope:** Fix known bugs, improve stability, establish bug tracking process
 
@@ -26,113 +26,6 @@ Document known issues, establish a bug triage process, and systematically fix ex
 
 ## Known Issues to Investigate
 
-### Newly Reported Mini-Game Bugs
-
-#### A. Guess the Country: Wrong answer feedback is missing
-- **Severity:** High
-- **Component:** Geography mini-game (guess country name flow)
-- **Issue:** When users submit a wrong answer, the game immediately moves on without showing enough feedback.
-- **Required behavior:**
-  - Show the correct answer for at least 2-3 seconds
-  - Tell users how far their guess was from the correct location
-  - Optionally pan/zoom the map to the correct country for clearer feedback
-- **Current repo status:** Could not reproduce in current desktop smoke. Shape Quiz keeps wrong-answer feedback visible before advancing, matching the 2.5s review delay in `useGeographyGame`.
-- **Status:** Verified not currently reproducing
-
-#### B. XP/Achievement popups on mobile cover the full screen
-- **Severity:** High
-- **Component:** XP + achievement popup UI (mobile)
-- **Issue:** Popups take over the entire mobile viewport, blocking usability.
-- **Required behavior:** Use compact, non-blocking popup/toast sizing on small screens.
-- **Current repo status:** Could not reproduce in current mobile smoke. XP toast stays compact above the tab bar, and achievement toast CSS is also already constrained for small screens.
-- **Status:** Verified not currently reproducing
-
-#### C. Mini-game map does not fully cover the screen
-- **Severity:** Medium
-- **Component:** Mini-game map layout
-- **Issue:** The mini-game map leaves visible space showing the background map behind it.
-- **Required behavior:** Mini-game map container should fully cover intended viewport area.
-- **Current repo status:** Could not reproduce in a current desktop visual check of Map Quiz. The quiz screen renders as a full overlay and the game map fills the available screen area.
-- **Status:** Not currently reproducing on desktop; re-check on mobile if this report returns
-
-#### D. Quit button in mini-game leads to blank screen
-- **Severity:** Critical
-- **Component:** Mini-game quit/exit navigation
-- **Issue:** Pressing quit exits to a blank screen instead of returning to the expected app view.
-- **Required behavior:** Route/state should return users to the previous screen (e.g., main map/dashboard) reliably.
-- **Current repo status:** Could not reproduce in current mobile smoke. Opening games from the Explore tab, starting Map Quiz, and pressing `Quit` returns to the games home screen correctly.
-- **Status:** Verified not currently reproducing
-
-#### E. Flag mini-game missing nearby flag display
-- **Severity:** Medium
-- **Component:** Flag mini-game UI
-- **Issue:** The flag is not shown near the country name as expected.
-- **Required behavior:** Display flag in close visual proximity to country label/prompt.
-- **Current repo status:** Could not reproduce in current desktop smoke. Flag Quiz renders the main flag prompt and keeps flag + country feedback visible on wrong answers.
-- **Status:** Verified not currently reproducing
-
-#### F. Desktop settings menu is missing
-- **Severity:** High
-- **Component:** Desktop navigation / settings entry point
-- **Issue:** On desktop, there is no visible settings menu or settings entry point.
-- **Required behavior:** Desktop users should have a clear, accessible way to open settings without relying on the mobile-only UI.
-- **Current repo status:** Newly reported; not yet triaged against the current desktop layout.
-- **Status:** Open
-
-#### G. Achievement popups replay on every app reopen
-- **Severity:** Critical
-- **Component:** Achievement unlock persistence / popup queue
-- **Issue:** When reopening the site/app, all previously earned achievement popups appear again at once every time.
-- **Required behavior:** Achievement popups should only appear when an achievement is newly unlocked, and previously shown unlocks should stay dismissed across app restarts.
-- **Current repo status:** Newly reported; persistence and popup replay behavior not yet triaged.
-- **Status:** Open
-
-### Confirmed and Recently Fixed
-
-#### H. Root Vitest run picks up unrelated tests and worktrees
-- **Severity:** High
-- **Component:** `vitest.config.js`
-- **Issue:** Root `npm run test` was discovering tests from `.worktrees/`, stale E2E files, and non-unit test paths, producing false failures and noisy triage.
-- **Fix:** Scope Vitest to frontend unit/spec files under `src/` and explicitly exclude `.worktrees/`, `e2e/`, `dist/`, `test-results/`, and `node_modules/`.
-- **Status:** Fixed
-
-#### I. Map Quiz target country was not highlighted in click mode
-- **Severity:** High
-- **Component:** `src/components/games/MapQuiz.jsx`
-- **Issue:** `WorldMap` never received the active `targetId`, so the click-the-country game could ask for a country without actually marking the live target state on the map.
-- **Fix:** Pass `targetId: question?.id ?? null` into `gameMode`.
-- **Status:** Fixed
-
-#### J. Smoke coverage was desktop-only
-- **Severity:** Medium
-- **Component:** `playwright.config.js`, `e2e/mobile.spec.js`
-- **Issue:** Bug reports around mobile behavior were not backed by automated verification.
-- **Fix:** Split Playwright into desktop and mobile Chromium projects and add mobile smoke coverage for Explore tab -> Games -> Map Quiz -> Quit and compact XP toast behavior.
-- **Status:** Fixed
-
-#### K. Text-answer game feedback lacked regression coverage
-- **Severity:** Medium
-- **Component:** `e2e/smoke.spec.js`
-- **Issue:** Reported regressions around Shape Quiz and Flag Quiz feedback were not covered by any automated test, so stale bug reports were hard to distinguish from current failures.
-- **Fix:** Add desktop smoke assertions for Shape Quiz wrong-answer review visibility and Flag Quiz prompt/feedback visibility.
-- **Status:** Fixed
-
-#### L. Mobile bottom sheet snap behavior was brittle across interruptions and rotation
-- **Severity:** High
-- **Component:** `src/components/MobileBottomSheet.jsx`, `src/App.css`
-- **Issue:** The sheet used raw `vh` heights, had no `touchcancel` recovery path, and did not adapt its current snap cleanly across orientation changes. The mobile Leaflet attribution also stayed underneath the sheet.
-- **Fix:** Switch runtime sheet sizing to viewport-pixel heights, add orientation-aware snap points, restore the prior snap on cancelled drags, recalculate the active snap on resize, and shift attribution above the sheet on mobile.
-- **Verification:** `src/components/__tests__/MobileBottomSheet.test.jsx` plus full Playwright smoke.
-- **Status:** Fixed
-
-#### M. Login-time local data migration could race authenticated fetches
-- **Severity:** High
-- **Component:** `src/context/AuthContext.jsx`, `src/hooks/useVisitedCountries.js`, `src/hooks/useVisitedCantons.js`, `src/App.jsx`
-- **Issue:** Login previously kicked off `syncLocalDataToServer()` without awaiting it, while the rest of the app immediately switched into authenticated mode. That allowed visited hooks to fetch server state before migration finished and left a window for user interaction during the merge.
-- **Fix:** Add an `isSyncingLocalData` lock in auth, await local-data migration before exposing authenticated state on fresh login, block visited hooks from authenticated fetches while sync is active, and include the sync lock in app loading state.
-- **Verification:** `src/context/__tests__/AuthContext.test.jsx`, `src/hooks/__tests__/useVisitedCountries.test.jsx`, full Vitest, and full Playwright smoke.
-- **Status:** Fixed
-
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
@@ -143,14 +36,7 @@ Document known issues, establish a bug triage process, and systematically fix ex
   - Race conditions possible when multiple state updates happen simultaneously
 - **Impact:** Performance degradation, especially on mobile devices
 - **Fix approach:** Extract state into domain-specific hooks/contexts (see `12-architecture-refactor.md`)
-
-#### 2. Async Data Sync Race Conditions
-- **File:** `src/context/AuthContext.jsx`, `src/App.jsx`
-- **Issue:** On login, `syncLocalDataToServer()` migrates localStorage data to the server. If the user interacts with the app during sync, local and server state can diverge
-- **Impact:** Data loss or duplication on login
-- **Current repo status:** Fixed for the visited-data migration path. Auth now exposes a sync-in-progress lock, the app treats that window as loading, and visited hooks wait until migration completes before fetching authenticated state.
-- **Remaining gap:** This does not add retries for every future server-side sync error; it specifically closes the login/migration race.
-- **Fix approach:** Keep the current lock; add retry/backoff only if server-side migration failures become a real observed issue
+- **Status:** Open
 
 #### 3. Mobile Bottom Sheet Edge Cases
 - **File:** `src/components/MobileBottomSheet.jsx`
@@ -163,12 +49,14 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Current repo status:** Partially fixed on this branch. `MobileBottomSheet` now snaps using viewport-pixel heights, handles `touchcancel`, recalculates its current snap on resize/orientation changes, and the mobile Leaflet attribution is shifted above the sheet.
 - **Remaining gap:** Body-vs-drag scroll arbitration is still conservative because dragging is limited to the handle area rather than the full sheet body.
 - **Fix approach:** Keep drag gestures constrained to the handle area; if future UX wants drag-from-body, add scroll-position aware arbitration first
+- **Status:** Partially fixed
 
 #### 4. Challenge Region Names Not Resolving
 - **File:** `src/components/ChallengeDetailModal.jsx`
 - **Issue:** Challenge target regions sometimes show raw IDs (e.g., "us-ca") instead of friendly names (e.g., "California") if the GeoJSON data hasn't loaded yet
 - **Impact:** Poor UX in challenge detail view
 - **Fix approach:** Preload region name dictionary, add fallback display for loading state
+- **Status:** Open
 
 ### Medium Priority
 
@@ -177,18 +65,14 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Issue:** When a user has many friends (10+), the map renders overlay polygons for each friend. With large GeoJSON datasets (NYC with 188 neighborhoods × 10 friends = 1,880 polygon renders), this causes visible lag
 - **Impact:** Map becomes sluggish with many friends
 - **Fix approach:** Limit simultaneous overlays, use canvas rendering instead of SVG for overlays, debounce overlay updates
+- **Status:** Open
 
 #### 6. Export Button Captures Incorrect Area
 - **File:** `src/components/ExportButton.jsx`
 - **Issue:** `html2canvas` sometimes captures the wrong viewport area or misses map tiles that haven't loaded yet
 - **Impact:** Exported images may be blank or cropped incorrectly
 - **Fix approach:** Wait for all map tiles to load before capture, add a brief delay, or use Leaflet's built-in `toDataURL` for the map layer
-
-#### 7. Share URL Length Limits
-- **File:** `src/components/ShareButton.jsx`
-- **Issue:** Share mode encodes visited data as base64 in the URL hash. With many visited regions across all trackers, the URL can exceed browser limits (~2,000 chars for some browsers)
-- **Impact:** Share links break or get truncated
-- **Fix approach:** Compress data before base64 encoding (LZ-string), or switch to a server-generated short link
+- **Status:** Open
 
 #### 8. Dark Mode Inconsistencies
 - **File:** `src/App.css`, various component CSS files
@@ -198,27 +82,14 @@ Document known issues, establish a bug triage process, and systematically fix ex
   - `src/components/EasterEggPrompt.css`
 - **Impact:** Visual inconsistency in dark mode
 - **Fix approach:** Audit all CSS files for hardcoded colors, replace with CSS custom properties
+- **Status:** Open
 
 ### Low Priority
 
 #### 9. Keyboard Shortcut Conflicts
 - **Issue:** Some keyboard shortcuts may conflict with browser defaults or accessibility tools
 - **Fix approach:** Audit shortcut list, add modifier keys where needed
-
-#### 10. Onboarding Doesn't Re-trigger
-- **File:** `src/components/Onboarding.jsx`
-- **Issue:** Once dismissed, there's no way to re-view the onboarding guide
-- **Fix approach:** Add "Show Onboarding" option in settings/profile
-
-#### 11. Year in Review — Missing Data Edge Cases
-- **File:** `src/components/YearInReview.jsx`
-- **Issue:** If a user has no visits in a year, the Year in Review may show empty cards or crash
-- **Fix approach:** Add guard for empty data, show a "No travels this year" message
-
-#### 12. Confetti Firing Multiple Times
-- **File:** `src/components/Confetti.jsx`
-- **Issue:** Reaching a milestone (25/50/75/100%) and then toggling a region off and back on can re-trigger confetti
-- **Fix approach:** Track shown milestones in localStorage, only fire once per milestone per tracker
+- **Status:** Open
 
 ## Bug Triage Template
 
@@ -263,15 +134,15 @@ For future bugs, use this template:
 | `src/components/MobileBottomSheet.jsx` | Scroll-lock detection, landscape snap points |
 | `src/components/ChallengeDetailModal.jsx` | Region name fallback |
 | `src/components/ExportButton.jsx` | Wait for tile load before capture |
-| `src/components/ShareButton.jsx` | Compress share data |
-| `src/components/Confetti.jsx` | Track shown milestones |
-| `src/components/YearInReview.jsx` | Empty year guard |
+| `src/hooks/useFriendsData.js` | Reduce overlay loading/render pressure |
+| `src/components/SwissMap.jsx` | Reduce overlay rendering cost |
 | `src/App.css` | Dark mode variable audit |
 | Various `.css` files | Replace hardcoded colors with CSS variables |
+| `src/hooks/useKeyboardShortcuts.js` | Reduce shortcut conflicts with browser and accessibility tools |
 
 ## Estimated Effort
 - Critical/High fixes: ~6-8 hours
 - Medium fixes: ~4-6 hours
-- Low fixes: ~2-3 hours
+- Low fixes: ~1-2 hours
 - Testing infrastructure setup: ~4-5 hours (see `12-architecture-refactor.md`)
-- **Total immediate fixes: ~12-17 hours**
+- **Total immediate fixes: ~11-16 hours**
