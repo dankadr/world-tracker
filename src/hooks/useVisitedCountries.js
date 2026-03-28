@@ -90,7 +90,12 @@ export default function useVisitedCountries() {
     let cancelled = false;
 
     fetchAllVisited(token).then((bulk) => {
-      if (cancelled || !bulk) return;
+      if (cancelled) return;
+      if (!bulk) {
+        // Bulk fetch failed or returned no data; clear loading state to avoid UI being stuck
+        setIsLoading(false);
+        return;
+      }
       const remote = new Set(bulk.world || []);
       const local = loadVisitedWorld(userId);
       // Merge: if user had local data before logging in, push it up
