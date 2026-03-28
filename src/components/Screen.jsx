@@ -41,6 +41,7 @@ export default function Screen({ title, largeTitle, onBack, backLabel = 'Back', 
   // IntersectionObserver: fade compact title in when large title leaves viewport
   useEffect(() => {
     if (!largeTitle || !largeTitleRef.current) return;
+    if (typeof IntersectionObserver !== 'function') return;
     const el = largeTitleRef.current;
     const observer = new IntersectionObserver(
       ([entry]) => setHeaderCompact(!entry.isIntersecting),
@@ -100,7 +101,7 @@ export default function Screen({ title, largeTitle, onBack, backLabel = 'Back', 
             {backLabel}
           </button>
         )}
-        <h1 className="screen-title">{title}</h1>
+        <h1 className="screen-title" aria-hidden={largeTitle && !headerCompact ? 'true' : undefined}>{title}</h1>
         {rightAction && <div className="screen-right-action">{rightAction}</div>}
       </header>
 

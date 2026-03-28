@@ -141,3 +141,9 @@
   width: 20px;
   z-index: 300;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-title {
+    transition: none !important;
+  }
+}
