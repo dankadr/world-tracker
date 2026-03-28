@@ -77,6 +77,7 @@ export default function WorldSidebar({
   const [showSettings, setShowSettings] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
+  const [regionVersion, setRegionVersion] = useState(0);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const allCountries = useMemo(() => {
@@ -127,7 +128,14 @@ export default function WorldSidebar({
         pct: total > 0 ? Math.round((v / total) * 100) : 0,
       };
     });
-  }, [userId]);
+  // regionVersion is listed as a dep (not used in body) to force recompute on visitedchange
+  }, [userId, regionVersion]);
+
+  useEffect(() => {
+    const refresh = () => setRegionVersion((v) => v + 1);
+    window.addEventListener('visitedchange', refresh);
+    return () => window.removeEventListener('visitedchange', refresh);
+  }, []);
 
   useEffect(() => {
     function handleEasterEggToggle(e) {

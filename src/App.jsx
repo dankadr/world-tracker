@@ -75,6 +75,9 @@ function AchievementToasts() {
     const seen = parseStoredIdList(secureStorage.getItemSync(seenKey));
 
     if (prevUnlocked.current === null) {
+      // If both seen and currentUnlocked are empty, data hasn't loaded yet.
+      // Don't set an empty baseline — wait for the next visitedchange after data arrives.
+      if (seen.length === 0 && currentUnlocked.length === 0) return;
       prevUnlocked.current = createAchievementBaseline(seen, currentUnlocked);
       if (seen.length === 0) {
         secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
@@ -467,11 +470,21 @@ export default function App() {
     [userId]
   );
   const shownMilestonesRef = useRef(new Set());
+  const prevIsLoadingRef = useRef(isDataLoading);
 
   useEffect(() => {
     shownMilestonesRef.current = new Set(parseStoredIdList(secureStorage.getItemSync(confettiKey)));
   }, [confettiKey]);
 
+  // Snap prevPct when data finishes loading so the 0→actual% jump after server
+  // sync doesn't cross a milestone threshold. Must run before the milestone effect.
+  useEffect(() => {
+    if (prevIsLoadingRef.current && !isDataLoading) {
+      prevPct.current = pct;
+      prevCountryRef.current = countryId;
+    }
+    prevIsLoadingRef.current = isDataLoading;
+  }, [isDataLoading, pct, countryId]);
   useEffect(() => {
     const prev = prevPct.current;
     const countryChanged = prevCountryRef.current !== countryId;
