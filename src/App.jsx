@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ActionSheetProvider } from './context/ActionSheetContext';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
@@ -49,17 +50,19 @@ import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
-import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import useShareMode from './hooks/useShareMode';
+import {
+  createAchievementBaseline,
+  getCrossedMilestone,
+  getNewlyUnlockedIds,
+  markMilestoneShown,
+  parseStoredIdList,
+} from './utils/progressCelebrations';
 
-function parseShareHash() {
-  const hash = window.location.hash;
-  if (!hash.startsWith('#share=')) return null;
-  return decodeShareData(hash.slice(7));
-}
 
 function AchievementToasts() {
-  const { user } = useAuth();
+  const { user, cacheReady } = useAuth();
   const userId = user?.id || null;
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
@@ -69,23 +72,17 @@ function AchievementToasts() {
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
     const currentUnlocked = achievements.filter((a) => a.check()).map((a) => a.id);
-
-    let seen;
-    try {
-      seen = JSON.parse(secureStorage.getItemSync(seenKey) || '[]');
-    } catch {
-      seen = [];
-    }
+    const seen = parseStoredIdList(secureStorage.getItemSync(seenKey));
 
     if (prevUnlocked.current === null) {
-      prevUnlocked.current = new Set(seen.length > 0 ? seen : currentUnlocked);
+      prevUnlocked.current = createAchievementBaseline(seen, currentUnlocked);
       if (seen.length === 0) {
         secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
       }
       return;
     }
 
-    const newlyUnlocked = currentUnlocked.filter((id) => !prevUnlocked.current.has(id));
+    const newlyUnlocked = getNewlyUnlockedIds(prevUnlocked.current, currentUnlocked);
     if (newlyUnlocked.length > 0) {
       haptics.achievementUnlock();
       const newToasts = newlyUnlocked.map((id) => {
@@ -111,10 +108,16 @@ function AchievementToasts() {
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
 
   useEffect(() => {
+    prevUnlocked.current = null;
+    setToasts([]);
+  }, [seenKey]);
+
+  useEffect(() => {
+    if (userId && !cacheReady) return;
     checkAchievements();
     window.addEventListener('visitedchange', checkAchievements);
     return () => window.removeEventListener('visitedchange', checkAchievements);
-  }, [checkAchievements]);
+  }, [checkAchievements, cacheReady, userId]);
 
   useEffect(() => {
     if (toasts.length === 0) return;
@@ -136,7 +139,7 @@ function AchievementToasts() {
             <span className="toast-title">{t.title}</span>
             <span className="toast-desc">{t.desc}</span>
           </div>
-          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))}>&times;</button>
+          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))} aria-label="Dismiss notification">&times;</button>
         </div>
       ))}
     </div>,
@@ -150,7 +153,7 @@ export default function App() {
   const [view, setView] = useState('world'); // 'world' | 'detail'
   const isWorldView = view === 'world';
   const [countryId, setCountryId] = useState('ch');
-  const [shareData, setShareData] = useState(null);
+  const { isShareMode, exitShareMode, getSharedVisited } = useShareMode({ setView, setCountryId });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
@@ -412,17 +415,6 @@ export default function App() {
     setView('world');
   }, []);
 
-  useEffect(() => {
-    const data = parseShareHash();
-    if (data) {
-      setShareData(data);
-      setView('detail');
-      const firstKey = Object.keys(data).find((k) => countries[k]);
-      if (firstKey) setCountryId(firstKey);
-    }
-  }, []);
-
-  const isShareMode = !!shareData;
   const handleOpenStats = useCallback(() => {
     if (isMobile && !isShareMode) {
       push('stats');
@@ -457,17 +449,10 @@ export default function App() {
     }
     setShowComparisonStats(true);
   }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country]);
-  const sharedVisited = isShareMode && shareData[countryId]
-    ? new Set(shareData[countryId])
-    : null;
+  const sharedVisited = getSharedVisited(countryId);
 
   const displayVisited = isShareMode ? (sharedVisited || new Set()) : visited;
   const handleToggle = isShareMode ? () => {} : handleToggleRegion;
-
-  const exitShareMode = () => {
-    setShareData(null);
-    window.location.hash = '';
-  };
 
   const regionList = country.data.features.filter((f) => !f.properties.isBorough);
   const total = regionList.length;
@@ -477,33 +462,33 @@ export default function App() {
 
   const prevPct = useRef(pct);
   const prevCountryRef = useRef(countryId);
+  const confettiKey = useMemo(
+    () => (userId ? `swiss-tracker-u${userId}-confetti-milestones` : 'swiss-tracker-confetti-milestones'),
+    [userId]
+  );
+  const shownMilestonesRef = useRef(new Set());
+
+  useEffect(() => {
+    shownMilestonesRef.current = new Set(parseStoredIdList(secureStorage.getItemSync(confettiKey)));
+  }, [confettiKey]);
+
   useEffect(() => {
     const prev = prevPct.current;
     const countryChanged = prevCountryRef.current !== countryId;
     prevPct.current = pct;
     prevCountryRef.current = countryId;
     if (countryChanged || prev === pct) return;
-    for (const m of MILESTONES) {
-      if (prev < m && pct >= m) {
-        const confettiKey = userId
-          ? `swiss-tracker-u${userId}-confetti-milestones`
-          : 'swiss-tracker-confetti-milestones';
-        let shown;
-        try {
-          shown = new Set(JSON.parse(secureStorage.getItemSync(confettiKey) || '[]'));
-        } catch {
-          shown = new Set();
-        }
-        const milestoneId = `${countryId}-${m}`;
-        if (!shown.has(milestoneId)) {
-          shown.add(milestoneId);
-          secureStorage.setItem(confettiKey, JSON.stringify([...shown])); // fire-and-forget
-          setShowConfetti(true);
-        }
-        break;
-      }
+
+    const crossedMilestone = getCrossedMilestone(prev, pct, MILESTONES);
+    if (!crossedMilestone) return;
+
+    const nextMilestoneState = markMilestoneShown(shownMilestonesRef.current, countryId, crossedMilestone);
+    shownMilestonesRef.current = nextMilestoneState.shownMilestones;
+    if (nextMilestoneState.shouldFire) {
+      secureStorage.setItem(confettiKey, JSON.stringify([...nextMilestoneState.shownMilestones])); // fire-and-forget
+      setShowConfetti(true);
     }
-  }, [pct, countryId, userId]);
+  }, [pct, countryId, confettiKey]);
 
   const closeModals = useCallback(() => {}, []);
 
@@ -573,6 +558,7 @@ export default function App() {
   const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
+    <ActionSheetProvider>
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
@@ -633,6 +619,11 @@ export default function App() {
                   onOpenFriends={handleOpenFriends}
                   friendsPendingCount={pendingCount}
                   isMobile={isMobile}
+                  onResetAll={resetAll}
+                  onShowOnboarding={() => {
+                    localStorage.removeItem('onboarding-dismissed');
+                    window.location.reload();
+                  }}
                 />
               </MobileBottomSheet>
             )
@@ -645,6 +636,11 @@ export default function App() {
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
               isMobile={isMobile}
+              onResetAll={resetAll}
+              onShowOnboarding={() => {
+                localStorage.removeItem('onboarding-dismissed');
+                window.location.reload();
+              }}
             />
           )}
           <main
@@ -659,8 +655,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <WorldMap
@@ -815,8 +812,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <RegionMap
@@ -990,5 +988,6 @@ export default function App() {
       <Analytics />
       <SpeedInsights />
     </div>
+    </ActionSheetProvider>
   );
 }

@@ -141,38 +141,43 @@
   transition: width 0.4s ease-out;
 }
 
-/* XP Toast Notifications */
+/* XP Toast Notifications — iOS Dynamic Island pill style */
 .xp-toast-container {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   pointer-events: none;
-  max-width: 280px;
+  width: 100%;
+  max-width: 360px;
+  padding: 0 16px;
 }
 
 .xp-toast {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  animation: slideInRight 0.3s ease-out;
+  border-radius: 999px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--glass-bg-heavy, rgba(255, 248, 220, 0.88));
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.35));
+  box-shadow: 0 4px 24px rgba(13, 27, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: pillSlideDown 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
   pointer-events: auto;
   cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+  transition: opacity 0.25s ease-in;
 }
 
 .xp-toast:hover {
   opacity: 0.85;
-  transform: translateX(-4px);
 }
 
 .xp-toast-icon {
@@ -222,8 +227,8 @@
   background: linear-gradient(135deg, #FFD700, #FFA500);
   color: white;
   border: 1px solid rgba(255, 215, 0, 0.3);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
-  animation: popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 24px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: pillSlideDown 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 .xp-toast-levelup .xp-toast-label {
@@ -251,29 +256,25 @@
 }
 
 /* Animations */
-@keyframes slideInRight {
+@keyframes pillSlideDown {
   from {
     opacity: 0;
-    transform: translateX(120%);
+    transform: translateY(-120%) scale(0.9);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes popUp {
-  0% {
+@keyframes pillSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
     opacity: 0;
-    transform: scale(0.5) translateY(20px);
-  }
-  70% {
-    opacity: 1;
-    transform: scale(1.08) translateY(-4px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(-100%) scale(0.95);
   }
 }
 
@@ -286,18 +287,15 @@
   }
 }
 
-/* Mobile — compact non-blocking toasts */
+/* Mobile — pill toasts remain top-center, just tighter padding */
 @media (max-width: 768px) {
   .xp-toast-container {
-    top: auto;
-    bottom: calc(var(--tab-bar-safe-height, 80px) + 12px);
-    right: 12px;
-    max-width: 240px;
+    max-width: 320px;
+    padding: 0 12px;
   }
 
   .xp-toast-levelup {
-    padding: 10px 12px;
-    animation: slideInRight 0.3s ease-out;
+    animation: pillSlideDown 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
   }
 
   .xp-toast-levelup .xp-toast-title {
@@ -311,8 +309,8 @@
 
 /* Dark mode adjustments */
 .dark .xp-toast {
-  background: rgba(30, 30, 40, 0.95);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(5, 14, 24, 0.92);
+  border-color: var(--glass-border, rgba(201, 168, 76, 0.35));
   color: var(--text-on-glass);
 }
 

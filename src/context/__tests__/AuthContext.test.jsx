@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, loadAuth, useAuth } from '../AuthContext';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const syncLocalDataToServer = vi.fn();
 const deriveKey = vi.fn();
@@ -58,6 +59,10 @@ function makeJwt(payload) {
 }
 
 const STORAGE_KEY = 'swiss-tracker-auth';
+
+function storeAuth(jwt_token, user = { id: 1, email: 'a@b.com', sub: 'google-1' }) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ jwt_token, user }));
+}
 
 describe('loadAuth', () => {
   beforeEach(() => {
@@ -164,5 +169,47 @@ describe('AuthProvider', () => {
     await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
     expect(setActiveKey).toHaveBeenCalled();
     expect(warmCache).toHaveBeenCalledWith(7);
+  });
+});
+
+describe('AuthProvider cache readiness', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+    syncLocalDataToServer.mockReset();
+    deriveKey.mockReset();
+    setActiveKey.mockReset();
+    warmCache.mockReset();
+  });
+
+  it('exposes cacheReady=false until warmCache finishes for an existing login', async () => {
+    const validToken = makeJwt({ sub: 'google-1', exp: Math.floor(Date.now() / 1000) + 3600 });
+    storeAuth(validToken);
+
+    let resolveWarm;
+    const warmPromise = new Promise((resolve) => {
+      resolveWarm = resolve;
+    });
+
+    deriveKey.mockResolvedValue('derived-key');
+    warmCache.mockImplementation(() => warmPromise);
+    syncLocalDataToServer.mockResolvedValue(false);
+
+    function Probe() {
+      const { cacheReady } = useAuth();
+      return <div>{cacheReady ? 'ready' : 'warming'}</div>;
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+
+    expect(screen.getByText('warming')).toBeInTheDocument();
+
+    resolveWarm();
+
+    await waitFor(() => expect(screen.getByText('ready')).toBeInTheDocument());
   });
 });

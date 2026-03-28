@@ -1,7 +1,7 @@
 # ToDo: Bug Fixes & Quality Improvements
 
 **Date:** 2026-03-14
-**Status:** In Progress — bug list is now partially triaged against the current repo
+**Status:** In Progress — bug list is now triaged against the current repo, with several recent PRs already folded into the plan
 **Priority:** High (ongoing)
 **Scope:** Fix known bugs, improve stability, establish bug tracking process
 
@@ -23,6 +23,19 @@ Document known issues, establish a bug triage process, and systematically fix ex
   - `npx playwright test` passes
 - Older `test-results/` artifacts are no longer a reliable source of truth by themselves; some reflect the pre-fix setup
 - `src/App.jsx` and `backend/main.py` are still large coordination points, so regression risk remains high
+
+
+## PR Review Snapshot (2026-03-19)
+
+Recent merged PRs materially changed the bug backlog, so this ToDo now reflects the current branch instead of the older reports:
+
+- **PR #77** — fixed the mini-game quit blank-screen flow, share URL compression, dark-mode cleanup, and added regression tests around Map Quiz / Flag Quiz behavior.
+- **PR #100** — fixed the mobile zero-height quiz rendering bug and restored Shape Quiz target reveal behavior.
+- **PR #102** — fixed horizontal tracker-tab scrolling and dark-mode styling in `EasterEggPrompt`.
+- **PR #104** — moved `SettingsPanel` inside the scrollable region list so desktop region views no longer hide the achievements / progress area.
+- **PR #111** — added a proper loading state for fresh login and tracker switches so stale or empty region data does not flash before authenticated fetches resolve.
+
+These changes mean several previously-open bugs are now closed or downgraded to monitoring-only.
 
 ## Known Issues to Investigate
 
@@ -52,16 +65,16 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Component:** Mini-game map layout
 - **Issue:** The mini-game map leaves visible space showing the background map behind it.
 - **Required behavior:** Mini-game map container should fully cover intended viewport area.
-- **Current repo status:** Could not reproduce in a current desktop visual check of Map Quiz. The quiz screen renders as a full overlay and the game map fills the available screen area.
-- **Status:** Not currently reproducing on desktop; re-check on mobile if this report returns
+- **Current repo status:** Fixed by PR #100 after a mobile-specific flex/height bug collapsed the quiz container to 0 height. Current desktop and mobile behavior should be treated as fixed unless a new repro appears.
+- **Status:** Fixed
 
 #### D. Quit button in mini-game leads to blank screen
 - **Severity:** Critical
 - **Component:** Mini-game quit/exit navigation
 - **Issue:** Pressing quit exits to a blank screen instead of returning to the expected app view.
 - **Required behavior:** Route/state should return users to the previous screen (e.g., main map/dashboard) reliably.
-- **Current repo status:** Could not reproduce in current mobile smoke. Opening games from the Explore tab, starting Map Quiz, and pressing `Quit` returns to the games home screen correctly.
-- **Status:** Verified not currently reproducing
+- **Current repo status:** Fixed by PR #77 and kept covered by smoke tests. `Quit` now routes back correctly on desktop and mobile instead of leaving a blank shell.
+- **Status:** Fixed
 
 #### E. Flag mini-game missing nearby flag display
 - **Severity:** Medium
@@ -71,37 +84,53 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Current repo status:** Could not reproduce in current desktop smoke. Flag Quiz renders the main flag prompt and keeps flag + country feedback visible on wrong answers.
 - **Status:** Verified not currently reproducing
 
+#### F. Desktop settings menu is missing
+- **Severity:** High
+- **Component:** Desktop navigation / settings entry point
+- **Issue:** On desktop, there is no visible settings menu or settings entry point.
+- **Required behavior:** Desktop users should have a clear, accessible way to open settings without relying on the mobile-only UI.
+- **Current repo status:** Newly reported; not yet triaged against the current desktop layout.
+- **Status:** Open
+
+#### G. Achievement popups replay on every app reopen
+- **Severity:** Critical
+- **Component:** Achievement unlock persistence / popup queue
+- **Issue:** When reopening the site/app, all previously earned achievement popups appear again at once every time.
+- **Required behavior:** Achievement popups should only appear when an achievement is newly unlocked, and previously shown unlocks should stay dismissed across app restarts.
+- **Current repo status:** Newly reported; persistence and popup replay behavior not yet triaged.
+- **Status:** Open
+
 ### Confirmed and Recently Fixed
 
-#### F. Root Vitest run picks up unrelated tests and worktrees
+#### H. Root Vitest run picks up unrelated tests and worktrees
 - **Severity:** High
 - **Component:** `vitest.config.js`
 - **Issue:** Root `npm run test` was discovering tests from `.worktrees/`, stale E2E files, and non-unit test paths, producing false failures and noisy triage.
 - **Fix:** Scope Vitest to frontend unit/spec files under `src/` and explicitly exclude `.worktrees/`, `e2e/`, `dist/`, `test-results/`, and `node_modules/`.
 - **Status:** Fixed
 
-#### G. Map Quiz target country was not highlighted in click mode
+#### I. Map Quiz target country / reveal-state regressions in click mode
 - **Severity:** High
 - **Component:** `src/components/games/MapQuiz.jsx`
-- **Issue:** `WorldMap` never received the active `targetId`, so the click-the-country game could ask for a country without actually marking the live target state on the map.
-- **Fix:** Pass `targetId: question?.id ?? null` into `gameMode`.
+- **Issue:** The click flow had two back-to-back regressions: first the target was not wired through at all, then later fixes risked revealing or zooming the answer too early.
+- **Fix:** Keep `targetId` available for testability and map data attributes, but gate visual reveal / zoom behind `revealTarget` so the answer is only shown during review state.
 - **Status:** Fixed
 
-#### H. Smoke coverage was desktop-only
+#### J. Smoke coverage was desktop-only
 - **Severity:** Medium
 - **Component:** `playwright.config.js`, `e2e/mobile.spec.js`
 - **Issue:** Bug reports around mobile behavior were not backed by automated verification.
 - **Fix:** Split Playwright into desktop and mobile Chromium projects and add mobile smoke coverage for Explore tab -> Games -> Map Quiz -> Quit and compact XP toast behavior.
 - **Status:** Fixed
 
-#### I. Text-answer game feedback lacked regression coverage
+#### K. Text-answer game feedback lacked regression coverage
 - **Severity:** Medium
 - **Component:** `e2e/smoke.spec.js`
 - **Issue:** Reported regressions around Shape Quiz and Flag Quiz feedback were not covered by any automated test, so stale bug reports were hard to distinguish from current failures.
 - **Fix:** Add desktop smoke assertions for Shape Quiz wrong-answer review visibility and Flag Quiz prompt/feedback visibility.
 - **Status:** Fixed
 
-#### J. Mobile bottom sheet snap behavior was brittle across interruptions and rotation
+#### L. Mobile bottom sheet snap behavior was brittle across interruptions and rotation
 - **Severity:** High
 - **Component:** `src/components/MobileBottomSheet.jsx`, `src/App.css`
 - **Issue:** The sheet used raw `vh` heights, had no `touchcancel` recovery path, and did not adapt its current snap cleanly across orientation changes. The mobile Leaflet attribution also stayed underneath the sheet.
@@ -109,7 +138,7 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Verification:** `src/components/__tests__/MobileBottomSheet.test.jsx` plus full Playwright smoke.
 - **Status:** Fixed
 
-#### K. Login-time local data migration could race authenticated fetches
+#### M. Login-time local data migration could race authenticated fetches
 - **Severity:** High
 - **Component:** `src/context/AuthContext.jsx`, `src/hooks/useVisitedCountries.js`, `src/hooks/useVisitedCantons.js`, `src/App.jsx`
 - **Issue:** Login previously kicked off `syncLocalDataToServer()` without awaiting it, while the rest of the app immediately switched into authenticated mode. That allowed visited hooks to fetch server state before migration finished and left a window for user interaction during the merge.
@@ -117,6 +146,12 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **Verification:** `src/context/__tests__/AuthContext.test.jsx`, `src/hooks/__tests__/useVisitedCountries.test.jsx`, full Vitest, and full Playwright smoke.
 - **Status:** Fixed
 
+#### F. Map Quiz reveals correct country before user selects
+- **Severity:** High
+- **Component:** Map Quiz mini-game
+- **Issue:** The correct country is highlighted/marked on the map before the user clicks, spoiling the answer.
+- **Required behavior:** No country should be visually indicated as correct until after the user makes their selection.
+- **Status:** Open
 ### Critical / High Priority
 
 #### 1. App.jsx State Management Complexity
@@ -172,16 +207,26 @@ Document known issues, establish a bug triage process, and systematically fix ex
 - **File:** `src/components/ShareButton.jsx`
 - **Issue:** Share mode encodes visited data as base64 in the URL hash. With many visited regions across all trackers, the URL can exceed browser limits (~2,000 chars for some browsers)
 - **Impact:** Share links break or get truncated
-- **Fix approach:** Compress data before base64 encoding (LZ-string), or switch to a server-generated short link
+- **Current repo status:** Fixed by PR #77 using `lz-string` encoded URI compression with backward-compatible legacy decode support.
+- **Remaining gap:** If share payloads grow substantially again, a server-generated short-link flow may still be worth adding later.
 
-#### 8. Dark Mode Inconsistencies
+#### 8. Country Tabs Not Horizontally Scrollable on Desktop
+- **Severity:** Medium
+- **Component:** Country/tracker tab bar (desktop)
+- **Issue:** The horizontal tab bar (e.g., Switzerland, United States, US Nat. Parks, NYC…) cannot be scrolled sideways on desktop, so tabs that overflow off-screen are inaccessible.
+- **Screenshot:** User-reported — tabs cut off on right side, no scroll affordance visible.
+- **Required behavior:** The tab row should be horizontally scrollable on desktop (mouse wheel or drag), or show prev/next arrow controls when tabs overflow.
+- **Status:** Open
+
+#### 9. Dark Mode Inconsistencies
 - **File:** `src/App.css`, various component CSS files
 - **Issue:** Some components have hardcoded colors that don't respond to the dark mode CSS variables. Particularly:
   - `src/components/ChallengesPanel.css`
   - `src/components/ConfirmDialog.css`
   - `src/components/EasterEggPrompt.css`
 - **Impact:** Visual inconsistency in dark mode
-- **Fix approach:** Audit all CSS files for hardcoded colors, replace with CSS custom properties
+- **Current repo status:** Partially fixed by PR #77 and PR #102 (`ConfirmDialog.css` and `EasterEggPrompt.css` were cleaned up).
+- **Remaining gap:** Continue auditing other component styles for hardcoded light-theme colors.
 
 ### Low Priority
 
