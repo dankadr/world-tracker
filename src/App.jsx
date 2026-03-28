@@ -8,7 +8,7 @@ import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
 import WorldSidebar from './components/WorldSidebar';
 import ExportButton from './components/ExportButton';
-import Confetti, { isMilestoneShown, markMilestoneShown } from './components/Confetti';
+import Confetti from './components/Confetti';
 import AnimatedNumber from './components/AnimatedNumber';
 import Onboarding from './components/Onboarding';
 import MobileBottomSheet from './components/MobileBottomSheet';
@@ -156,7 +156,6 @@ export default function App() {
   const { isShareMode, exitShareMode, getSharedVisited } = useShareMode({ setView, setCountryId });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiMilestone, setConfettiMilestone] = useState(null); // { trackerId, milestone }
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
@@ -565,14 +564,7 @@ export default function App() {
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
       {!isShareMode && <XpNotification />}
-      {showConfetti && (
-        <Confetti
-          onDone={() => { setShowConfetti(false); setConfettiMilestone(null); }}
-          trackerId={confettiMilestone?.trackerId}
-          milestone={confettiMilestone?.milestone}
-          userId={userId}
-        />
-      )}
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       <Onboarding />
       {isShareMode && (
