@@ -4,8 +4,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   test: {
-    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
-    exclude: ['**/.worktrees/**', '**/dist/**', '**/e2e/**'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: [
+      '**/.worktrees/**',
+      '**/e2e/**',
+      '**/dist/**',
+      '**/test-results/**',
+      '**/node_modules/**',
+    ],
     environment: 'jsdom',
     environmentOptions: {
       jsdom: {

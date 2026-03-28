@@ -1,7 +1,7 @@
 # ToDo: Trip Itinerary Planner
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Planned — bucket list foundations exist, but dedicated trip planning does not
 **Priority:** Medium
 **Scope:** Full multi-stop trip planning with day-by-day itineraries, route visualization, and collaborative planning
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Go beyond the bucket list with a dedicated trip planner. Users can create multi-stop itineraries with day-by-day schedules, visualize routes on the map, track budgets, and share trip plans with friends for collaborative planning. This transforms the app from a "visited tracker" into a complete travel companion.
+
+## Reality Check (2026-03-25)
+
+- The repo has no `useTrips` hook, trip models, trip UI, or route-planning workflow
+- The closest shipped foundation is the bucket list feature, not an itinerary planner
+- This should now be treated as a new product area, not an extension that is already partly wired
 
 ## Current State
 
