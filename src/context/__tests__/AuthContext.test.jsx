@@ -1,3 +1,4 @@
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Helper to build a minimal fake JWT with a given exp claim.
@@ -33,5 +34,58 @@ describe('loadAuth', () => {
     const result = loadAuth();
     expect(result).not.toBeNull();
     expect(result.jwt_token).toBe(validToken);
+  });
+});
+
+describe('AuthProvider cache readiness', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('exposes cacheReady=false until warmCache finishes for an existing login', async () => {
+    const validToken = makeFakeJwt({ sub: '1', exp: Math.floor(Date.now() / 1000) + 3600 });
+    storeAuth(validToken);
+
+    let resolveWarm;
+    const warmPromise = new Promise((resolve) => {
+      resolveWarm = resolve;
+    });
+
+    vi.doMock('../../utils/crypto', () => ({
+      deriveKey: vi.fn().mockResolvedValue('derived-key'),
+    }));
+    vi.doMock('../../utils/secureStorage', () => ({
+      setActiveKey: vi.fn(),
+      clearActiveKey: vi.fn(),
+      warmCache: vi.fn().mockImplementation(() => warmPromise),
+    }));
+    vi.doMock('../../utils/syncLocalData', () => ({
+      syncLocalDataToServer: vi.fn().mockResolvedValue(undefined),
+    }));
+    vi.doMock('../../utils/cache', () => ({
+      cacheInvalidatePrefix: vi.fn(),
+    }));
+    vi.doMock('../../utils/batchQueue', () => ({
+      clearBatch: vi.fn(),
+    }));
+
+    const { AuthProvider, useAuth } = await import('../AuthContext.jsx');
+
+    function Probe() {
+      const { cacheReady } = useAuth();
+      return <div>{cacheReady ? 'ready' : 'warming'}</div>;
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>
+    );
+
+    expect(screen.getByText('warming')).toBeInTheDocument();
+
+    resolveWarm();
+
+    await waitFor(() => expect(screen.getByText('ready')).toBeInTheDocument());
   });
 });

@@ -51,10 +51,17 @@ import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { haptics } from './utils/haptics';
 import useShareMode from './hooks/useShareMode';
+import {
+  createAchievementBaseline,
+  getCrossedMilestone,
+  getNewlyUnlockedIds,
+  markMilestoneShown,
+  parseStoredIdList,
+} from './utils/progressCelebrations';
 
 
 function AchievementToasts() {
-  const { user } = useAuth();
+  const { user, cacheReady } = useAuth();
   const userId = user?.id || null;
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
@@ -64,23 +71,17 @@ function AchievementToasts() {
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
     const currentUnlocked = achievements.filter((a) => a.check()).map((a) => a.id);
-
-    let seen;
-    try {
-      seen = JSON.parse(secureStorage.getItemSync(seenKey) || '[]');
-    } catch {
-      seen = [];
-    }
+    const seen = parseStoredIdList(secureStorage.getItemSync(seenKey));
 
     if (prevUnlocked.current === null) {
-      prevUnlocked.current = new Set(seen.length > 0 ? seen : currentUnlocked);
+      prevUnlocked.current = createAchievementBaseline(seen, currentUnlocked);
       if (seen.length === 0) {
         secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
       }
       return;
     }
 
-    const newlyUnlocked = currentUnlocked.filter((id) => !prevUnlocked.current.has(id));
+    const newlyUnlocked = getNewlyUnlockedIds(prevUnlocked.current, currentUnlocked);
     if (newlyUnlocked.length > 0) {
       haptics.achievementUnlock();
       const newToasts = newlyUnlocked.map((id) => {
@@ -106,10 +107,16 @@ function AchievementToasts() {
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
 
   useEffect(() => {
+    prevUnlocked.current = null;
+    setToasts([]);
+  }, [seenKey]);
+
+  useEffect(() => {
+    if (userId && !cacheReady) return;
     checkAchievements();
     window.addEventListener('visitedchange', checkAchievements);
     return () => window.removeEventListener('visitedchange', checkAchievements);
-  }, [checkAchievements]);
+  }, [checkAchievements, cacheReady, userId]);
 
   useEffect(() => {
     if (toasts.length === 0) return;
@@ -131,7 +138,7 @@ function AchievementToasts() {
             <span className="toast-title">{t.title}</span>
             <span className="toast-desc">{t.desc}</span>
           </div>
-          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))}>&times;</button>
+          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))} aria-label="Dismiss notification">&times;</button>
         </div>
       ))}
     </div>,
@@ -454,33 +461,33 @@ export default function App() {
 
   const prevPct = useRef(pct);
   const prevCountryRef = useRef(countryId);
+  const confettiKey = useMemo(
+    () => (userId ? `swiss-tracker-u${userId}-confetti-milestones` : 'swiss-tracker-confetti-milestones'),
+    [userId]
+  );
+  const shownMilestonesRef = useRef(new Set());
+
+  useEffect(() => {
+    shownMilestonesRef.current = new Set(parseStoredIdList(secureStorage.getItemSync(confettiKey)));
+  }, [confettiKey]);
+
   useEffect(() => {
     const prev = prevPct.current;
     const countryChanged = prevCountryRef.current !== countryId;
     prevPct.current = pct;
     prevCountryRef.current = countryId;
     if (countryChanged || prev === pct) return;
-    for (const m of MILESTONES) {
-      if (prev < m && pct >= m) {
-        const confettiKey = userId
-          ? `swiss-tracker-u${userId}-confetti-milestones`
-          : 'swiss-tracker-confetti-milestones';
-        let shown;
-        try {
-          shown = new Set(JSON.parse(secureStorage.getItemSync(confettiKey) || '[]'));
-        } catch {
-          shown = new Set();
-        }
-        const milestoneId = `${countryId}-${m}`;
-        if (!shown.has(milestoneId)) {
-          shown.add(milestoneId);
-          secureStorage.setItem(confettiKey, JSON.stringify([...shown])); // fire-and-forget
-          setShowConfetti(true);
-        }
-        break;
-      }
+
+    const crossedMilestone = getCrossedMilestone(prev, pct, MILESTONES);
+    if (!crossedMilestone) return;
+
+    const nextMilestoneState = markMilestoneShown(shownMilestonesRef.current, countryId, crossedMilestone);
+    shownMilestonesRef.current = nextMilestoneState.shownMilestones;
+    if (nextMilestoneState.shouldFire) {
+      secureStorage.setItem(confettiKey, JSON.stringify([...nextMilestoneState.shownMilestones])); // fire-and-forget
+      setShowConfetti(true);
     }
-  }, [pct, countryId, userId]);
+  }, [pct, countryId, confettiKey]);
 
   const closeModals = useCallback(() => {}, []);
 
@@ -610,6 +617,11 @@ export default function App() {
                   onOpenFriends={handleOpenFriends}
                   friendsPendingCount={pendingCount}
                   isMobile={isMobile}
+                  onResetAll={resetAll}
+                  onShowOnboarding={() => {
+                    localStorage.removeItem('onboarding-dismissed');
+                    window.location.reload();
+                  }}
                 />
               </MobileBottomSheet>
             )
@@ -622,6 +634,11 @@ export default function App() {
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
               isMobile={isMobile}
+              onResetAll={resetAll}
+              onShowOnboarding={() => {
+                localStorage.removeItem('onboarding-dismissed');
+                window.location.reload();
+              }}
             />
           )}
           <main
@@ -636,8 +653,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <WorldMap
@@ -792,8 +810,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <RegionMap

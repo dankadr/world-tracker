@@ -55,8 +55,10 @@ export default function Sidebar({
   const [showAvatar, setShowAvatar] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const isAdmin = user?.email === ADMIN_EMAIL;
   const [bucketListModal, setBucketListModal] = useState(null); // { regionId, name }
+  const [showSettings, setShowSettings] = useState(false);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const tabsRef = useRef(null);
@@ -200,7 +202,7 @@ export default function Sidebar({
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-header-top">
-          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
+          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar" aria-label="Customize avatar">
             <AvatarCanvas config={avatarConfig} size={40} />
             <div className="avatar-level-badge-wrap">
               <LevelBadge size={20} />
@@ -215,8 +217,8 @@ export default function Sidebar({
           </div>
           <div className="header-actions">
             {!isMobile && !readOnly && onOpenFriends && (
-              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends" aria-label="Friends">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -228,7 +230,7 @@ export default function Sidebar({
               </button>
             )}
             {!readOnly && onOpenBucketList && (
-              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List">
+              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List" aria-label="Bucket List">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 17v5" />
                   <path d="M6 4v4l3 3v5l6-3V8l3-4z" />
@@ -239,11 +241,24 @@ export default function Sidebar({
               </button>
             )}
             {!isMobile && !readOnly && (
-              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics" aria-label="Statistics">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </button>
+            )}
+            {!isMobile && !readOnly && (
+              <button
+                className="header-icon-btn"
+                onClick={() => setShowSettingsModal(true)}
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.4.58.92.6 1.46V11a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
               </button>
             )}
@@ -252,8 +267,9 @@ export default function Sidebar({
                 className="theme-toggle"
                 onClick={toggleTheme}
                 title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {dark ? '☀️' : '🌙'}
+                <span aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
               </button>
             )}
           </div>
@@ -315,15 +331,32 @@ export default function Sidebar({
         ) : (
           <ul>{regionList.map((r) => renderRegionItem(r))}</ul>
         )}
-        {!isMobile && !readOnly && (
-          <SettingsPanel
-            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
-            onShowOnboarding={onShowOnboarding}
-            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
-          />
-        )}
       </div>
+
+      {!isMobile && !readOnly && (
+        <div className="sidebar-settings-footer">
+          <button
+            className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}
+            onClick={() => setShowSettings((v) => !v)}
+            aria-expanded={showSettings}
+            aria-controls="sidebar-settings-panel"
+            type="button"
+          >
+            <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
+            <span className="sidebar-settings-toggle-arrow" aria-hidden="true">{showSettings ? '▲' : '▼'}</span>
+          </button>
+          {showSettings && (
+            <div id="sidebar-settings-panel">
+              <SettingsPanel
+                onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+                onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+                onShowOnboarding={onShowOnboarding}
+                onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="sidebar-footer">
         {!readOnly && <ShareButton />}
@@ -331,6 +364,16 @@ export default function Sidebar({
       {showAdmin && (
         <SwipeableModal onClose={() => setShowAdmin(false)} maxWidth={480}>
           <AdminPanel />
+        </SwipeableModal>
+      )}
+      {showSettingsModal && (
+        <SwipeableModal onClose={() => setShowSettingsModal(false)} maxWidth={480}>
+          <SettingsPanel
+            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
+            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+            onShowOnboarding={onShowOnboarding}
+            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
         </SwipeableModal>
       )}
 
