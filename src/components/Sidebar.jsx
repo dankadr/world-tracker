@@ -202,7 +202,7 @@ export default function Sidebar({
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-header-top">
-          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar">
+          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar" aria-label="Customize avatar">
             <AvatarCanvas config={avatarConfig} size={40} />
             <div className="avatar-level-badge-wrap">
               <LevelBadge size={20} />
@@ -217,8 +217,8 @@ export default function Sidebar({
           </div>
           <div className="header-actions">
             {!isMobile && !readOnly && onOpenFriends && (
-              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends" aria-label="Friends">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -230,7 +230,7 @@ export default function Sidebar({
               </button>
             )}
             {!readOnly && onOpenBucketList && (
-              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List">
+              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List" aria-label="Bucket List">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12 17v5" />
                   <path d="M6 4v4l3 3v5l6-3V8l3-4z" />
@@ -241,8 +241,8 @@ export default function Sidebar({
               </button>
             )}
             {!isMobile && !readOnly && (
-              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics" aria-label="Statistics">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
@@ -267,8 +267,9 @@ export default function Sidebar({
                 className="theme-toggle"
                 onClick={toggleTheme}
                 title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                {dark ? '☀️' : '🌙'}
+                <span aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
               </button>
             )}
           </div>
