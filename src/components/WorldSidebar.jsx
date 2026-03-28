@@ -238,8 +238,8 @@ export default function WorldSidebar({
           onChange={(e) => setSearch(e.target.value)}
         />
         {search && (
-          <button className="world-search-clear" onClick={() => setSearch('')}>
-            &times;
+          <button className="world-search-clear" onClick={() => setSearch('')} aria-label="Clear search">
+            <span aria-hidden="true">&times;</span>
           </button>
         )}
       </div>
