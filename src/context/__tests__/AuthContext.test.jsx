@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AuthProvider, useAuth } from '../AuthContext';
+import { AuthProvider, loadAuth, useAuth } from '../AuthContext';
 
 const syncLocalDataToServer = vi.fn();
 const deriveKey = vi.fn();
@@ -51,6 +51,73 @@ function AuthProbe() {
     </div>
   );
 }
+
+// Helper: build a minimal JWT-shaped token with the given payload
+function makeJwt(payload) {
+  return `header.${btoa(JSON.stringify(payload))}.signature`;
+}
+
+const STORAGE_KEY = 'swiss-tracker-auth';
+
+describe('loadAuth', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns null when nothing is stored', () => {
+    expect(loadAuth()).toBeNull();
+  });
+
+  it('returns auth data for a valid, non-expired JWT', () => {
+    const exp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+    const token = makeJwt({ sub: 'sub-1', email: 'a@b.com', exp });
+    const stored = { jwt_token: token, user: { id: 1, sub: 'sub-1', email: 'a@b.com' } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    const result = loadAuth();
+    expect(result).not.toBeNull();
+    expect(result.user.id).toBe(1);
+  });
+
+  it('returns null for an expired JWT', () => {
+    const exp = Math.floor(Date.now() / 1000) - 1; // 1 second ago
+    const token = makeJwt({ sub: 'sub-2', exp });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ jwt_token: token, user: { id: 2, sub: 'sub-2', email: 'b@b.com' } })
+    );
+    expect(loadAuth()).toBeNull();
+  });
+
+  it('returns null for a malformed JWT', () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ jwt_token: 'not.a.valid.jwt.at.all', user: { id: 3 } })
+    );
+    expect(loadAuth()).toBeNull();
+  });
+
+  it('treats a JWT without exp as non-expired', () => {
+    const token = makeJwt({ sub: 'sub-4' }); // no exp field
+    const stored = { jwt_token: token, user: { id: 4, sub: 'sub-4', email: 'c@b.com' } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    const result = loadAuth();
+    expect(result).not.toBeNull();
+    expect(result.user.id).toBe(4);
+  });
+
+  it('backfills email from JWT payload when missing from stored user', () => {
+    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const token = makeJwt({ sub: 'sub-5', email: 'filled@b.com', exp });
+    // Stored user has no email
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ jwt_token: token, user: { id: 5, sub: 'sub-5' } })
+    );
+    const result = loadAuth();
+    expect(result).not.toBeNull();
+    expect(result.user.email).toBe('filled@b.com');
+  });
+});
 
 describe('AuthProvider', () => {
   beforeEach(() => {
