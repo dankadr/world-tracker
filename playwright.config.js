@@ -18,8 +18,14 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'desktop-chromium',
       use: { ...devices['Desktop Chrome'] },
+      testMatch: /smoke\.spec\.js/,
+    },
+    {
+      name: 'mobile-chromium',
+      use: { ...devices['Pixel 5'] },
+      testMatch: /mobile\.spec\.js/,
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {

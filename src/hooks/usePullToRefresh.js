@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useReducedMotion from './useReducedMotion';
+import { haptics } from '../utils/haptics';
 
 const DEFAULT_THRESHOLD = 64;
 const DEFAULT_MAX_PULL = 96;
@@ -67,6 +68,9 @@ export default function usePullToRefresh({
     if (nextReady !== readyRef.current) {
       readyRef.current = nextReady;
       setIsReady(nextReady);
+      if (nextReady === true) {
+        haptics.selection();
+      }
     }
   }, [disabled, maxPull, threshold]);
 
@@ -101,6 +105,7 @@ export default function usePullToRefresh({
 
     try {
       await onRefresh();
+      haptics.confirmation();
     } finally {
       refreshingRef.current = false;
       setIsRefreshing(false);

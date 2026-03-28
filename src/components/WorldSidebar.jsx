@@ -17,6 +17,8 @@ import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs
 import { ADMIN_EMAIL } from '../utils/adminConfig';
 import AdminPanel from './AdminPanel';
 import SwipeableModal from './SwipeableModal';
+import SettingsPanel from './SettingsPanel';
+import ConfirmDialog from './ConfirmDialog';
 
 const CONTINENT_EMOJI = {
   'Africa': '🌍',
@@ -58,6 +60,8 @@ export default function WorldSidebar({
   onOpenFriends,
   friendsPendingCount,
   isMobile,
+  onResetAll,
+  onShowOnboarding,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();
@@ -69,6 +73,9 @@ export default function WorldSidebar({
   const [showStats, setShowStats] = useState(false);
   const [showUnesco, setShowUnesco] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -172,6 +179,19 @@ export default function WorldSidebar({
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </button>
+            )}
+            {!isMobile && (
+              <button
+                className="header-icon-btn"
+                onClick={() => setShowSettingsModal(true)}
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.4.58.92.6 1.46V11a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
               </button>
             )}
@@ -365,10 +385,43 @@ export default function WorldSidebar({
 
       </div>
 
+      {!isMobile && (
+        <div className="sidebar-settings-footer">
+          <button
+            className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}
+            onClick={() => setShowSettings((v) => !v)}
+            aria-expanded={showSettings}
+            aria-controls="world-sidebar-settings-panel"
+            type="button"
+          >
+            <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
+            <span className="sidebar-settings-toggle-arrow" aria-hidden="true">{showSettings ? '▲' : '▼'}</span>
+          </button>
+          {showSettings && (
+            <div id="world-sidebar-settings-panel">
+              <SettingsPanel
+                onResetAll={onResetAll ? () => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' }) : undefined}
+                onShowOnboarding={onShowOnboarding}
+                onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showUnesco && createPortal(
         <UnescoPanel onClose={() => setShowUnesco(false)} />,
         document.body
+      )}
+      {showSettingsModal && (
+        <SwipeableModal onClose={() => setShowSettingsModal(false)} maxWidth={480}>
+          <SettingsPanel
+            onResetAll={onResetAll ? () => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' }) : undefined}
+            onShowOnboarding={onShowOnboarding}
+            onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
+          />
+        </SwipeableModal>
       )}
       {showAvatar && (
         <AvatarEditor
@@ -383,6 +436,16 @@ export default function WorldSidebar({
           <AdminPanel />
         </SwipeableModal>
       )}
+      <ConfirmDialog
+        isOpen={!!confirmAction}
+        message={confirmAction?.message || ''}
+        confirmLabel="Reset"
+        onConfirm={() => {
+          if (confirmAction?.type === 'resetAll') onResetAll?.();
+          setConfirmAction(null);
+        }}
+        onCancel={() => setConfirmAction(null)}
+      />
     </aside>
   );
 }
