@@ -1,7 +1,7 @@
 # ToDo: Bucket List Feature Improvements
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — bucket list CRUD shipped, but the planning/collaboration upgrades are still open
 **Priority:** Medium
 **Scope:** Enhance the bucket list from a simple wishlist to a full trip planning & inspiration tool
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The current bucket list feature was implemented per `plans/15-bucket-list-planner.md` and provides basic CRUD with priorities, target dates, notes, and categories. This plan takes it to the next level with trip grouping, collaborative lists, cost estimates, auto-suggestions, photo attachments, and richer map visualization.
+
+## Reality Check (2026-03-25)
+
+- `BucketListPanel.jsx`, `BucketListItem.jsx`, `AddToBucketListModal.jsx`, and `useWishlist.js` are live
+- Bucket list items already support notes, dates, categories, priorities, and map overlay integration
+- Trip grouping, budgets, collaboration, suggestions, routes, and photo attachments are still unbuilt
 
 ## Current State
 
@@ -86,6 +92,48 @@ Trip: "Summer Europe 2026"
 POST /api/wishlist/share/{trip_id}          # Share trip with a friend
 GET  /api/wishlist/shared                   # Get trips shared with me
 PUT  /api/wishlist/shared/{trip_id}/vote     # Vote on an item
+```
+
+
+### 3.5. Friends Travel Intel & Recommendation Prompts
+Surface social context on every country/region so users can immediately see:
+
+- Which friends have already visited that country/region
+- Which friends currently have it on their bucket list
+- Which friends can provide recommendations before a trip
+
+**Core UX ideas:**
+- On each country/region detail or bucket list card, show two friend rows: `Visited by friends` and `Want to go`
+- When a user adds a country/region to their own bucket list, show a contextual prompt like: `3 friends have already been here — ask them for recommendations`
+- Add quick actions: `Message friends`, `Ask for tips`, or `Start a shared trip idea`
+- Support both countries and sub-regions (states, provinces, cantons, prefectures, etc.) where tracker data exists
+
+**Example experience:**
+```jsx
+<FriendTravelInsightCard
+  regionName="Japan — Tokyo"
+  visitedFriends={[anna, liam, maya]}
+  wishlistFriends={[noah, sara]}
+  cta={{ label: "Ask 3 friends for recommendations", action: openRecommendationThread }}
+/>
+```
+
+**Suggested data model additions:**
+```json
+{
+  "friend_travel_insights": {
+    "visited_by": ["friend-id-1", "friend-id-2"],
+    "want_to_visit": ["friend-id-3"],
+    "recommendation_candidates": ["friend-id-1", "friend-id-2"]
+  }
+}
+```
+
+**Potential API support:**
+```
+GET /api/regions/{tracker_id}/{region_id}/friends-insights
+GET /api/wishlist/friends-overlap
+POST /api/recommendations/request
 ```
 
 ### 4. Auto-Suggestions
