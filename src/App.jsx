@@ -51,6 +51,13 @@ import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import {
+  createAchievementBaseline,
+  getCrossedMilestone,
+  getNewlyUnlockedIds,
+  markMilestoneShown,
+  parseStoredIdList,
+} from './utils/progressCelebrations';
 
 function parseShareHash() {
   const hash = window.location.hash;
@@ -69,23 +76,20 @@ function AchievementToasts() {
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
     const currentUnlocked = achievements.filter((a) => a.check()).map((a) => a.id);
-
-    let seen;
-    try {
-      seen = JSON.parse(secureStorage.getItemSync(seenKey) || '[]');
-    } catch {
-      seen = [];
-    }
+    const seen = parseStoredIdList(secureStorage.getItemSync(seenKey));
 
     if (prevUnlocked.current === null) {
-      prevUnlocked.current = new Set(seen.length > 0 ? seen : currentUnlocked);
+      // If both seen and currentUnlocked are empty, data hasn't loaded yet.
+      // Don't set an empty baseline — wait for the next visitedchange after data arrives.
+      if (seen.length === 0 && currentUnlocked.length === 0) return;
+      prevUnlocked.current = createAchievementBaseline(seen, currentUnlocked);
       if (seen.length === 0) {
         secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
       }
       return;
     }
 
-    const newlyUnlocked = currentUnlocked.filter((id) => !prevUnlocked.current.has(id));
+    const newlyUnlocked = getNewlyUnlockedIds(prevUnlocked.current, currentUnlocked);
     if (newlyUnlocked.length > 0) {
       haptics.achievementUnlock();
       const newToasts = newlyUnlocked.map((id) => {
@@ -109,6 +113,11 @@ function AchievementToasts() {
     prevUnlocked.current = new Set(currentUnlocked);
     secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
+
+  useEffect(() => {
+    prevUnlocked.current = null;
+    setToasts([]);
+  }, [seenKey]);
 
   useEffect(() => {
     checkAchievements();
@@ -477,33 +486,44 @@ export default function App() {
 
   const prevPct = useRef(pct);
   const prevCountryRef = useRef(countryId);
+  const confettiKey = useMemo(
+    () => (userId ? `swiss-tracker-u${userId}-confetti-milestones` : 'swiss-tracker-confetti-milestones'),
+    [userId]
+  );
+  const shownMilestonesRef = useRef(new Set());
+  const prevIsLoadingRef = useRef(isDataLoading);
+
+  useEffect(() => {
+    shownMilestonesRef.current = new Set(parseStoredIdList(secureStorage.getItemSync(confettiKey)));
+  }, [confettiKey]);
+
+  // Snap prevPct when data finishes loading so the 0→actual% jump after server
+  // sync doesn't cross a milestone threshold. Must run before the milestone effect.
+  useEffect(() => {
+    if (prevIsLoadingRef.current && !isDataLoading) {
+      prevPct.current = pct;
+      prevCountryRef.current = countryId;
+    }
+    prevIsLoadingRef.current = isDataLoading;
+  }, [isDataLoading, pct, countryId]);
+
   useEffect(() => {
     const prev = prevPct.current;
     const countryChanged = prevCountryRef.current !== countryId;
     prevPct.current = pct;
     prevCountryRef.current = countryId;
     if (countryChanged || prev === pct) return;
-    for (const m of MILESTONES) {
-      if (prev < m && pct >= m) {
-        const confettiKey = userId
-          ? `swiss-tracker-u${userId}-confetti-milestones`
-          : 'swiss-tracker-confetti-milestones';
-        let shown;
-        try {
-          shown = new Set(JSON.parse(secureStorage.getItemSync(confettiKey) || '[]'));
-        } catch {
-          shown = new Set();
-        }
-        const milestoneId = `${countryId}-${m}`;
-        if (!shown.has(milestoneId)) {
-          shown.add(milestoneId);
-          secureStorage.setItem(confettiKey, JSON.stringify([...shown])); // fire-and-forget
-          setShowConfetti(true);
-        }
-        break;
-      }
+
+    const crossedMilestone = getCrossedMilestone(prev, pct, MILESTONES);
+    if (!crossedMilestone) return;
+
+    const nextMilestoneState = markMilestoneShown(shownMilestonesRef.current, countryId, crossedMilestone);
+    shownMilestonesRef.current = nextMilestoneState.shownMilestones;
+    if (nextMilestoneState.shouldFire) {
+      secureStorage.setItem(confettiKey, JSON.stringify([...nextMilestoneState.shownMilestones])); // fire-and-forget
+      setShowConfetti(true);
     }
-  }, [pct, countryId, userId]);
+  }, [pct, countryId, confettiKey]);
 
   const closeModals = useCallback(() => {}, []);
 
@@ -633,6 +653,11 @@ export default function App() {
                   onOpenFriends={handleOpenFriends}
                   friendsPendingCount={pendingCount}
                   isMobile={isMobile}
+                  onResetAll={resetAll}
+                  onShowOnboarding={() => {
+                    localStorage.removeItem('onboarding-dismissed');
+                    window.location.reload();
+                  }}
                 />
               </MobileBottomSheet>
             )
@@ -645,6 +670,11 @@ export default function App() {
               onOpenFriends={handleOpenFriends}
               friendsPendingCount={pendingCount}
               isMobile={isMobile}
+              onResetAll={resetAll}
+              onShowOnboarding={() => {
+                localStorage.removeItem('onboarding-dismissed');
+                window.location.reload();
+              }}
             />
           )}
           <main

@@ -167,6 +167,7 @@ export default function useVisitedRegions(countryId) {
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
   const prevCountryIdRef = useRef(countryId);
+  const lastSeededUserRef = useRef(null);
 
   // Debounce state for saveVisitedRemote
   const debounceTimerRef = useRef(null);
@@ -299,6 +300,18 @@ export default function useVisitedRegions(countryId) {
       }
       prevLoggedIn.current = true;
       setIsLoading(false);
+
+      // Seed all other countries' region data into localStorage once per user
+      // session so WorldSidebar can read accurate per-country percentages
+      // without the user having to navigate into each country individually.
+      if (userId && lastSeededUserRef.current !== userId) {
+        lastSeededUserRef.current = userId;
+        for (const [cId, cd] of Object.entries(bulk.regions || {})) {
+          if (cId === countryId) continue;
+          saveLocal(cId, new Set(cd.regions || []), userId);
+        }
+        emitVisitedChange();
+      }
     });
 
     return () => { cancelled = true; };
