@@ -261,7 +261,11 @@ export default function useVisitedRegions(countryId) {
 
 
     fetchAllVisited(token).then((bulk) => {
-      if (cancelled || !bulk) return;
+      if (cancelled) return;
+      if (!bulk) {
+        setIsLoading(false);
+        return;
+      }
       const countryData = bulk.regions[countryId];
       const remote = countryData
         ? {
