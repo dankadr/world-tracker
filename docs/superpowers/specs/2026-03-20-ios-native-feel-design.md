@@ -65,7 +65,7 @@ Make the World Tracker PWA feel indistinguishable from a native iOS app. The fou
 **Problem:** Scrollable lists feel flat — no snap, no scroll-to-top on tab re-tap, overscroll isn't tuned.
 
 **Design:**
-1. **Scroll-to-top on tab re-tap:** In `BottomTabBar`, when the already-active tab is tapped, dispatch a `scroll-to-top` custom event. Each scrollable screen listens and scrolls its container to top (smooth, with spring). Also works when tapping the active tab while a push screen is open (pops to root first).
+1. **Scroll-to-top on tab re-tap:** In `BottomTabBar`, when the already-active tab is tapped, dispatch a `tab-reselect` custom event. Each scrollable screen listens and scrolls its container to top (smooth, with spring). Also works when tapping the active tab while a push screen is open (pops to root first).
 2. **Scroll-snap on horizontal card rows:** Add `scroll-snap-type: x mandatory` + `scroll-snap-align: start` to horizontal carousels in ExploreScreen and GamesPanel. Add `-webkit-overflow-scrolling: touch` where missing.
 3. **Overscroll bounce indicator:** `.screen-content` and `.sidebar-scroll` get `overscroll-behavior-y: contain` (already some have it; audit and standardize).
 4. **Momentum scroll audit:** Ensure every scrollable div has `-webkit-overflow-scrolling: touch` on iOS.
