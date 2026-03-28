@@ -27,9 +27,16 @@ export default function ActionSheet({ isOpen, title, message, actions = [], onCa
               <button
                 key={index}
                 className={`action-sheet-btn${action.destructive ? ' destructive' : ''}`}
-                onClick={() => {
-                  action.onPress?.();
-                  onCancel?.();
+                onClick={async () => {
+                  try {
+                    if (action.onPress) {
+                      await Promise.resolve(action.onPress());
+                    }
+                  } catch (error) {
+                    console.error('Error in ActionSheet action onPress', error);
+                  } finally {
+                    onCancel?.();
+                  }
                 }}
               >
                 {action.icon && <span className="action-sheet-btn-icon">{action.icon}</span>}
