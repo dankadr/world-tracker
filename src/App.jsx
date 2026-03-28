@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ActionSheetProvider } from './context/ActionSheetContext';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
@@ -49,8 +50,8 @@ import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
-import { decodeShareData } from './utils/shareUrl';
 import { haptics } from './utils/haptics';
+import useShareMode from './hooks/useShareMode';
 import {
   createAchievementBaseline,
   getCrossedMilestone,
@@ -59,14 +60,9 @@ import {
   parseStoredIdList,
 } from './utils/progressCelebrations';
 
-function parseShareHash() {
-  const hash = window.location.hash;
-  if (!hash.startsWith('#share=')) return null;
-  return decodeShareData(hash.slice(7));
-}
 
 function AchievementToasts() {
-  const { user } = useAuth();
+  const { user, cacheReady } = useAuth();
   const userId = user?.id || null;
   const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
   const [toasts, setToasts] = useState([]);
@@ -120,10 +116,11 @@ function AchievementToasts() {
   }, [seenKey]);
 
   useEffect(() => {
+    if (userId && !cacheReady) return;
     checkAchievements();
     window.addEventListener('visitedchange', checkAchievements);
     return () => window.removeEventListener('visitedchange', checkAchievements);
-  }, [checkAchievements]);
+  }, [checkAchievements, cacheReady, userId]);
 
   useEffect(() => {
     if (toasts.length === 0) return;
@@ -145,7 +142,7 @@ function AchievementToasts() {
             <span className="toast-title">{t.title}</span>
             <span className="toast-desc">{t.desc}</span>
           </div>
-          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))}>&times;</button>
+          <button className="toast-close" onClick={() => setToasts((prev) => prev.filter((x) => x.ts !== t.ts))} aria-label="Dismiss notification">&times;</button>
         </div>
       ))}
     </div>,
@@ -159,7 +156,7 @@ export default function App() {
   const [view, setView] = useState('world'); // 'world' | 'detail'
   const isWorldView = view === 'world';
   const [countryId, setCountryId] = useState('ch');
-  const [shareData, setShareData] = useState(null);
+  const { isShareMode, exitShareMode, getSharedVisited } = useShareMode({ setView, setCountryId });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEasterEggPrompt, setShowEasterEggPrompt] = useState(false);
@@ -421,17 +418,6 @@ export default function App() {
     setView('world');
   }, []);
 
-  useEffect(() => {
-    const data = parseShareHash();
-    if (data) {
-      setShareData(data);
-      setView('detail');
-      const firstKey = Object.keys(data).find((k) => countries[k]);
-      if (firstKey) setCountryId(firstKey);
-    }
-  }, []);
-
-  const isShareMode = !!shareData;
   const handleOpenStats = useCallback(() => {
     if (isMobile && !isShareMode) {
       push('stats');
@@ -466,17 +452,10 @@ export default function App() {
     }
     setShowComparisonStats(true);
   }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country]);
-  const sharedVisited = isShareMode && shareData[countryId]
-    ? new Set(shareData[countryId])
-    : null;
+  const sharedVisited = getSharedVisited(countryId);
 
   const displayVisited = isShareMode ? (sharedVisited || new Set()) : visited;
   const handleToggle = isShareMode ? () => {} : handleToggleRegion;
-
-  const exitShareMode = () => {
-    setShareData(null);
-    window.location.hash = '';
-  };
 
   const regionList = country.data.features.filter((f) => !f.properties.isBorough);
   const total = regionList.length;
@@ -506,7 +485,6 @@ export default function App() {
     }
     prevIsLoadingRef.current = isDataLoading;
   }, [isDataLoading, pct, countryId]);
-
   useEffect(() => {
     const prev = prevPct.current;
     const countryChanged = prevCountryRef.current !== countryId;
@@ -593,6 +571,7 @@ export default function App() {
   const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
+    <ActionSheetProvider>
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
@@ -689,8 +668,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <WorldMap
@@ -845,8 +825,9 @@ export default function App() {
                 className="sidebar-toggle"
                 onClick={() => setSidebarCollapsed((c) => !c)}
                 title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               >
-                {sidebarCollapsed ? '\u25B6' : '\u25C0'}
+                <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
             <RegionMap
@@ -1020,5 +1001,6 @@ export default function App() {
       <Analytics />
       <SpeedInsights />
     </div>
+    </ActionSheetProvider>
   );
 }

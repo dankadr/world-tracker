@@ -328,6 +328,31 @@ export default function useVisitedRegions(countryId) {
     }
   }, [isLoggedIn]);
 
+  // On page load the user may already be authenticated, but warmCache() runs
+  // asynchronously in AuthContext's mount effect — AFTER the initial render.
+  // This means loadLocal() in initFromCache / the render-time reset returns an
+  // empty Set for encrypted user-scoped keys that haven't been decrypted yet.
+  // Once warmCache() completes it fires 'auth:cache-warm'; we reload from
+  // localStorage so regional data shows immediately without waiting for the
+  // server fetch that the sync effect would otherwise trigger.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      const local = loadLocal(countryId, userId);
+      // Only apply if server data hasn't already arrived — avoids rolling back
+      // a fresher server value when crypto is slow relative to the network.
+      if (local.size > 0 && visitedRef.current.size === 0) {
+        setVisited(local);
+        setDatesState(loadDates(countryId, userId));
+        setNotesState(loadNotes(countryId, userId));
+        setWishlist(loadWishlist(countryId, userId));
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [countryId, userId]);
+
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
     if (!isLoggedIn || !token) return;
@@ -366,9 +391,16 @@ export default function useVisitedRegions(countryId) {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    // When syncLocalDataToServer() completes (guest → login migration), it
+    // invalidates the bulk cache and emits 'visitedchange'. Re-fetch so the
+    // merged regional data appears immediately without waiting for a tab switch.
+    // The TTL cache guard inside refetch() makes this a no-op for normal
+    // toggles (which don't invalidate the cache).
+    window.addEventListener('visitedchange', refetch);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', refetch);
     };
   }, [countryId, isLoggedIn, token, userId]);
 

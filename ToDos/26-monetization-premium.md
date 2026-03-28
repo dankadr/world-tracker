@@ -1,7 +1,7 @@
 # ToDo: Monetization & Premium Tier
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Planned — no billing infrastructure exists yet
 **Priority:** Low-Medium (future)
 **Scope:** Define and implement a freemium model with a premium subscription using Stripe, while keeping the core tracker free forever
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The app is currently free with no monetization. As the user base grows, infrastructure costs (Neon DB, Vercel bandwidth, Blob storage for photos) will scale linearly. A premium tier funds continued development without compromising the core free experience. The goal is "free gets you hooked, premium makes you love it."
+
+## Reality Check (2026-03-25)
+
+- There is no Stripe dependency, billing endpoint, premium field set, or premium UI in the current repo
+- Some future plans reference premium-gated features, but they are still conceptual dependencies rather than shipped hooks
+- This ToDo should be read as a product plan, not an in-progress implementation
 
 ## Principles
 
@@ -162,6 +168,10 @@ track('upgrade_completed', { plan });
 - [ ] "Manage subscription" in Settings
 - [ ] Handle `payment_failed` gracefully (grace period of 3 days before deactivation)
 - [ ] Tests: webhook processing, premium status expiry
+
+## Related Plans
+
+- `docs/plans/2026-03-20-buy-me-a-tea.md` — one-time creator-style support flow that complements subscriptions without gating features
 
 ## Notes
 
