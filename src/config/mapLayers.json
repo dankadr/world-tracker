@@ -24,6 +24,12 @@
     "dark": "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
   },
   {
+    "id": "streets",
+    "label": "Streets",
+    "light": "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    "dark": "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+  },
+  {
     "id": "friends",
     "label": "Friends' visits",
     "icon": "👥",

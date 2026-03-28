@@ -132,8 +132,12 @@ export function XpProvider({ children }) {
   const grantedKeysRef = useRef(loadGrantedKeys(userId));
   const pendingDeltasRef = useRef(loadPendingDeltas(userId));
   const isFlushingRef = useRef(false);
+  // Holds the latest flushPendingDeltas so the cache-warm handler can call it
+  // without needing it as a dependency (which would re-register the listener
+  // on every token change).
+  const flushRef = useRef(null);
 
-  // When user changes, reload user-scoped local state.
+  // When user changes (login transition), reload user-scoped local state.
   useEffect(() => {
     if (userId === currentUserId) return;
     setCurrentUserId(userId);
@@ -141,6 +145,32 @@ export function XpProvider({ children }) {
     grantedKeysRef.current = loadGrantedKeys(userId);
     pendingDeltasRef.current = loadPendingDeltas(userId);
   }, [userId, currentUserId]);
+
+  // On page load when the user is already logged in, the useState() initializers
+  // above run before AuthContext's mount effect has had a chance to call
+  // warmCache(). This means loadGrantedKeys() / loadPendingDeltas() read from
+  // unwarmed encrypted storage and return empty data. Once warmCache() completes
+  // it dispatches 'auth:cache-warm' — we reload the refs so granted-key tracking
+  // and pending-delta replay are correct for the session.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      grantedKeysRef.current = loadGrantedKeys(userId);
+      pendingDeltasRef.current = loadPendingDeltas(userId);
+      // Reload local XP — guard against overwriting a server value that already
+      // arrived (fast network / slow decrypt).
+      const localXp = loadXp(userId);
+      setTotalXp((prev) => (prev === 0 ? localXp : prev));
+      // The server sync effect may have run with an empty pendingDeltasRef
+      // (cold cache) and skipped the flush. Now that the ref is populated,
+      // kick off a flush so offline deltas aren't silently dropped.
+      if (pendingDeltasRef.current.length > 0) {
+        flushRef.current?.();
+      }
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [userId]);
 
   const enqueuePendingDelta = useCallback((delta) => {
     pendingDeltasRef.current = [...pendingDeltasRef.current, delta];
@@ -174,6 +204,8 @@ export function XpProvider({ children }) {
       isFlushingRef.current = false;
     }
   }, [isLoggedIn, token, userId]);
+  // Keep flushRef in sync so the cache-warm handler always calls the latest version.
+  flushRef.current = flushPendingDeltas;
 
   // Sync from server when logged in.
   useEffect(() => {
