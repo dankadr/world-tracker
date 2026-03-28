@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ActionSheetProvider } from './context/ActionSheetContext';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
@@ -557,6 +558,7 @@ export default function App() {
   const [gamesOpen, setGamesOpen] = useState(false);
 
   return (
+    <ActionSheetProvider>
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
@@ -986,5 +988,6 @@ export default function App() {
       <Analytics />
       <SpeedInsights />
     </div>
+    </ActionSheetProvider>
   );
 }
