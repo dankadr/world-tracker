@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { syncLocalDataToServer } from '../utils/syncLocalData';
 import { cacheInvalidatePrefix } from '../utils/cache';
 import { clearBatch } from '../utils/batchQueue';
@@ -58,13 +58,55 @@ function saveAuth(data) {
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => loadAuth());
   const [loading, setLoading] = useState(false);
+  const [isSyncingLocalData, setIsSyncingLocalData] = useState(false);
   const [cacheReady, setCacheReady] = useState(() => !loadAuth()?.jwt_token);
+  const syncRunRef = useRef(0);
+  const didRunInitialSyncRef = useRef(false);
 
-  // Auto-logout when any API call receives a 401 (expired/invalid token).
-  // api.js dispatches 'auth:expired' on every 401 response.
+  const runLocalDataSync = useCallback(async (token, userId) => {
+    if (!token || !userId) return false;
+
+    const runId = ++syncRunRef.current;
+    setIsSyncingLocalData(true);
+    try {
+      return await syncLocalDataToServer(token, userId);
+    } finally {
+      if (syncRunRef.current === runId) {
+        setIsSyncingLocalData(false);
+      }
+    }
+  }, [syncRunRef]);
+
+  // On mount, if already logged in, check for any leftover anonymous data
+  useEffect(() => {
+    if (didRunInitialSyncRef.current) return;
+    didRunInitialSyncRef.current = true;
+    if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
+      setCacheReady(false);
+      (async () => {
+        try {
+          const key = await deriveKey(auth.user.sub);
+          setActiveKey(key);
+          await warmCache(auth.user.id);
+          window.dispatchEvent(new CustomEvent('auth:cache-warm', { detail: { userId: auth.user.id } }));
+        } catch (e) {
+          console.error('[auth] key derivation failed on mount:', e);
+        } finally {
+          setCacheReady(true);
+        }
+        await runLocalDataSync(auth.jwt_token, auth.user.id);
+      })();
+    } else {
+      setCacheReady(true);
+    }
+  }, [auth?.jwt_token, auth?.user?.id, auth?.user?.sub, runLocalDataSync]);
+
+  // Auto-logout when JWT expires while the page is open
   useEffect(() => {
     const handleExpired = () => {
       if (!loadAuth()) return; // already logged out
+      syncRunRef.current += 1;
+      setIsSyncingLocalData(false);
       clearActiveKey();
       clearBatch();
       setCacheReady(true);
@@ -74,31 +116,6 @@ export function AuthProvider({ children }) {
     window.addEventListener('auth:expired', handleExpired);
     return () => window.removeEventListener('auth:expired', handleExpired);
   }, []);
-
-  // On mount, if already logged in, check for any leftover anonymous data
-  useEffect(() => {
-    if (auth?.jwt_token && auth?.user?.id && auth?.user?.sub) {
-      setCacheReady(false);
-      (async () => {
-        try {
-          const key = await deriveKey(auth.user.sub);
-          setActiveKey(key);
-          await warmCache(auth.user.id);
-          // Signal that the encrypted memCache is now ready so hooks that read
-          // user-scoped data synchronously (e.g. useXp's grantedKeysRef) can
-          // reload their state from the now-decrypted localStorage values.
-          window.dispatchEvent(new CustomEvent('auth:cache-warm', { detail: { userId: auth.user.id } }));
-        } catch (e) {
-          console.error('[auth] key derivation failed on mount:', e);
-        } finally {
-          setCacheReady(true);
-        }
-        syncLocalDataToServer(auth.jwt_token, auth.user.id).catch(() => {});
-      })();
-    } else {
-      setCacheReady(true);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback(async (googleToken) => {
     setLoading(true);
@@ -115,12 +132,8 @@ export function AuthProvider({ children }) {
       }
       const data = await res.json();
 
-      // Derive the encryption key and warm the in-memory cache BEFORE calling
-      // setAuth(). setAuth() triggers an immediate React re-render (this is an
-      // async function, so React 18 does NOT batch the update). If warmCache
-      // runs after setAuth(), hooks that read user-scoped encrypted localStorage
-      // keys synchronously (e.g. loadXp, loadGrantedKeys) get null back because
-      // the memCache isn't ready yet — causing XP and other state to flash to 0.
+      // Warm encrypted storage before setAuth() so user-scoped hooks read
+      // hydrated data on the first authenticated render.
       if (data.jwt_token && data.user?.id && data.user?.sub) {
         try {
           const key = await deriveKey(data.user.sub);
@@ -132,25 +145,26 @@ export function AuthProvider({ children }) {
         } finally {
           setCacheReady(true);
         }
+        // Keep auth hidden until guest data migration finishes so hooks don't
+        // issue authenticated writes against stale pre-merge state.
+        await runLocalDataSync(data.jwt_token, data.user.id);
       } else {
         setCacheReady(true);
       }
 
       setAuth(data);
       saveAuth(data);
-
-      if (data.jwt_token && data.user?.id) {
-        syncLocalDataToServer(data.jwt_token, data.user.id).catch(() => {});
-      }
     } catch (err) {
       console.error('Login error:', err);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [runLocalDataSync]);
 
   const logout = useCallback(() => {
+    syncRunRef.current += 1;
+    setIsSyncingLocalData(false);
     clearActiveKey(); // wipe encryption key and decrypted data cache
     // Drop any queued writes so they don't fire with a stale token after logout
     clearBatch();
@@ -172,6 +186,7 @@ export function AuthProvider({ children }) {
     user: auth?.user || null,
     token: auth?.jwt_token || null,
     isLoggedIn: !!auth?.jwt_token,
+    isSyncingLocalData,
     loading,
     cacheReady,
     login,
