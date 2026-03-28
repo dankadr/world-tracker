@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import FriendsPanel from './FriendsPanel';
 import ChallengesPanel from './ChallengesPanel';
 import useTouchFeedback from '../hooks/useTouchFeedback';
+import useReducedMotion from '../hooks/useReducedMotion';
 import { haptics } from '../utils/haptics';
 import './SocialScreen.css';
 import './iosPrimitives.css';
@@ -44,6 +45,7 @@ export default function SocialScreen({ onCompare, comparisonFriendId }) {
   const [tab, setTab] = useState('friends');
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
+  const reducedMotion = useReducedMotion();
   const friendsTouch = useTouchFeedback();
   const challengesTouch = useTouchFeedback();
 
@@ -58,11 +60,11 @@ export default function SocialScreen({ onCompare, comparisonFriendId }) {
     const handler = (e) => {
       if (e.detail !== 'social') return;
       const sel = tab === 'friends' ? '.fp-scrollable' : '.ch-scrollable';
-      document.querySelector(sel)?.scrollTo({ top: 0, behavior: 'smooth' });
+      document.querySelector(sel)?.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
     };
     window.addEventListener('tab-reselect', handler);
     return () => window.removeEventListener('tab-reselect', handler);
-  }, [tab]);
+  }, [tab, reducedMotion]);
 
   const handleScrollPositionChange = useCallback((scrollTop) => {
     setHeaderCollapsed(scrollTop > 22);

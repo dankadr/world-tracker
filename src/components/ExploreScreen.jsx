@@ -7,6 +7,7 @@ import continentMap from '../config/continents.json';
 import { secureStorage } from '../utils/secureStorage';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import useTouchFeedback from '../hooks/useTouchFeedback';
+import useReducedMotion from '../hooks/useReducedMotion';
 import './ExploreScreen.css';
 import './iosPrimitives.css';
 
@@ -91,6 +92,7 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const userId = user?.id || null;
 
+  const reducedMotion = useReducedMotion();
   const countriesTabTouch = useTouchFeedback();
   const trackersTabTouch = useTouchFeedback();
   const worldCardTouch = useTouchFeedback();
@@ -230,11 +232,11 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
     const handler = (e) => {
       if (e.detail !== 'explore') return;
       const ref = tab === 'countries' ? countriesPull.containerRef : trackersPull.containerRef;
-      ref.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      ref.current?.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
     };
     window.addEventListener('tab-reselect', handler);
     return () => window.removeEventListener('tab-reselect', handler);
-  }, [tab, countriesPull.containerRef, trackersPull.containerRef]);
+  }, [tab, countriesPull.containerRef, trackersPull.containerRef, reducedMotion]);
 
   const handlePaneScroll = useCallback((event) => {
     setHeaderCollapsed(event.currentTarget.scrollTop > 22);
