@@ -2,8 +2,20 @@ import './ChallengesPanel.css';
 import { createPortal } from 'react-dom';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 import countries from '../data/countries';
+import worldData from '../data/world.json';
 import { useState } from 'react';
 import ChallengeDetailSkeleton from './ChallengeDetailSkeleton';
+
+/**
+ * Converts a raw region ID into a human-readable fallback name.
+ * e.g. "us-ca" → "Us Ca", "nyc-manhattan" → "Nyc Manhattan"
+ */
+function formatRegionIdFallback(id) {
+  return id
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
 
 const TRACKER_LABELS = {
   world: { flag: '🌍', name: 'World' },
@@ -69,13 +81,20 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
     participantCount: participants.length,
   };
 
-  // Build a lookup from region ID → display name for this tracker
+  // Build a lookup from region ID → display name for this tracker.
+  // For the world tracker, use the world GeoJSON. For all others, use the
+  // per-country GeoJSON loaded via the countries data module.
   const regionMap = {};
-  if (challenge.tracker_id && challenge.tracker_id !== 'world') {
-    const features = countries[challenge.tracker_id]?.data?.features || [];
+  if (challenge.tracker_id) {
+    const features =
+      challenge.tracker_id === 'world'
+        ? worldData?.features || []
+        : countries[challenge.tracker_id]?.data?.features || [];
     features.forEach((f) => {
-      if (f.properties?.id && f.properties?.name) {
-        regionMap[f.properties.id] = f.properties.name;
+      const id = f.properties?.id || f.properties?.ISO_A2?.toLowerCase();
+      const name = f.properties?.name || f.properties?.NAME;
+      if (id && name) {
+        regionMap[id] = name;
       }
     });
   }
@@ -201,9 +220,10 @@ export default function ChallengeDetailModal({ challenge, loading, userId, onClo
                       <div className="ch-targets-list">
                         {challenge.target_regions.map((r) => {
                           const visitedByAnyone = participants.some((p) => p.visited_regions?.includes(r));
+                          const displayName = regionMap[r] || formatRegionIdFallback(r);
                           return (
                             <span key={r} className={`ch-target-tag ${visitedByAnyone ? 'visited' : ''}`}>
-                              {regionMap[r] || r}
+                              {displayName}
                             </span>
                           );
                         })}
