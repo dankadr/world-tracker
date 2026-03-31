@@ -1,7 +1,7 @@
 # ToDo: Icons, Logos & Visual Assets — Replace Emojis with Custom Art
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — logo/brand assets exist, but the full emoji-to-custom-icon migration has not started
 **Priority:** High
 **Scope:** Replace all emoji usage across the app with custom-designed icons, logos, and imagery
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The app currently uses emoji characters for all visual elements — achievement badges (👣🚀🧭🎒💯), tracker icons (🇨🇭🇺🇸), navigation labels, and map layer indicators. This creates an inconsistent cross-platform look (emojis render differently on iOS/Android/Windows) and feels generic. Replace every emoji with a custom-designed icon set in a unified visual style.
+
+## Reality Check (2026-03-25)
+
+- Brand assets now exist under `public/logo*`, `public/icons/`, and `public/brand/`
+- The app still renders emoji in achievements, tracker labels, some game cards, and activity UI
+- This plan is now more of a visual-system migration than a greenfield asset creation task
 
 ## Current Emoji Usage Audit
 
