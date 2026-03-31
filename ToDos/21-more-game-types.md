@@ -1,7 +1,7 @@
 # ToDo: More Geography Game Types
 
 **Date:** 2026-03-15
-**Status:** Planned
+**Status:** Partially complete — the core games platform exists, but the new fact-based modes have not started
 **Priority:** Medium
 **Scope:** Add new quiz game types to the existing Geography Games section: Population Quiz, Currency Quiz, Language Quiz, and a Daily Challenge mode
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The games section currently has 4 games: Map Quiz, Flag Quiz, Capital Quiz, Shape Quiz. These are all well-built and fun, but they cover the same dimension (visual/capital recognition). Adding games around population, currency, and language deepens the geography education angle and gives users more reasons to return daily.
+
+## Reality Check (2026-03-25)
+
+- `GamesPanel.jsx`, `useGeographyGame.js`, shared result UI, answer helpers, and high-score storage are all live
+- Shape Quiz already shipped on top of the original 3-game plan
+- Population, currency, language, and daily-challenge modes are still only design work
 
 ## Current State
 

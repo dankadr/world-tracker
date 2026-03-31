@@ -99,7 +99,7 @@ export default function UnescoPanel({ onClose }) {
     <div className={`unesco-panel ${dark ? 'dark' : ''} ${isMobile ? 'mobile' : ''}`}>
       <div className="unesco-panel-header">
         <h2>🏛️ UNESCO Sites</h2>
-        <button className="close-btn" onClick={onClose}>✕</button>
+        <button className="close-btn" onClick={onClose} aria-label="Close UNESCO Sites panel">✕</button>
       </div>
 
       <div className={`unesco-top-section ${collapseTopSection ? 'collapsed' : ''}`}>

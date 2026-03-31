@@ -1,7 +1,7 @@
 # ToDo: Travel Timeline & Calendar View
 
 **Date:** 2026-03-15
-**Status:** Planned
+**Status:** Planned — there is a lightweight stats timeline today, but not the calendar/timeline feature described here
 **Priority:** Medium-High
 **Scope:** Chronological timeline and calendar heatmap showing the user's travel history over time
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Users currently log visits with optional dates per region. There is no way to view this data chronologically — no "what did I do in 2024?" view beyond the year-in-review cards. A timeline + calendar heatmap turns raw visit dates into a compelling visual story of someone's travel life.
+
+## Reality Check (2026-03-25)
+
+- `StatsModal.jsx` already shows a basic recent timeline list built from stored visit dates
+- `YearInReview` exists and covers yearly storytelling at a higher level
+- The dedicated calendar heatmap, merged timeline utilities, and profile-surface integration from this plan have not been built
 
 ## Current State
 

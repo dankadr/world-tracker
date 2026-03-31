@@ -1,7 +1,7 @@
 # ToDo: Collaborative Travel Maps
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Planned — social comparison exists, but collaborative maps do not
 **Priority:** Medium (Premium feature)
 **Scope:** Shared travel maps for couples, families, and travel groups — a single map where multiple users contribute visited places
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Many users travel with a partner or family and want a single shared map that represents "places WE have been" not just "places I have been." Currently the comparison view shows two maps side-by-side but doesn't let you build a unified shared map together. Collaborative maps are a premium feature that drives both paid conversions and viral sharing.
+
+## Reality Check (2026-03-25)
+
+- The repo already has friendships, comparison view, and collaborative/race challenge types
+- There is no collab map schema, API, hook, or UI in the codebase
+- This feature is still a net-new product area despite overlap with existing social mechanics
 
 ## Current State
 
