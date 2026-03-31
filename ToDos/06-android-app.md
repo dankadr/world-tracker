@@ -1,7 +1,7 @@
 # ToDo: Android App — Publish on Google Play Store
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Planned — depends on a Capacitor wrapper that is not in the repo yet
 **Priority:** Medium
 **Scope:** Wrap the web app in a native Android shell using Capacitor and publish to Google Play Store
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Using the same Capacitor infrastructure as the iOS app (`05-ios-app-store.md`), add Android platform support and publish to Google Play Store. Capacitor shares the same web codebase for both platforms, so most work is Android-specific configuration, testing, and Play Store submission.
+
+## Reality Check (2026-03-25)
+
+- The mobile web app is already substantially more native-feeling than when this plan was written
+- There is still no Capacitor setup, no `android/` project, and no Android-specific bridge code
+- This remains downstream of the iOS/Capacitor wrapper work rather than an immediately actionable branch task
 
 ## Prerequisites
 
