@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { haptics } from '../utils/haptics';
 import { useNavigation } from '../context/NavigationContext';
 import ChallengeScreen from './ChallengeScreen';
 import GamesScreen from './GamesScreen';
@@ -23,6 +25,14 @@ const SCREEN_REGISTRY = {
 export default function NavigationStack() {
   const { stacks, activeTab, pop } = useNavigation();
   const stack = stacks[activeTab] ?? [];
+  const prevLengthRef = useRef(stack.length);
+
+  useEffect(() => {
+    if (stack.length > prevLengthRef.current) {
+      haptics.selection();
+    }
+    prevLengthRef.current = stack.length;
+  }, [stack.length]);
 
   if (stack.length === 0) return null;
 

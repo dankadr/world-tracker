@@ -5,7 +5,7 @@ import useChallengeStreak from '../hooks/useChallengeStreak';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import ChallengeCreateModal from './ChallengeCreateModal';
 import ChallengeDetailModal from './ChallengeDetailModal';
-import ConfirmDialog from './ConfirmDialog';
+import { useActionSheet } from '../context/ActionSheetContext';
 import countries from '../data/countries';
 import { formatTimeRemaining, getDifficultyLabel } from '../utils/challengeUtils';
 import useDeviceType from '../hooks/useDeviceType';
@@ -263,11 +263,11 @@ export default function ChallengesPanel({ onClose, showHeader = true, onScrollPo
   const { challenges, loading, refresh, create, getDetail, leave, remove } = useChallenges();
   const { isMobile } = useDeviceType();
   const { push } = useNavigation();
+  const { showActionSheet } = useActionSheet();
   const [showCreate, setShowCreate] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [detailData, setDetailData] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [confirmLeave, setConfirmLeave] = useState(null);
 
   const pullToRefresh = usePullToRefresh({
     onRefresh: refresh,
@@ -311,17 +311,28 @@ export default function ChallengesPanel({ onClose, showHeader = true, onScrollPo
     setShowCreate(false);
   }, [create]);
 
-  const handleLeave = useCallback(async () => {
-    if (!confirmLeave) return;
-    try {
-      await leave(confirmLeave.id);
-      handleCloseDetail();
-    } catch (err) {
-      console.error('Failed to leave challenge:', err);
-    } finally {
-      setConfirmLeave(null);
-    }
-  }, [confirmLeave, leave, handleCloseDetail]);
+  const handleLeave = useCallback((challenge) => {
+    const isCreator = challenge.creator_id === user?.id;
+    const message = `Leave "${challenge.title}"?${isCreator ? ' As the creator, this will delete it for everyone.' : ''}`;
+    showActionSheet({
+      title: 'Leave Challenge',
+      message,
+      actions: [
+        {
+          label: isCreator ? 'Delete for Everyone' : 'Leave Challenge',
+          destructive: true,
+          onPress: async () => {
+            try {
+              await leave(challenge.id);
+              handleCloseDetail();
+            } catch (err) {
+              console.error('Failed to leave challenge:', err);
+            }
+          },
+        },
+      ],
+    });
+  }, [user?.id, showActionSheet, leave, handleCloseDetail]);
 
   const handleDelete = useCallback(async (challengeId) => {
     try {
@@ -426,20 +437,11 @@ export default function ChallengesPanel({ onClose, showHeader = true, onScrollPo
           loading={detailLoading}
           userId={user?.id}
           onClose={handleCloseDetail}
-          onLeave={(c) => setConfirmLeave(c)}
+          onLeave={handleLeave}
           onDelete={handleDelete}
           onRefresh={() => handleOpenDetail(selectedChallenge)}
         />
       )}
-
-      <ConfirmDialog
-        isOpen={!!confirmLeave}
-        message={`Leave "${confirmLeave?.title || 'this challenge'}"?${confirmLeave?.creator_id === user?.id ? ' As the creator, this will delete it for everyone.' : ''}`}
-        confirmLabel="Leave"
-        onConfirm={handleLeave}
-        onCancel={() => setConfirmLeave(null)}
-        destructive
-      />
     </div>
   );
 }

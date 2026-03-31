@@ -1,7 +1,7 @@
 # ToDo: Push Notifications (PWA)
 
 **Date:** 2026-03-15
-**Status:** Planned
+**Status:** Planned — PWA/service-worker groundwork exists, but there is no push subscription system
 **Priority:** Medium
 **Scope:** Add Web Push notifications for social events (friend requests, challenge updates, leaderboard changes) and engagement nudges
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The app is a PWA with a service worker (`src/sw.js`) already in place. Web Push is the natural next step — it allows the app to re-engage users even when they're not actively using it. Key use cases: friend requests, challenge completions, and "your friend just visited 5 new countries" nudges.
+
+## Reality Check (2026-03-25)
+
+- The repo already has a service worker, install prompt, and offline indicator
+- There are no push subscription tables, no VAPID keys, no push endpoints, and no notification preference UI
+- This remains a future feature rather than partially implemented work
 
 ## Current State
 

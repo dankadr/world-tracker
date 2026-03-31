@@ -1,7 +1,7 @@
 # ToDo: Avatar System Overhaul — Template Architecture & AI Generation
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Partially complete — the avatar system is shipped, but the template-based overhaul has not started
 **Priority:** High
 **Scope:** Redesign the avatar system with a scalable template/skeleton architecture and AI-generated parts
 
@@ -15,6 +15,12 @@ The current avatar system uses hand-coded 16×16 pixel art defined as row-string
 2. Any new avatar part just needs to follow the template spec
 3. AI can mass-generate parts using consistent prompts
 4. Adding 100 new hairstyles is as easy as dropping files into a folder
+
+## Reality Check (2026-03-25)
+
+- `AvatarCanvas.jsx`, `AvatarEditor.jsx`, `useAvatar.js`, and `src/config/avatarParts.js` are all live
+- The current system is functional and already supports unlockable parts, color picking, and persistence
+- None of the 32×32 template architecture, conversion scripts, or AI-generation workflow from this plan exists yet
 
 ## Current State
 

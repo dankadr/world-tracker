@@ -3,7 +3,7 @@ import GamesPanel from './GamesPanel';
 
 export default function GamesScreen({ worldVisited, onBack }) {
   return (
-    <Screen title="Geography Games" onBack={onBack}>
+    <Screen title="Geography Games" largeTitle="Geography Games" onBack={onBack}>
       <GamesPanel worldVisited={worldVisited} />
     </Screen>
   );
