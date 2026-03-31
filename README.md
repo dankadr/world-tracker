@@ -18,27 +18,36 @@ Your world. Your journey. — An interactive travel tracker where you mark count
 | 🇦🇺 Australia | 8 states & territories | Polygon |
 | 🇵🇭 Philippines | 17 regions | Polygon |
 | 🇧🇷 Brazil | 26 states + DF | Polygon |
+| 🇫🇷 France | 13 regions | Polygon |
+| 🇩🇪 Germany | 16 states | Polygon |
+| 🇮🇹 Italy | 20 regions | Polygon |
+| 🇪🇸 Spain | 17 autonomous communities | Polygon |
+| 🇲🇽 Mexico | 32 states | Polygon |
+| 🇬🇧 United Kingdom | 4 nations / regional view support | Polygon |
+| 🇮🇳 India | 36 states & union territories | Polygon |
+| 🇳🇿 New Zealand | 16 regions | Polygon |
 
 ## Feature Highlights
 
-- **World + Regional Maps** — 12 tracker views with polygon and point datasets.
+- **World + Regional Maps** — 20 tracker/map views across world, capitals, and country sub-trackers.
 - **UNESCO Overlay** — optional UNESCO World Heritage layer with **270 sites**.
 - **Bucket List Planner** — add planned trips, target dates, and mark destinations complete.
 - **Travel Challenges** — create personal or friend challenges with streak-friendly progress.
 - **XP + Levels** — gain XP for visits, achievements, and milestones.
-- **Achievements** — **131** unlockable badges spanning global and tracker-specific goals.
+- **Achievements** — **173** unlockable badges spanning global and tracker-specific goals.
 - **Friends + Comparison** — share progress, compare maps, and use friend overlays.
 - **Stats Dashboard** — timeline, continent stats, totals, and progress summaries.
 - **Year in Review** — generate annual travel summaries and sharing cards.
 - **Trip Notes & Dates** — attach notes and dates to any visited destination.
 - **Wishlist / Planned** — mark places to visit next and manage a global wish list.
-- **Map Layer Controls** — switch base maps (clean, labels, satellite, terrain).
-- **Export + Share** — export map visuals and generate share links.
-- **Geography Mini Games** — Map Quiz, Flag Quiz, and Capital Quiz — test your knowledge on blank maps with scored rounds, high scores, and multiple difficulty modes. *(In Progress)*
+- **Map Layer Controls** — switch map layers and toggle wishlist, friends, and UNESCO overlays.
+- **Export + Import** — PNG map export, share cards, JSON backup/restore, and CSV exports.
+- **Geography Mini Games** — Map Quiz, Flag Quiz, Capital Quiz, and Shape Quiz with scored rounds and local high scores.
+- **PWA Foundation** — manifest, install prompt, service worker, and offline indicator are in place.
 - **Dark Mode + Mobile UX** — optimized for desktop and touch devices.
 - **Google Sign-In or Guest Mode** — local-only mode or account sync.
 
-## Geography Mini Games *(In Progress)*
+## Geography Mini Games
 
 An interactive games section accessible from the Explore tab that tests your geographical knowledge using the app's existing map infrastructure.
 
@@ -49,6 +58,7 @@ An interactive games section accessible from the Explore tab that tests your geo
 | 🗺️ **Map Quiz** | A blank world map highlights a random country — type or select its name |
 | 🚩 **Flag Quiz** | Identify a country from its flag (or pick the correct flag for a country name) |
 | 🏛️ **Capital Quiz** | Name the capital of a highlighted country, or identify the country from its capital |
+| 🧩 **Shape Quiz** | Identify the country from its highlighted outline/shape on the map |
 
 ### How It Works
 
@@ -64,17 +74,19 @@ An interactive games section accessible from the Explore tab that tests your geo
 GamesPanel (mode selector)
 ├── MapQuiz      → useGeographyGame(worldPool, options)
 ├── FlagQuiz     → useGeographyGame(worldPool, options)
-└── CapitalQuiz  → useGeographyGame(capitalPool, options)
+├── CapitalQuiz  → useGeographyGame(capitalPool, options)
+└── ShapeQuiz    → useGeographyGame(worldPool, options)
                         └── GameResultScreen (shared)
 ```
 
 **Key files:**
 - `src/hooks/useGeographyGame.js` — shared game engine (shuffling, scoring, timer, state machine)
 - `src/components/GamesPanel.jsx` — mode selection screen
-- `src/components/MapQuiz.jsx` — blank map click-to-guess UI using Leaflet
-- `src/components/FlagQuiz.jsx` — flag display + multiple choice or text input
-- `src/components/CapitalQuiz.jsx` — capital city round
-- `src/components/GameResultScreen.jsx` — shared end screen with score breakdown
+- `src/components/games/MapQuiz.jsx` — blank map click-to-guess UI using Leaflet
+- `src/components/games/FlagQuiz.jsx` — flag display + multiple choice or text input
+- `src/components/games/CapitalQuiz.jsx` — capital city round
+- `src/components/games/ShapeQuiz.jsx` — identify countries by their outline
+- `src/components/games/GameResultScreen.jsx` — shared end screen with score breakdown
 
 ---
 

@@ -131,10 +131,15 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
       </div>
       <div style={{ padding: '12px 16px 20px', background: 'var(--bg, #fff)' }}>
         {status === 'reviewing' && (
-          <div role="status" aria-live="polite" style={{
-            textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
-            color: isCorrect ? '#22c55e' : '#ef4444',
-          }}>
+          <div
+            data-testid="shape-quiz-feedback"
+            role="status"
+            aria-live="polite"
+            style={{
+              textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
+              color: isCorrect ? '#22c55e' : '#ef4444',
+            }}
+          >
             {isCorrect ? 'Correct!' : `Incorrect — ${question.name}`}
           </div>
         )}

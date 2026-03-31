@@ -41,6 +41,7 @@ export default function XpNotification() {
           className={`xp-toast ${n.levelUp ? 'xp-toast-levelup' : ''}`}
           onClick={() => dismissNotification(n.id)}
           role="status"
+          style={{ pointerEvents: 'auto' }}
         >
           {n.levelUp ? (
             <>

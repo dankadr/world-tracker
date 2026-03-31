@@ -1,7 +1,7 @@
 # ToDo: Email System — Notifications, Digests & Engagement
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Planned — user email identities exist, but no email delivery system has been built
 **Priority:** Medium
 **Scope:** Add email-based notifications, weekly digests, and engagement emails
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Currently the app has no email functionality at all. Users authenticate via Google (which provides their email), but no emails are ever sent. This plan adds a full email system covering transactional emails (welcome, friend requests), engagement emails (weekly digest, achievement notifications), and planning emails (bucket list reminders).
+
+## Reality Check (2026-03-25)
+
+- Google auth does give the app a user email and basic profile identity
+- There is still no Resend integration, no email preferences table, no templates, and no scheduled email jobs
+- This plan remains entirely future-facing
 
 ## Current State
 

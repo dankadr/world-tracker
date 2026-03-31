@@ -116,7 +116,11 @@ export default function YearInReview({ year, onClose, embedded = false, hideClos
 
   const showCloseButton = !hideClose;
 
-  if (!stats.hasData) {
+  // Show empty state when there are no dated visits for the year, or when all
+  // cards were filtered out (e.g. visits exist but none have usable data).
+  const hasNoTravels = !stats?.hasData || cards.length === 0;
+
+  if (hasNoTravels) {
     const emptyCard = (
       <div
         className={`yir-container yir-empty${embedded ? ' yir-embedded-container' : ''}`}
@@ -124,8 +128,8 @@ export default function YearInReview({ year, onClose, embedded = false, hideClos
       >
         {showCloseButton && <button className="yir-close" onClick={onClose}>&times;</button>}
         <div className="yir-card">
-          <div className="yir-card-icon">🗺️</div>
-          <h2>No dated visits in {year}</h2>
+          <div className="yir-card-icon">✈️</div>
+          <h2>No travels in {year}</h2>
           <p className="yir-card-detail">
             Add dates to your visits to generate a Year in Review!
           </p>
