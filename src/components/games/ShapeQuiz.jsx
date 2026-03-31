@@ -131,10 +131,13 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
       </div>
       <div style={{ padding: '12px 16px 20px', background: 'var(--bg, #fff)' }}>
         {status === 'reviewing' && (
-          <div style={{
+          <div
+            data-testid="shape-quiz-feedback"
+            style={{
             textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
             color: isCorrect ? '#22c55e' : '#ef4444',
-          }}>
+          }}
+          >
             {isCorrect ? '✓ Correct!' : `✗ ${question.name}`}
           </div>
         )}

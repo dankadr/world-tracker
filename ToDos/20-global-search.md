@@ -11,6 +11,12 @@
 
 Currently each tracker (Switzerland, USA, Norway, etc.) has its own local search inside the sidebar. There is no way to search across trackers — if I want to find "where is Zurich?" or "do I have Bavaria in my bucket list?" I have to navigate to the right tracker first. A global search command palette solves this and is a natural power-user feature for a geography app.
 
+## Reality Check (2026-03-25)
+
+- `CitySearch.jsx`, `WorldSidebar.jsx`, `ExploreScreen.jsx`, and `UnescoPanel.jsx` all have local search/filtering
+- There is still no unified index, command palette, or cross-tracker keyboard shortcut
+- This plan is still valid, but it should start from existing local search patterns rather than from zero
+
 ## Current State
 
 - `CitySearch.jsx` — handles in-sidebar search for individual trackers

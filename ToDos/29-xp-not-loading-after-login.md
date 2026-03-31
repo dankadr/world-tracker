@@ -1,6 +1,10 @@
 # Bug: XP Doesn't Auto-Load After Login
 
-**Status:** Fixed — PRs #127 + #131 open
+**Date:** 2026-03-25
+**Status:** Needs re-verification — prior fixes landed in PRs #127 and #131, but the current repo still lacks explicit proof this regression is closed
+**Priority:** High
+
+---
 
 ## Problem
 After user logs in, XP shows as 0 or doesn't display correctly until page refresh. The XP value should be loaded immediately from the backend during authentication flow.
@@ -24,11 +28,13 @@ After user logs in, XP shows as 0 or doesn't display correctly until page refres
 ## Related
 - Possibly related to #87 (JWT expiry + auto-logout) if auth flow changed
 
-## Fix
-- PR #127: load XP immediately from auth response on login
-- PR #131: fetch XP immediately on login (follow-up fix)
+## Current Repo Status
+
+- Prior fixes landed in PR #127 (load XP immediately from auth response on login) and PR #131 (follow-up fetch-on-login coverage)
+- `useXp.jsx` now fetches `/api/user/xp` after login and reconciles local vs remote XP
+- Keep this open until login-flow verification confirms immediate XP hydration on a fresh authenticated session without a reload
 
 ## Test Plan
-- [x] Log in and check XP displays immediately
-- [x] Verify no console errors during login
-- [x] Compare XP value before/after page refresh
+- [ ] Log in and check XP displays immediately
+- [ ] Verify no console errors during login
+- [ ] Compare XP value before/after page refresh

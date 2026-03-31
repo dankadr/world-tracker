@@ -1,7 +1,7 @@
 # ToDo: Advanced Map Features
 
 **Date:** 2026-03-16
-**Status:** Phase 1–4 🔄 In Progress (PR #126) · Map layer improvements ✅ (PR #80, #110)
+**Status:** Phase 1–4 🔄 In Progress (PR #126) · Map layer improvements ✅ (#80, #110)
 **Priority:** Medium
 **Scope:** Heatmap overlay, visit-density visualization, custom map markers, and route drawing on the world map
 
@@ -10,6 +10,12 @@
 ## Overview
 
 The world map currently shows visited countries with a flat gold fill. Adding a heatmap mode (intensity based on how deeply you've explored each country), custom markers for meaningful spots, and a route drawing feature turns the map into a visual travel story rather than just a checklist.
+
+## Reality Check (2026-03-25)
+
+- `MapLayerControl.jsx`, `mapLayers.json`, and UNESCO/wishlist/friends toggles already exist
+- No exploration-depth logic, custom marker storage, or route-drawing UI exists today
+- This plan is still fully open despite the mature baseline map controls
 
 ## Current State
 

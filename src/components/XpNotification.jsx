@@ -40,6 +40,7 @@ export default function XpNotification() {
           key={n.id}
           className={`xp-toast ${n.levelUp ? 'xp-toast-levelup' : ''}`}
           onClick={() => dismissNotification(n.id)}
+          style={{ pointerEvents: 'auto' }}
         >
           {n.levelUp ? (
             <>

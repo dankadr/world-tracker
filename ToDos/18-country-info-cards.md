@@ -1,7 +1,7 @@
 # ToDo: Country Info Cards
 
 **Date:** 2026-03-15
-**Status:** Phase 1 🔄 In Progress (PR #139) · Phase 2 🔄 In Progress (PR #140)
+**Status:** Phase 1 🔄 In Progress (PR #139) · Phase 2 🔄 In Progress (PR #162)
 **Priority:** Medium
 **Scope:** Show rich contextual information about countries and regions when clicking/tapping them on the map
 
@@ -10,6 +10,12 @@
 ## Overview
 
 When a user clicks a country on the world map or a region on a detail tracker, they get no information about it — just a toggle and a tooltip with the name. Adding contextual info (capital, population, currency, language, fun facts) transforms the app from a pure tracker into an educational/discovery tool, increasing time-on-app and making the bucket list workflow more compelling.
+
+## Reality Check (2026-03-25)
+
+- `src/config/countryMeta.json` exists and can support this direction
+- The current world-map interaction is still primarily toggle/tooltip based
+- No `CountryInfoPanel`, no `useCountryInfo` hook, and no static `countryInfo.json` dataset are present
 
 ## Current State
 
@@ -96,7 +102,7 @@ This is a behavioral change that needs a brief onboarding tooltip the first time
 - [x] Run the script, commit the JSON
 - [x] `useCountryInfo` hook with lazy import
 
-### Phase 2 — Panel component (PR #140 open)
+### Phase 2 — Panel component (PR #162 open)
 - [x] `CountryInfoPanel` component + CSS
 - [x] `WorldSidebar` country list — ℹ info button (search results + continent breakdown)
 - [ ] Mobile bottom sheet integration

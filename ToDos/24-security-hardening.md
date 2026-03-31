@@ -1,15 +1,33 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Phases 1–4 🔄 In Progress (PRs #85, #88, #96, #125, #145, #146)
+**Status:** Phases 1–4 🔄 In Progress — current open hardening PRs: #125, #145, #146
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 
 ---
 
+
+## PR Review Snapshot (2026-03-19)
+
+Several hardening tasks described here are no longer hypothetical:
+
+- **PR #75** added edge middleware rate limiting for `/auth/google` and `/admin/*`.
+- **PR #81** added a `Permissions-Policy` response header in `vercel.json`.
+- **PR #87** hardened auth expiry handling by rejecting expired JWTs on load and auto-logging out after authenticated 401s.
+- **PR #84** added a lightweight `/api/health` endpoint for uptime monitoring, which supports operational readiness but does not replace deeper security controls.
+
+Treat the remaining items below as the next security pass, not a greenfield list.
+
 ## Overview
 
 A code review of the current stack reveals several security improvements that should be addressed before the user base grows significantly. None of these are critical vulnerabilities (the encryption layer is solid), but they are best-practice gaps that could be exploited at scale.
+
+## Reality Check (2026-03-25)
+
+- The repo now has encrypted-at-rest data handling, request IDs, JWT secret validation in production, and several security headers in `vercel.json`
+- `secureStorage.js` already documents intentional legacy/plaintext fallback behavior in code comments
+- Missing pieces from this plan still include CSP, broader rate limiting, stronger request/input validation, `security.txt`, and dependency-audit automation
 
 ## Identified Issues
 
@@ -34,7 +52,7 @@ def generate_challenge_id():
 
 #### 2. No rate limiting on most API endpoints (MEDIUM)
 
-Only `/auth/google` and `/admin/*` are rate-limited (via `middleware.js` edge middleware). All `/api/*` endpoints are unprotected against bulk operations (e.g. a user spamming `POST /api/friends/request`).
+PR #75 already added edge rate limiting for `/auth/google` and `/admin/*`, but the broader `/api/*` surface is still unprotected against bulk operations (e.g. a user spamming `POST /api/friends/request`).
 
 **Fix:** Add per-user rate limits in FastAPI middleware:
 ```python
@@ -86,7 +104,7 @@ app.add_middleware(
 
 #### 7. No Content Security Policy (MEDIUM)
 
-No CSP headers are set, meaning any injected script (e.g. from a malicious map tile CDN or a dependency) could access localStorage including JWTs.
+No CSP headers are set yet. PR #81 added `Permissions-Policy`, which is helpful, but it does not mitigate script injection the way a real CSP would.
 
 **Fix:** Add CSP via `vercel.json` headers:
 ```json
