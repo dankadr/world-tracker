@@ -17,6 +17,7 @@ import { isGreaterIsraelEnabled, toggleGreaterIsrael } from '../utils/easterEggs
 import { ADMIN_EMAIL } from '../utils/adminConfig';
 import AdminPanel from './AdminPanel';
 import SwipeableModal from './SwipeableModal';
+import CountryInfoPanel from './CountryInfoPanel';
 import SettingsPanel from './SettingsPanel';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -77,6 +78,7 @@ export default function WorldSidebar({
   const [showSettings, setShowSettings] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [greaterIsraelEnabled, setGreaterIsraelEnabled] = useState(() => isGreaterIsraelEnabled());
+  const [infoCountry, setInfoCountry] = useState(null); // { id, name } or null
   const [regionVersion, setRegionVersion] = useState(0);
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
@@ -293,6 +295,14 @@ export default function WorldSidebar({
                   <span className="canton-name">{c.name}</span>
                   <span className="world-country-continent">{c.continent}</span>
                 </label>
+                <button
+                  className="world-country-info-btn"
+                  onClick={() => setInfoCountry({ id: c.id, name: c.name })}
+                  aria-label={`Info about ${c.name}`}
+                  title={`Info about ${c.name}`}
+                >
+                  ℹ
+                </button>
               </li>
             ))}
           </ul>
@@ -382,6 +392,14 @@ export default function WorldSidebar({
                             />
                             <span className="canton-name">{c.name}</span>
                           </label>
+                          <button
+                            className="world-country-info-btn"
+                            onClick={() => setInfoCountry({ id: c.id, name: c.name })}
+                            aria-label={`Info about ${c.name}`}
+                            title={`Info about ${c.name}`}
+                          >
+                            ℹ
+                          </button>
                         </li>
                       ))}
                   </ul>
@@ -393,6 +411,20 @@ export default function WorldSidebar({
 
       </div>
 
+      {infoCountry && (
+        <CountryInfoPanel
+          countryId={infoCountry.id}
+          countryName={infoCountry.name}
+          isVisited={visited.has(infoCountry.id)}
+          onToggleVisited={() => onToggle(infoCountry.id)}
+          onClose={() => setInfoCountry(null)}
+          onExploreRegions={
+            countryList.some((c) => c.id === infoCountry.id)
+              ? () => { onExploreCountry?.(infoCountry.id); }
+              : undefined
+          }
+        />
+      )}
       {!isMobile && (
         <div className="sidebar-settings-footer">
           <button
@@ -416,7 +448,6 @@ export default function WorldSidebar({
           )}
         </div>
       )}
-
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
       {showUnesco && createPortal(
         <UnescoPanel onClose={() => setShowUnesco(false)} />,
