@@ -14,16 +14,20 @@ function BackChevron() {
  * Screen — iOS-style push screen wrapper.
  *
  * Props:
- *   title       string    — nav bar title
+ *   title       string    — nav bar title (compact nav bar)
+ *   largeTitle  string    — when set, renders a 34px large title above content
+ *                           that collapses into the nav bar on scroll
  *   onBack      () => void — called when back button or swipe-back triggers
  *   backLabel   string    — label next to back chevron (default "Back")
  *   children    ReactNode
  *   rightAction ReactNode  — optional right-side nav bar element
  */
-export default function Screen({ title, onBack, backLabel = 'Back', children, rightAction }) {
+export default function Screen({ title, largeTitle, onBack, backLabel = 'Back', children, rightAction }) {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [headerCompact, setHeaderCompact] = useState(false);
   const edgeRef = useRef(null);
+  const largeTitleRef = useRef(null);
   const swipeStartX = useRef(null);
   const swipeStartY = useRef(null);
 
@@ -33,6 +37,19 @@ export default function Screen({ title, onBack, backLabel = 'Back', children, ri
     const raf = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  // IntersectionObserver: fade compact title in when large title leaves viewport
+  useEffect(() => {
+    if (!largeTitle || !largeTitleRef.current) return;
+    if (typeof IntersectionObserver !== 'function') return;
+    const el = largeTitleRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeaderCompact(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [largeTitle]);
 
   // Left-edge swipe-back gesture
   useEffect(() => {
@@ -77,18 +94,21 @@ export default function Screen({ title, onBack, backLabel = 'Back', children, ri
 
   return (
     <div className={`screen${visible ? ' screen-visible' : ''}${exiting ? ' screen-exiting' : ''}`}>
-      <header className="screen-header">
+      <header className={`screen-header${largeTitle ? ' screen-header--large-title' : ''}${headerCompact ? ' header-compact' : ''}`}>
         {onBack && (
           <button className="screen-back-btn" onClick={handleBack} aria-label={`Back to ${backLabel}`}>
             <BackChevron />
             {backLabel}
           </button>
         )}
-        <h1 className="screen-title">{title}</h1>
+        <h1 className="screen-title" aria-hidden={largeTitle && !headerCompact ? 'true' : undefined}>{title}</h1>
         {rightAction && <div className="screen-right-action">{rightAction}</div>}
       </header>
 
       <div className="screen-content">
+        {largeTitle && (
+          <h2 className="screen-large-title" ref={largeTitleRef}>{largeTitle}</h2>
+        )}
         {children}
       </div>
 
