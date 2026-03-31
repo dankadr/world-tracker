@@ -10,7 +10,7 @@ export default function StatsScreen({ onBack }) {
   }, [push]);
 
   return (
-    <Screen title="Travel Stats" onBack={onBack}>
+    <Screen title="Travel Stats" largeTitle="Travel Stats" onBack={onBack}>
       <StatsModal embedded onOpenYearInReview={handleOpenYearInReview} />
     </Screen>
   );

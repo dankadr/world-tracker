@@ -1,15 +1,33 @@
 # ToDo: Code Quality & Incremental Refactor
 
 **Date:** 2026-03-16
-**Status:** Planned
+**Status:** Partially complete — some cleanup items already landed, but the larger refactor backlog remains
 **Priority:** Medium (ongoing)
 **Scope:** Fix identified code quality issues: App.jsx god component, duplicate hook files, hardcoded backend config, missing error boundaries, and test coverage gaps
 
 ---
 
+
+## PR Review Snapshot (2026-03-19)
+
+Recent PRs already moved part of this plan forward:
+
+- **PR #76** introduced `ErrorBoundary.jsx` and wrapped the app root with it, partially closing the error-boundary gap.
+- **PR #78** expanded runtime wiring for mobile screens, haptics, and component polish, which reduced some UI debt but also confirms `App.jsx` is still the main coordination hub.
+- **PR #70** and **PR #77** materially improved frontend regression coverage around `WorldMap`, `GamesPanel`, share URLs, and mini-game flows.
+- **PR #92** exposed the long-term weakness of hardcoded backend tracker allowlists by requiring another manual `VALID_COUNTRIES` update.
+
+So this ToDo should now focus on the remaining structural cleanup rather than pretending nothing has shipped.
+
 ## Overview
 
 The codebase is in good shape overall but has accumulated several quality issues that will compound as new features are added. This is a collection of small, targeted improvements that don't require a big-bang rewrite — each can be done independently.
+
+## Reality Check (2026-03-25)
+
+- The root app already has an `ErrorBoundary`, a meaningful test suite, logger utilities, and some extracted hooks/contexts
+- The duplicate `useXp.js` wrapper still exists, `App.jsx` is still very large, and lazy loading is still limited
+- This ToDo should now focus on reducing `App.jsx` complexity and aligning duplicated/shared config, not on redoing already-landed basics
 
 ## Identified Issues
 
@@ -155,7 +173,7 @@ Fix in this refactor: replace with `secrets` module. Small fix, big security win
 ### Phase 1 — Quick wins (< 1 hour each)
 - [ ] Delete `useXp.js` after confirming `useXp.jsx` is canonical
 - [ ] Fix `VALID_COUNTRIES` — use regex validation instead of hardcoded set
-- [ ] Add `MapErrorBoundary` around WorldMap and SwissMap
+- [ ] Add `MapErrorBoundary` around WorldMap and SwissMap (app-level `ErrorBoundary` already exists; this is now about map-local recovery)
 - [ ] Replace `random` with `secrets` in `models.py`
 
 ### Phase 2 — Lazy loading
@@ -176,7 +194,7 @@ Fix in this refactor: replace with `secrets` module. Small fix, big security win
 - [ ] Clean up `App.css` — keep only truly global styles
 
 ### Phase 5 — Test coverage
-- [ ] Add tests for `useWishlist`, `useVisitedCountries`, `useFriendsData`
+- [ ] Add tests for `useWishlist`, `useVisitedCountries`, `useFriendsData` (coverage improved recently, but these hooks are still thinly tested)
 - [ ] Add component tests for `BucketListPanel`, `Leaderboard`, `Onboarding`
 - [ ] Set up vitest coverage thresholds in `vitest.config.js`
 - [ ] CI step: fail build if coverage drops below threshold
