@@ -12,6 +12,9 @@ async function loadCountryInfo() {
     cache = mod.default;
     pending = null;
     return cache;
+  }).catch((err) => {
+    pending = null;
+    throw err;
   });
   return pending;
 }
