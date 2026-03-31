@@ -15,6 +15,12 @@ function resolveUrl(url) {
   return url?.replace('{stadiaKey}', STADIA_KEY) ?? url;
 }
 
+export function computeZoomFactor(zoom) {
+  if (zoom <= 6) return 1;
+  if (zoom >= 10) return 0;
+  return (10 - zoom) / 4;
+}
+
 const VISITED_COLOR = '#c9a84c';
 const VISITED_HOVER = '#b8943a';
 
@@ -26,6 +32,15 @@ const TRACKED_COUNTRY_IDS = {
   jp: 'jp',
   au: 'au',
   ph: 'ph',
+  br: 'br',
+  fr: 'fr',
+  de: 'de',
+  it: 'it',
+  es: 'es',
+  mx: 'mx',
+  gb: 'gb',
+  in: 'in',
+  nz: 'nz',
 };
 
 const UNVISITED_STYLE = {
@@ -65,6 +80,16 @@ const FRIEND_LABEL_LAYERS = {
   dark: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
 };
 
+function syncFeatureTestAttributes(layer, { id, name, isVisited, isWishlisted, isGameTarget }) {
+  const el = layer.getElement?.();
+  if (!el) return;
+  el.setAttribute('data-country-id', id);
+  el.setAttribute('data-country-name', name);
+  el.setAttribute('data-visited', String(Boolean(isVisited)));
+  el.setAttribute('data-wishlisted', String(Boolean(isWishlisted)));
+  el.setAttribute('data-game-target', String(Boolean(isGameTarget)));
+}
+
 function GameFocuser({ targetId, geoJsonRef }) {
   const map = useMap();
   useEffect(() => {
@@ -89,6 +114,31 @@ function MapController({ center, zoom }) {
       initialized.current = true;
     }
   }, [map, center, zoom]);
+  return null;
+}
+
+function OverlayFader({ gameModeRef, gameMode }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const pane = map.getPane('countryPane');
+    if (!pane) return;
+
+    function onZoomEnd() {
+      if (gameModeRef.current) {
+        pane.style.opacity = 1;
+        return;
+      }
+      pane.style.opacity = computeZoomFactor(map.getZoom());
+    }
+
+    // Apply at mount time AND whenever gameMode changes
+    onZoomEnd();
+
+    map.on('zoomend', onZoomEnd);
+    return () => { map.off('zoomend', onZoomEnd); };
+  }, [map, gameModeRef, gameMode]); // gameMode triggers re-run when game mode activates/deactivates
+
   return null;
 }
 
@@ -240,7 +290,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   const wishlistRef = useRef(wishlist);
   useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
   const { dark } = useTheme();
-  const [activeLayer, setActiveLayer] = useState(LAYERS[1]);
+  const [tileUrl, setTileUrl] = useState(
+    dark ? LAYERS[1].dark : LAYERS[1].light
+  );
   const [wishlistActive, setWishlistActive] = useState(true);
   const wishlistActiveRef = useRef(wishlistActive);
   useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);
@@ -258,6 +310,14 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     return () => window.removeEventListener('easter-egg-toggle', handleEasterEggToggle);
   }, []);
 
+  useEffect(() => {
+    setTileUrl((prev) => {
+      const layer = LAYERS.find((l) => l.light === prev || l.dark === prev);
+      if (layer) return resolveUrl(dark ? layer.dark : layer.light);
+      return resolveUrl(dark ? LAYERS[0].dark : LAYERS[0].light);
+    });
+  }, [dark]);
+
   // Apply easter egg modifications to world data
   const modifiedWorldData = useMemo(
     () => applyEasterEggModifications(worldData, greaterIsraelEnabled),
@@ -273,23 +333,24 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     layer.eachLayer((l) => {
       const id = l.feature?.properties?.id;
       if (!id) return;
-      const el = l.getElement?.();
-      if (el) {
-        el.dataset.countryId = id;
-        el.dataset.gameTarget = id === gameMode.targetId ? 'true' : 'false';
-        el.dataset.visited = visitedRef.current.has(id) ? 'true' : 'false';
-      }
       if (id === gameMode.correctId) {
         l.setStyle({ fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 });
       } else if (id === gameMode.incorrectId) {
         l.setStyle({ fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 });
-      } else if (id === gameMode.targetId) {
+      } else if (id === gameMode.targetId && gameMode.revealTarget) {
         l.setStyle({ fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 });
         l.getElement()?.classList.add('map-target-pulse');
       } else {
         l.setStyle({ fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 });
         l.getElement()?.classList.remove('map-target-pulse');
       }
+      syncFeatureTestAttributes(l, {
+        id,
+        name: l.feature?.properties?.name || id,
+        isVisited: visitedRef.current.has(id),
+        isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+        isGameTarget: id === gameMode.targetId,
+      });
     });
   }, [gameMode]);
 
@@ -305,12 +366,6 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       const isWishlisted = wishlistActive && wishlist?.has(id);
       const isTracked = id in TRACKED_COUNTRY_IDS;
       const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
-      const el = l.getElement?.();
-      if (el) {
-        el.dataset.countryId = id;
-        el.dataset.visited = isVisited ? 'true' : 'false';
-        el.dataset.gameTarget = 'false';
-      }
       let style;
       if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
       else if (isVisited) style = VISITED_STYLE;
@@ -321,6 +376,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         style = { ...style, color: 'transparent', weight: 0 };
       }
       l.setStyle(style);
+      syncFeatureTestAttributes(l, {
+        id,
+        name: l.feature?.properties?.name || id,
+        isVisited,
+        isWishlisted,
+        isGameTarget: false,
+      });
     });
   }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]);
 
@@ -332,7 +394,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       if (gameMode) {
         if (id === gameMode.correctId)   return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
         if (id === gameMode.incorrectId) return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.targetId)    return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
+        if (id === gameMode.targetId && gameMode.revealTarget) return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
         return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
       }
 
@@ -376,12 +438,14 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       layer.on({
         add: (e) => {
           const el = e.target.getElement?.();
-          if (el) {
-            el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
-            el.dataset.countryId = id;
-            el.dataset.visited = visitedRef.current.has(id) ? 'true' : 'false';
-            el.dataset.gameTarget = gameModeRef.current?.targetId === id ? 'true' : 'false';
-          }
+          if (el) el.style.webkitTapHighlightColor = 'rgba(46,204,113,0.15)';
+          syncFeatureTestAttributes(e.target, {
+            id,
+            name,
+            isVisited: visitedRef.current.has(id),
+            isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+            isGameTarget: gameModeRef.current?.targetId === id,
+          });
         },
         mouseover: (e) => {
           if (gameModeRef.current) return;
@@ -424,6 +488,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           const finalStyle = willBeVisited
             ? (isTracked ? TRACKED_VISITED_STYLE : VISITED_STYLE)
             : (isTracked ? TRACKED_STYLE : UNVISITED_STYLE);
+          syncFeatureTestAttributes(target, {
+            id,
+            name,
+            isVisited: willBeVisited,
+            isWishlisted: wishlistActiveRef.current && wishlistRef.current?.has(id),
+            isGameTarget: false,
+          });
           target.setStyle({ fillOpacity: 0.85, weight: 2, color: 'rgba(255,255,255,0.7)' });
           setTimeout(() => target.setStyle({ fillOpacity: 0.7, weight: 1.5 }), 120);
           setTimeout(() => target.setStyle({ fillOpacity: 0.6, weight: 1 }), 250);
@@ -445,82 +516,83 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   }, [onToggle]);
 
   return (
-    <MapContainer
-      center={[20, 0]}
-      zoom={2}
-      className="swiss-map world-map"
-      data-testid="world-map-container"
-      zoomControl={true}
-      scrollWheelZoom={true}
-      minZoom={2}
-      maxZoom={18}
-      worldCopyJump={true}
-      maxBounds={[[-90, -Infinity], [90, Infinity]]}
-      maxBoundsViscosity={0.7}
-    >
-      <MapController center={[20, 0]} zoom={2} />
-      {gameMode?.targetId && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
-      <TileLayer
-        key={gameMode ? 'game-clean' : activeLayer.id + (dark ? '-dark' : '-light')}
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        url={resolveUrl(gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : (dark ? activeLayer.dark : activeLayer.light))}
-      />
-      {!gameMode && activeLayer?.overlayUrl && (
-        <TileLayer url={activeLayer.overlayUrl} pane="shadowPane" />
-      )}
-      {friendsActive && !comparisonFriend && (
-        <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
-          <TileLayer
-            key={`friend-labels-${dark ? 'dark' : 'light'}`}
-            url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
-            opacity={0.95}
-            noWrap={false}
+    <div data-testid="world-map-container" style={{ height: '100%' }}>
+      <MapContainer
+        center={[20, 0]}
+        zoom={2}
+        className="swiss-map world-map"
+        zoomControl={true}
+        scrollWheelZoom={true}
+        minZoom={2}
+        maxZoom={18}
+        worldCopyJump={true}
+        maxBounds={[[-90, -Infinity], [90, Infinity]]}
+        maxBoundsViscosity={0.7}
+      >
+        <MapController center={[20, 0]} zoom={2} />
+        <OverlayFader gameModeRef={gameModeRef} gameMode={gameMode} />
+        {gameMode?.targetId && gameMode?.revealTarget && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
+        <TileLayer
+          key={gameMode ? 'game-clean' : tileUrl}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+          url={resolveUrl(gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl)}
+        />
+        {friendsActive && !comparisonFriend && (
+          <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
+            <TileLayer
+              key={`friend-labels-${dark ? 'dark' : 'light'}`}
+              url={dark ? FRIEND_LABEL_LAYERS.dark : FRIEND_LABEL_LAYERS.light}
+              opacity={0.95}
+              noWrap={false}
+            />
+          </Pane>
+        )}
+        <Pane name="countryPane" style={{ zIndex: 400 }}>
+          <GeoJSON
+            key={`world-geojson-${greaterIsraelEnabled}`}
+            ref={geoJsonRef}
+            data={modifiedWorldData}
+            style={getStyle}
+            onEachFeature={onEachFeature}
           />
         </Pane>
-      )}
-      <GeoJSON
-        key={`world-geojson-${greaterIsraelEnabled}`}
-        ref={geoJsonRef}
-        data={modifiedWorldData}
-        style={getStyle}
-        onEachFeature={onEachFeature}
-      />
-      {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
-        <FriendsWorldOverlay
-          worldData={modifiedWorldData}
-          friendOverlayData={friendOverlayData}
-        />
-      )}
-      {comparisonFriend && (
-        <ComparisonWorldOverlay
-          worldData={modifiedWorldData}
-          visited={visited}
-          friendVisited={comparisonFriend.visited}
-          friendName={comparisonFriend.name}
-        />
-      )}
-      {!gameMode && <MapLayerControl
-        onLayerChange={setActiveLayer}
-        onFriendsToggle={onFriendsToggle}
-        friendsActive={friendsActive}
-        onWishlistToggle={setWishlistActive}
-        wishlistActive={wishlistActive}
-        onUnescoToggle={setUnescoActive}
-        unescoActive={unescoActive}
-      />}
-      {unescoActive && <UnescoLayer />}
-      {!gameMode && <MapSearch geoJsonRef={geoJsonRef} />}
-      {!gameMode && visited.size > 0 && <FitVisited visited={visited} geoJsonRef={geoJsonRef} />}
-      {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
-        <FriendOverlayLegend friendOverlayData={friendOverlayData} />
-      )}
-      {comparisonFriend && (
-        <ComparisonLegend
-          friendName={comparisonFriend.name}
-          friendPicture={comparisonFriend.picture}
-          onClose={onExitComparison}
-        />
-      )}
-    </MapContainer>
+        {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+          <FriendsWorldOverlay
+            worldData={modifiedWorldData}
+            friendOverlayData={friendOverlayData}
+          />
+        )}
+        {comparisonFriend && (
+          <ComparisonWorldOverlay
+            worldData={modifiedWorldData}
+            visited={visited}
+            friendVisited={comparisonFriend.visited}
+            friendName={comparisonFriend.name}
+          />
+        )}
+        {!gameMode && <MapLayerControl
+          onLayerChange={setTileUrl}
+          onFriendsToggle={onFriendsToggle}
+          friendsActive={friendsActive}
+          onWishlistToggle={setWishlistActive}
+          wishlistActive={wishlistActive}
+          onUnescoToggle={setUnescoActive}
+          unescoActive={unescoActive}
+        />}
+        {unescoActive && <UnescoLayer />}
+        {!gameMode && <MapSearch geoJsonRef={geoJsonRef} />}
+        {!gameMode && visited.size > 0 && <FitVisited visited={visited} geoJsonRef={geoJsonRef} />}
+        {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
+          <FriendOverlayLegend friendOverlayData={friendOverlayData} />
+        )}
+        {comparisonFriend && (
+          <ComparisonLegend
+            friendName={comparisonFriend.name}
+            friendPicture={comparisonFriend.picture}
+            onClose={onExitComparison}
+          />
+        )}
+      </MapContainer>
+    </div>
   );
 }
