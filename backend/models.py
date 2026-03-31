@@ -142,6 +142,23 @@ class XpLog(Base):
     __table_args__ = {'extend_existing': True}
 
 
+class CustomMarker(Base):
+    __tablename__ = "custom_markers"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    lat = Column(String, nullable=False)   # stored as string to avoid float precision issues
+    lng = Column(String, nullable=False)
+    label = Column(String, nullable=True)  # encrypted
+    icon = Column(String(20), nullable=False, default='📍')
+    color = Column(String(7), nullable=False, default='#c9a84c')
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", backref="custom_markers")
+
+    __table_args__ = {'extend_existing': True}
+
+
 def generate_challenge_id():
     """Generate a random 12-char alphanumeric challenge ID."""
     chars = string.ascii_lowercase + string.digits

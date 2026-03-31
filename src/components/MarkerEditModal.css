@@ -1,0 +1,175 @@
+.marker-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.marker-modal {
+  background: var(--card-bg, #fff);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0));
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+}
+
+.marker-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.marker-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text, #1a1a1a);
+}
+
+.marker-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-secondary, #666);
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.marker-modal-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.marker-preview-dot {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.marker-modal-field {
+  margin-bottom: 16px;
+}
+
+.marker-modal-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #666);
+  margin-bottom: 8px;
+}
+
+.marker-modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.15));
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg, #f5f5f5);
+  color: var(--text, #1a1a1a);
+  box-sizing: border-box;
+  outline: none;
+}
+
+.marker-modal-input:focus {
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
+}
+
+.marker-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.marker-emoji-btn {
+  background: var(--input-bg, #f5f5f5);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-size: 20px;
+  padding: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-emoji-btn.selected {
+  border-color: #c9a84c;
+  background: rgba(201, 168, 76, 0.15);
+}
+
+.marker-color-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.marker-color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.marker-color-btn.selected {
+  border-color: var(--text, #1a1a1a);
+  transform: scale(1.15);
+}
+
+.marker-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.marker-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.marker-btn:active {
+  opacity: 0.7;
+}
+
+.marker-btn-save {
+  background: #c9a84c;
+  color: #fff;
+}
+
+.marker-btn-cancel {
+  background: var(--input-bg, #f0f0f0);
+  color: var(--text, #1a1a1a);
+}
+
+.marker-btn-delete {
+  background: #e74c3c;
+  color: #fff;
+  flex: 0 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}

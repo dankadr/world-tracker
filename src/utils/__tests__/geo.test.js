@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findRegion } from '../geo';
+import { findRegion, greatCircleDistance } from '../geo';
 
 // Simple square: corners at (0,0), (10,0), (10,10), (0,10) in [lng, lat]
 const squarePolygon = {
@@ -107,5 +107,37 @@ describe('findRegion — multiple non-overlapping regions', () => {
 describe('findRegion — empty collection', () => {
   it('returns null for empty feature collection', () => {
     expect(findRegion(5, 5, makeCollection([]))).toBeNull();
+  });
+});
+
+describe('greatCircleDistance', () => {
+  it('returns 0 for identical points', () => {
+    expect(greatCircleDistance(48.8566, 2.3522, 48.8566, 2.3522)).toBe(0);
+  });
+
+  it('calculates approximate distance between Paris and London (~340 km)', () => {
+    // Paris: 48.8566, 2.3522  London: 51.5074, -0.1278
+    const dist = greatCircleDistance(48.8566, 2.3522, 51.5074, -0.1278);
+    expect(dist).toBeGreaterThan(330);
+    expect(dist).toBeLessThan(360);
+  });
+
+  it('calculates approximate distance between NYC and LA (~3940 km)', () => {
+    // NYC: 40.7128, -74.0060  LA: 34.0522, -118.2437
+    const dist = greatCircleDistance(40.7128, -74.0060, 34.0522, -118.2437);
+    expect(dist).toBeGreaterThan(3900);
+    expect(dist).toBeLessThan(4000);
+  });
+
+  it('is symmetric (a→b equals b→a)', () => {
+    const d1 = greatCircleDistance(48.8566, 2.3522, 51.5074, -0.1278);
+    const d2 = greatCircleDistance(51.5074, -0.1278, 48.8566, 2.3522);
+    expect(Math.abs(d1 - d2)).toBeLessThan(0.001);
+  });
+
+  it('handles antipodal points (approximately half the circumference, ~20015 km)', () => {
+    const dist = greatCircleDistance(0, 0, 0, 180);
+    expect(dist).toBeGreaterThan(20000);
+    expect(dist).toBeLessThan(20030);
   });
 });

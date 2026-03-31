@@ -51,6 +51,8 @@ import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { haptics } from './utils/haptics';
+import useCustomMarkers from './hooks/useCustomMarkers';
+import useRouteDrawing from './hooks/useRouteDrawing';
 import useShareMode from './hooks/useShareMode';
 import {
   createAchievementBaseline,
@@ -182,6 +184,39 @@ export default function App() {
     isInWishlist,
   } = useWishlist();
   const [showBucketList, setShowBucketList] = useState(false);
+
+  // Advanced map features
+  const [depthMode, setDepthMode] = useState(false);
+  const { markers, addMarker, updateMarker, deleteMarker } = useCustomMarkers();
+  const [markersVisible, setMarkersVisible] = useState(true);
+  const { routeMode, routePoints, toggleRouteMode, addPoint: addRoutePoint, clearRoute, totalDistanceKm } = useRouteDrawing();
+
+  // Collect all visited region keys across all trackers for exploration depth
+  const allVisitedKeys = useMemo(() => {
+    const keys = [];
+    // Scan localStorage for all tracker visited data
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        // Keys like: swiss-tracker-visited-ch, swiss-tracker-uN-visited-ch
+        const match = key.match(/swiss-tracker(?:-u\d+)?-visited-(\w+)/);
+        if (match) {
+          const trackerId = match[1];
+          try {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+              const regions = JSON.parse(raw);
+              if (Array.isArray(regions)) {
+                regions.forEach((r) => keys.push(`${trackerId}:${r}`));
+              }
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    } catch { /* ignore */ }
+    return keys;
+  }, [depthMode]); // recompute when depth mode is toggled (lazy — no live update needed)
   const [pendingBucketVisit, setPendingBucketVisit] = useState(null);
   const worldWishlist = useMemo(
     () => new Set(bucketListItems.filter((i) => i.tracker_id === 'world').map((i) => i.region_id)),
@@ -683,6 +718,21 @@ export default function App() {
               onExitComparison={handleExitComparison}
               wishlist={worldWishlist}
               comparisonMode={!!comparisonFriend}
+              depthMode={depthMode}
+              allVisitedKeys={allVisitedKeys}
+              onDepthToggle={setDepthMode}
+              routeMode={routeMode}
+              addRoutePoint={addRoutePoint}
+              markers={markers}
+              markersVisible={markersVisible}
+              onMarkersToggle={setMarkersVisible}
+              onAddMarker={addMarker}
+              onUpdateMarker={updateMarker}
+              onDeleteMarker={deleteMarker}
+              routePoints={routePoints}
+              totalDistanceKm={totalDistanceKm}
+              onClearRoute={clearRoute}
+              onRouteToggle={toggleRouteMode}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#d4b866' }}>

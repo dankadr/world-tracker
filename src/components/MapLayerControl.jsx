@@ -13,6 +13,12 @@ export default function MapLayerControl({
   wishlistActive,
   onUnescoToggle,
   unescoActive,
+  onDepthToggle,
+  depthActive,
+  onMarkersToggle,
+  markersActive,
+  onRouteToggle,
+  routeActive,
 }) {
   const [active, setActive] = useState('labels');
   const [open, setOpen] = useState(false);
@@ -89,6 +95,33 @@ export default function MapLayerControl({
               </button>
             );
           })}
+          {onDepthToggle && (
+            <button
+              className={`layer-option layer-option-overlay ${depthActive ? 'active' : ''}`}
+              onClick={() => onDepthToggle(!depthActive)}
+            >
+              <span className="layer-option-icon">🌡️</span>
+              Depth view
+            </button>
+          )}
+          {onMarkersToggle && (
+            <button
+              className={`layer-option layer-option-overlay ${markersActive ? 'active' : ''}`}
+              onClick={() => onMarkersToggle(!markersActive)}
+            >
+              <span className="layer-option-icon">📍</span>
+              My Markers
+            </button>
+          )}
+          {onRouteToggle && (
+            <button
+              className={`layer-option layer-option-overlay ${routeActive ? 'active' : ''}`}
+              onClick={() => onRouteToggle(!routeActive)}
+            >
+              <span className="layer-option-icon">✈️</span>
+              Route Planner
+            </button>
+          )}
         </div>
       )}
     </div>

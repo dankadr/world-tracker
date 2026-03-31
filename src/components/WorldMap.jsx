@@ -6,8 +6,12 @@ import MapLayerControl, { LAYERS } from './MapLayerControl';
 import FriendOverlayLegend from './FriendOverlayLegend';
 import ComparisonLegend from './ComparisonLegend';
 import UnescoLayer from './UnescoLayer';
+import ExplorationDepthLegend from './ExplorationDepthLegend';
+import CustomMarkersLayer from './CustomMarkersLayer';
+import RouteOverlay from './RouteOverlay';
 import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
+import { getExplorationDepth, depthToColor } from '../utils/explorationDepth';
 
 export function computeZoomFactor(zoom) {
   if (zoom <= 6) return 1;
@@ -254,13 +258,17 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
   );
 }
 
-export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode }) {
+export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode, depthMode, allVisitedKeys, onDepthToggle, routeMode, addRoutePoint, markers, markersVisible, onMarkersToggle, onAddMarker, onUpdateMarker, onDeleteMarker, routePoints, totalDistanceKm, onClearRoute, onRouteToggle }) {
   const geoJsonRef = useRef(null);
   // Use refs so event handlers always read current values even with stale closures
   const gameModeRef = useRef(gameMode);
   gameModeRef.current = gameMode; // sync update — no async window
   const comparisonModeRef = useRef(comparisonMode);
   useEffect(() => { comparisonModeRef.current = comparisonMode; }, [comparisonMode]);
+  const routeModeRef = useRef(routeMode);
+  useEffect(() => { routeModeRef.current = routeMode; }, [routeMode]);
+  const addRoutePointRef = useRef(addRoutePoint);
+  useEffect(() => { addRoutePointRef.current = addRoutePoint; }, [addRoutePoint]);
   const visitedRef = useRef(visited);
   useEffect(() => { visitedRef.current = visited; }, [visited]);
   const wishlistRef = useRef(wishlist);
@@ -338,20 +346,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     layer.eachLayer((l) => {
       const id = l.feature?.properties?.id;
       if (!id) return;
+      l.setStyle(getStyle(l.feature));
       const isVisited = visited.has(id);
       const isWishlisted = wishlistActive && wishlist?.has(id);
-      const isTracked = id in TRACKED_COUNTRY_IDS;
-      const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
-      let style;
-      if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
-      else if (isVisited) style = VISITED_STYLE;
-      else if (isWishlisted) style = WISHLIST_STYLE;
-      else if (isTracked) style = TRACKED_STYLE;
-      else style = UNVISITED_STYLE;
-      if (isGreaterIsrael) {
-        style = { ...style, color: 'transparent', weight: 0 };
-      }
-      l.setStyle(style);
       syncFeatureTestAttributes(l, {
         id,
         name: l.feature?.properties?.name || id,
@@ -360,7 +357,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         isGameTarget: false,
       });
     });
-  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]);
+  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, depthMode, allVisitedKeys, getStyle]);
 
   const getStyle = useCallback(
     (feature) => {
@@ -372,6 +369,20 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         if (id === gameMode.incorrectId)                            return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
         if (id === gameMode.targetId && gameMode.revealTarget)      return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
         return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
+      }
+
+      // Depth mode: color by exploration depth
+      if (depthMode) {
+        const depth = getExplorationDepth(id, allVisitedKeys || []);
+        const fillColor = depthToColor(depth, dark);
+        return {
+          fillColor,
+          fillOpacity: 0.85,
+          color: 'rgba(0,0,0,0.1)',
+          weight: 0.5,
+          lineJoin: 'round',
+          lineCap: 'round',
+        };
       }
 
       const isVisited = visited.has(id);
@@ -393,7 +404,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
       return style;
     },
-    [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]
+    [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, depthMode, allVisitedKeys, dark]
   );
 
   const onEachFeature = useCallback(
@@ -458,6 +469,15 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
             return;
           }
           if (comparisonModeRef.current) return;
+          // Route mode: add centroid instead of toggling visited
+          if (routeModeRef.current && addRoutePointRef.current) {
+            try {
+              const bounds = e.target.getBounds();
+              const center = bounds.getCenter();
+              addRoutePointRef.current({ lat: center.lat, lng: center.lng, label: feature.properties.name || id });
+            } catch (_) {}
+            return;
+          }
           onToggle(id);
           const target = e.target;
           const willBeVisited = !visitedRef.current.has(id);
@@ -554,8 +574,29 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           wishlistActive={wishlistActive}
           onUnescoToggle={setUnescoActive}
           unescoActive={unescoActive}
+          onDepthToggle={onDepthToggle}
+          depthActive={depthMode}
+          onMarkersToggle={onMarkersToggle}
+          markersActive={markersVisible}
+          onRouteToggle={onRouteToggle}
+          routeActive={routeMode}
         />}
         {unescoActive && <UnescoLayer />}
+        {depthMode && <ExplorationDepthLegend darkMode={dark} />}
+        <CustomMarkersLayer
+          markers={markers}
+          visible={markersVisible}
+          onAdd={onAddMarker}
+          onUpdate={onUpdateMarker}
+          onDelete={onDeleteMarker}
+        />
+        {routeMode && (
+          <RouteOverlay
+            routePoints={routePoints}
+            totalDistanceKm={totalDistanceKm}
+            onClear={onClearRoute}
+          />
+        )}
         {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
           <FriendOverlayLegend friendOverlayData={friendOverlayData} />
         )}
