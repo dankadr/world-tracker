@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import useReducedMotion from '../hooks/useReducedMotion';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '../context/NavigationContext';
 import AvatarCanvas from './AvatarCanvas';
@@ -22,6 +23,18 @@ export default function ProfileScreen({ onReset, onResetAll }) {
   const { user } = useAuth();
   const { push } = useNavigation();
   const userId = user?.id ?? null;
+  const profileBodyRef = useRef(null);
+  const reducedMotion = useReducedMotion();
+
+  // Scroll-to-top when the already-active Profile tab is re-tapped
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail !== 'profile') return;
+      profileBodyRef.current?.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    };
+    window.addEventListener('tab-reselect', handler);
+    return () => window.removeEventListener('tab-reselect', handler);
+  }, [reducedMotion]);
 
   // All-time stats (memoized — recomputed only when userId changes)
   const allTimeStats = useMemo(() => computeAllTimeStats(userId), [userId]);
@@ -89,7 +102,7 @@ export default function ProfileScreen({ onReset, onResetAll }) {
         </div>
       </div>
 
-      <div className="profile-tab-body">
+      <div className="profile-tab-body" ref={profileBodyRef}>
         {tab === 'profile' && (
           <ProfileTab
             config={config}

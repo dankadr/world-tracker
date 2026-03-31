@@ -1,4 +1,6 @@
 // src/components/SwipeableModal.jsx
+import { useEffect } from 'react';
+import { haptics } from '../utils/haptics';
 import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
 
 /**
@@ -12,6 +14,10 @@ import useSwipeToDismiss from '../hooks/useSwipeToDismiss';
  */
 export default function SwipeableModal({ onClose, children, maxWidth = 420, height = '80vh', className = '' }) {
   const { handleRef, dragHandlers } = useSwipeToDismiss(onClose);
+
+  useEffect(() => {
+    haptics.action();
+  }, []);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
