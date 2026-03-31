@@ -91,6 +91,10 @@ function TabBarButton({ id, label, Icon, active, socialBadge, onTabChange }) {
       className={`tab-bar-item ${touchClassName}${active ? ' active' : ''}`}
       onClick={() => {
         haptics.selection();
+        if (active) {
+          // Re-tapping the active tab: scroll to top
+          window.dispatchEvent(new CustomEvent('tab-reselect', { detail: id }));
+        }
         onTabChange(id);
       }}
       {...touchHandlers}

@@ -1,7 +1,7 @@
 # ToDo: iOS App Store — Publish as Native iOS App
 
 **Date:** 2026-02-24
-**Status:** Not Started
+**Status:** Planned — mobile UX groundwork is shipped, but no Capacitor/iOS project exists yet
 **Priority:** Medium
 **Scope:** Wrap the web app in a native iOS shell and publish to the Apple App Store
 
@@ -10,6 +10,12 @@
 ## Overview
 
 Package the existing React web app as an iOS app using Capacitor (Ionic's native bridge). This avoids a full rewrite while providing native app store presence, home screen icon, push notifications, and native APIs (haptics, status bar, splash screen). The app already uses Leaflet for maps (runs in WebView), glassmorphism CSS (works in Safari WebView), and localStorage (persisted in Capacitor).
+
+## Reality Check (2026-03-25)
+
+- The app already has strong mobile-specific UI work: tab bar navigation, push-style screens, touch feedback, pull-to-refresh, and safe-area handling
+- PWA/install support is present, which reduces the urgency of an app-store wrapper
+- There is no `capacitor.config.*`, no `ios/` project, and no native plugin integration in the repo
 
 ## Approach Options
 
