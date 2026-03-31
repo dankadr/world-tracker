@@ -1,3 +1,24 @@
+/* ======== Skip Navigation Link (a11y) ======== */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--bg, #fff);
+  color: var(--text, #1a1a1a);
+  border: 2px solid var(--accent, #c9a84c);
+  border-radius: 0 0 4px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+  outline: none;
+}
+
 /* ======== Liquid Glass Design System ======== */
 :root {
   --glass-bg: rgba(255, 248, 220, 0.28);

@@ -538,6 +538,7 @@ export default function App() {
   return (
     <ActionSheetProvider>
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
@@ -553,7 +554,7 @@ export default function App() {
       )}
 
       {isDataLoading ? (
-        <main className="map-container">
+        <main id="main-content" className="map-container">
           <MapSkeleton />
         </main>
       ) : isWorldView ? (
@@ -622,6 +623,7 @@ export default function App() {
             />
           )}
           <main
+            id="main-content"
             className="map-container"
             onTouchStart={handleLongPressStart}
             onTouchMove={handleLongPressMove}
@@ -784,7 +786,7 @@ export default function App() {
               }}
             />
           )}
-          <main className="map-container">
+          <main id="main-content" className="map-container">
             {!isMobile && (
               <button
                 className="sidebar-toggle"
