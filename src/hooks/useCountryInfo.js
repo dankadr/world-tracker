@@ -28,26 +28,43 @@ export default function useCountryInfo(countryId) {
   const lastId = useRef(null);
 
   useEffect(() => {
+    let aborted = false;
+
     if (!countryId) {
       setInfo(null);
+      setLoading(false);
       return;
     }
 
     // If the JSON is already cached, resolve synchronously to avoid a render cycle
     if (cache) {
       setInfo(cache[countryId] ?? null);
+      setLoading(false);
       return;
     }
 
     lastId.current = countryId;
     setLoading(true);
 
-    loadCountryInfo().then((data) => {
-      // Guard against stale effect (country changed while loading)
-      if (lastId.current !== countryId) return;
-      setInfo(data[countryId] ?? null);
-      setLoading(false);
-    });
+    loadCountryInfo()
+      .then((data) => {
+        if (aborted) return;
+        // Guard against stale effect (country changed while loading)
+        if (lastId.current !== countryId) return;
+        setInfo(data[countryId] ?? null);
+      })
+      .catch(() => {
+        if (aborted) return;
+        setInfo(null);
+      })
+      .finally(() => {
+        if (aborted) return;
+        setLoading(false);
+      });
+
+    return () => {
+      aborted = true;
+    };
   }, [countryId]);
 
   return { info, loading };
