@@ -22,8 +22,9 @@ from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
-from pydantic import BaseModel
-from sqlalchemy import delete, func, select, text
+from typing import Annotated
+from pydantic import BaseModel, Field
+from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
@@ -266,7 +267,7 @@ class BatchAction(BaseModel):
 
 
 class BatchRequest(BaseModel):
-    actions: list[BatchAction]
+    actions: Annotated[list[BatchAction], Field(max_length=50)]
 
 
 class ChallengeCreate(BaseModel):
@@ -686,6 +687,53 @@ async def batch_actions(
     """Execute multiple actions in a single request (single DB transaction)."""
     uid = user.id
     results = []
+
+    # ── Phase 1: collect keys needed for bulk pre-fetch ──
+    region_country_ids: set[str] = set()
+    has_world_toggle = False
+    wishlist_keys: list[tuple[str, str]] = []
+
+    for item in body.actions:
+        a = item.action
+        p = item.payload
+        if a == "region_toggle":
+            region_country_ids.add(p.get("country_id", ""))
+        elif a == "world_toggle":
+            has_world_toggle = True
+        elif a == "wishlist_upsert":
+            key = (p.get("tracker_id", ""), p.get("region_id", ""))
+            if key not in wishlist_keys:
+                wishlist_keys.append(key)
+
+    # ── Phase 2: bulk SELECTs (1 query per model, not per action) ──
+    region_cache: dict[str, VisitedRegions] = {}
+    if region_country_ids:
+        rows = (await db.execute(
+            select(VisitedRegions).where(
+                VisitedRegions.user_id == uid,
+                VisitedRegions.country_id.in_(region_country_ids),
+            )
+        )).scalars().all()
+        region_cache = {r.country_id: r for r in rows}
+
+    world_record = None
+    if has_world_toggle:
+        world_record = (await db.execute(
+            select(VisitedWorld).where(VisitedWorld.user_id == uid)
+        )).scalar_one_or_none()
+
+    wishlist_cache: dict[tuple[str, str], WishlistItem] = {}
+    if wishlist_keys:
+        wl_filter = or_(*[
+            and_(WishlistItem.tracker_id == t, WishlistItem.region_id == r)
+            for t, r in wishlist_keys
+        ])
+        rows = (await db.execute(
+            select(WishlistItem).where(WishlistItem.user_id == uid, wl_filter)
+        )).scalars().all()
+        wishlist_cache = {(w.tracker_id, w.region_id): w for w in rows}
+
+    # ── Phase 3: process all actions using cached data (no per-action SELECTs) ──
     for item in body.actions:
         action = item.action
         p = item.payload
@@ -697,13 +745,7 @@ async def batch_actions(
             if country_id not in VALID_COUNTRIES or act not in ("add", "remove"):
                 results.append({"action": action, "ok": False, "error": "invalid params"})
                 continue
-            result = await db.execute(
-                select(VisitedRegions).where(
-                    VisitedRegions.user_id == uid,
-                    VisitedRegions.country_id == country_id,
-                )
-            )
-            record = result.scalar_one_or_none()
+            record = region_cache.get(country_id)
             if not record:
                 record = VisitedRegions(
                     user_id=uid, country_id=country_id,
@@ -711,6 +753,7 @@ async def batch_actions(
                     notes=enc_json(uid, {}), wishlist=enc_json(uid, []),
                 )
                 db.add(record)
+                region_cache[country_id] = record
             regions = dec_json_safe(uid, record.regions) or []
             dates = dec_json_safe(uid, record.dates) or {}
             notes = dec_json_safe(uid, record.notes) or {}
@@ -734,22 +777,18 @@ async def batch_actions(
             if act not in ("add", "remove"):
                 results.append({"action": action, "ok": False, "error": "invalid params"})
                 continue
-            result = await db.execute(
-                select(VisitedWorld).where(VisitedWorld.user_id == uid)
-            )
-            record = result.scalar_one_or_none()
-            if not record:
-                record = VisitedWorld(user_id=uid, countries=enc_json(uid, []))
-                db.add(record)
-            countries_list = dec_json_safe(uid, record.countries) or []
+            if not world_record:
+                world_record = VisitedWorld(user_id=uid, countries=enc_json(uid, []))
+                db.add(world_record)
+            countries_list = dec_json_safe(uid, world_record.countries) or []
             if act == "add":
                 if country_code not in countries_list:
                     countries_list.append(country_code)
             else:
                 if country_code in countries_list:
                     countries_list.remove(country_code)
-            record.countries = enc_json(uid, countries_list)
-            record.updated_at = datetime.now(timezone.utc)
+            world_record.countries = enc_json(uid, countries_list)
+            world_record.updated_at = datetime.now(timezone.utc)
             results.append({"action": action, "ok": True})
 
         elif action == "wishlist_upsert":
@@ -759,14 +798,7 @@ async def batch_actions(
             target_date = p.get("target_date")
             notes_val = p.get("notes")
             category = p.get("category", "solo")
-            result = await db.execute(
-                select(WishlistItem).where(
-                    WishlistItem.user_id == uid,
-                    WishlistItem.tracker_id == tracker_id,
-                    WishlistItem.region_id == region_id,
-                )
-            )
-            wi = result.scalar_one_or_none()
+            wi = wishlist_cache.get((tracker_id, region_id))
             if wi:
                 wi.priority = enc(uid, priority)
                 wi.target_date = enc(uid, target_date) if target_date else None
@@ -782,6 +814,7 @@ async def batch_actions(
                     category=enc(uid, category),
                 )
                 db.add(wi)
+                wishlist_cache[(tracker_id, region_id)] = wi
             results.append({"action": action, "ok": True})
 
         elif action == "wishlist_delete":
@@ -805,8 +838,6 @@ async def batch_actions(
         await db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
     return {"results": results}
-
-
 # --------------- World visited endpoints ---------------
 @app.get("/api/visited-world", response_model=WorldVisitedResponse)
 async def get_visited_world(

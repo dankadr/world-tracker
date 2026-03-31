@@ -58,10 +58,10 @@ function initWorldFromCache(token, userId) {
 }
 
 export default function useVisitedCountries() {
-  const { token, isLoggedIn, user } = useAuth();
+  const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const [visited, setVisited] = useState(() => initWorldFromCache(token, userId));
-  const [isLoading, setIsLoading] = useState(() => initWorldFromCache(token, userId).size === 0 && isLoggedIn);
+  const [isLoading, setIsLoading] = useState(() => (initWorldFromCache(token, userId).size === 0 && isLoggedIn) || isSyncingLocalData);
   const [currentUserId, setCurrentUserId] = useState(userId);
   const prevLoggedIn = useRef(isLoggedIn);
   const visitedRef = useRef(visited);
@@ -77,18 +77,25 @@ export default function useVisitedCountries() {
     }
   }
 
+  useEffect(() => {
+    // Use visitedRef.current (actual current state) not initWorldFromCache (stale bulk cache).
+    // Same reasoning as useVisitedRegions: the stale cache may have data while visited is
+    // still empty (fresh device, memCache not yet populated), causing false isLoading=false.
+    setIsLoading(isSyncingLocalData || (visitedRef.current.size === 0 && isLoggedIn));
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
+
   // Sync from server when logged in (bulk endpoint) — background only
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
     let cancelled = false;
-
-    // Cover the fresh-login case: isLoading was initialized false when the user
-    // wasn't yet authenticated, so flip it to true while the fetch is in-flight.
-    if (visitedRef.current.size === 0) setIsLoading(true);
 
     fetchAllVisited(token).then((bulk) => {
       if (cancelled) return;
-      if (!bulk) { setIsLoading(false); return; }
+      if (!bulk) {
+        // Bulk fetch failed or returned no data; clear loading state to avoid UI being stuck
+        setIsLoading(false);
+        return;
+      }
       const remote = new Set(bulk.world || []);
       const local = loadVisitedWorld(userId);
       // Merge: if user had local data before logging in, push it up
@@ -110,7 +117,7 @@ export default function useVisitedCountries() {
     });
 
     return () => { cancelled = true; };
-  }, [isLoggedIn, token, userId]);
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   // On logout, reset to prevent data leaks
   useEffect(() => {
@@ -123,9 +130,30 @@ export default function useVisitedCountries() {
     }
   }, [isLoggedIn]);
 
+  // On page load the user may already be authenticated, but warmCache() runs
+  // asynchronously in AuthContext's mount effect — AFTER the initial render.
+  // This means loadVisitedWorld() returns an empty Set for encrypted user-scoped
+  // keys not yet in the memCache. Once warmCache() completes it fires
+  // 'auth:cache-warm'; reload world data from localStorage so the map is
+  // populated immediately without waiting for the server fetch.
+  useEffect(() => {
+    const handleCacheWarm = (e) => {
+      if (!userId || e.detail?.userId !== userId) return;
+      const local = loadVisitedWorld(userId);
+      // Only apply if server data hasn't already arrived — avoids rolling back
+      // a fresher server value when crypto is slow relative to the network.
+      if (local.size > 0 && visitedRef.current.size === 0) {
+        setVisited(local);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('auth:cache-warm', handleCacheWarm);
+    return () => window.removeEventListener('auth:cache-warm', handleCacheWarm);
+  }, [userId]);
+
   // Re-fetch from server when the tab/app becomes visible again
   useEffect(() => {
-    if (!isLoggedIn || !token) return;
+    if (!isLoggedIn || !token || isSyncingLocalData) return;
 
     const refetch = () => {
       // Only refetch if cache has expired — avoids a DB read on every tab switch
@@ -147,11 +175,18 @@ export default function useVisitedCountries() {
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('focus', refetch);
+    // When syncLocalDataToServer() completes (guest → login migration), it
+    // invalidates the bulk cache and emits 'visitedchange'. Re-fetch so the
+    // merged world data appears immediately without waiting for a tab switch.
+    // The TTL cache guard inside refetch() makes this a no-op for normal
+    // toggles (which don't invalidate the cache).
+    window.addEventListener('visitedchange', refetch);
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', refetch);
+      window.removeEventListener('visitedchange', refetch);
     };
-  }, [isLoggedIn, token, userId]);
+  }, [isLoggedIn, isSyncingLocalData, token, userId]);
 
   const toggleCountry = useCallback(
     (countryCode) => {
@@ -164,14 +199,14 @@ export default function useVisitedCountries() {
           next.add(countryCode);
         }
         saveVisitedWorld(next, userId);
-        if (isLoggedIn && token) {
+        if (isLoggedIn && token && !isSyncingLocalData) {
           addToBatch('world_toggle', { country: countryCode, action }, token);
         }
         emitVisitedChange();
         return next;
       });
     },
-    [userId, isLoggedIn, token]
+    [userId, isLoggedIn, isSyncingLocalData, token]
   );
 
   const isVisited = useCallback(
