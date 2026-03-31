@@ -133,12 +133,14 @@ export default function ShapeQuiz({ filter = 'all', worldVisited = EMPTY_SET, on
         {status === 'reviewing' && (
           <div
             data-testid="shape-quiz-feedback"
+            role="status"
+            aria-live="polite"
             style={{
-            textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
-            color: isCorrect ? '#22c55e' : '#ef4444',
-          }}
+              textAlign: 'center', fontWeight: 700, fontSize: '1rem', marginBottom: 10,
+              color: isCorrect ? '#22c55e' : '#ef4444',
+            }}
           >
-            {isCorrect ? '✓ Correct!' : `✗ ${question.name}`}
+            {isCorrect ? 'Correct!' : `Incorrect — ${question.name}`}
           </div>
         )}
         <AnswerInput
