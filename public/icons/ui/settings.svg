@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c07a30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="3"/>
+  <path d="M12 2a1 1 0 011 1v1.07A7.002 7.002 0 0118.93 9H20a1 1 0 010 2h-1.07A7.002 7.002 0 0115 17.93V19a1 1 0 01-2 0v-1.07A7.002 7.002 0 015.07 13H4a1 1 0 010-2h1.07A7.002 7.002 0 019 4.07V3a1 1 0 011-1h2z" fill="#d89648" fill-opacity="0.2"/>
+  <path d="M19.07 9A7.002 7.002 0 0015 4.93M19.07 15A7.002 7.002 0 0115 19.07M4.93 15A7.002 7.002 0 009 19.07M4.93 9A7.002 7.002 0 019 4.93" stroke-opacity="0"/>
+  <!-- simplified gear teeth -->
+  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+</svg>
