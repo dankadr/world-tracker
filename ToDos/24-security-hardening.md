@@ -1,7 +1,7 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Partially complete — encryption and some hardening are live, but several security tasks remain open
+**Status:** Phase 1–3 complete in this branch — CSPRNG, input validation, CSP headers, CORS multi-origin, and security.txt are shipped; broader rate limiting and audit automation still remain
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 

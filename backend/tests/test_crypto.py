@@ -105,3 +105,38 @@ def test_fernet_cache_is_keyed_by_user_and_fingerprint():
 
     enc(1, "user 1 again")
     assert len(_FERNET_CACHE) == 2, "No new entry for existing user"
+
+
+# ---------------------------------------------------------------------------
+# Security: CSPRNG for ID generation
+# ---------------------------------------------------------------------------
+
+def test_generate_friend_code_uses_secrets():
+    """generate_friend_code produces unique uppercase alphanumeric codes."""
+    try:
+        from backend.models import generate_friend_code
+    except ImportError:
+        from models import generate_friend_code
+
+    codes = {generate_friend_code() for _ in range(100)}
+    # All unique (astronomically unlikely to collide with CSPRNG)
+    assert len(codes) == 100
+    for code in codes:
+        assert len(code) == 8
+        assert code.isalnum()
+        assert code == code.upper()
+
+
+def test_generate_challenge_id_uses_secrets():
+    """generate_challenge_id produces unique URL-safe IDs."""
+    try:
+        from backend.models import generate_challenge_id
+    except ImportError:
+        from models import generate_challenge_id
+
+    ids = {generate_challenge_id() for _ in range(100)}
+    assert len(ids) == 100
+    for cid in ids:
+        assert len(cid) == 12
+        # URL-safe base64 chars only
+        assert all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" for c in cid)

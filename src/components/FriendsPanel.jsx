@@ -4,7 +4,7 @@ import { useFriends } from '../context/FriendsContext';
 import { lookupFriendCode } from '../utils/api';
 import usePullToRefresh from '../hooks/usePullToRefresh';
 import AuthButton from './AuthButton';
-import ConfirmDialog from './ConfirmDialog';
+import { useActionSheet } from '../context/ActionSheetContext';
 import ChallengesPanel from './ChallengesPanel';
 import { haptics } from '../utils/haptics';
 import './FriendsPanel.css';
@@ -118,6 +118,7 @@ export default function FriendsPanel({
   onScrollPositionChange,
 }) {
   const { token, isLoggedIn } = useAuth();
+  const { showActionSheet } = useActionSheet();
   const {
     friends,
     requests,
@@ -138,7 +139,6 @@ export default function FriendsPanel({
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
-  const [confirmRemove, setConfirmRemove] = useState(null);
 
   useEffect(() => {
     if (isLoggedIn && refresh) {
@@ -231,18 +231,28 @@ export default function FriendsPanel({
     }
   }, [cancelRequest]);
 
-  const handleRemove = useCallback(async () => {
-    if (!confirmRemove) return;
-    setActionLoading(`remove-${confirmRemove.id}`);
-    try {
-      await removeFriend(confirmRemove.id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setActionLoading(null);
-      setConfirmRemove(null);
-    }
-  }, [confirmRemove, removeFriend]);
+  const handleRemove = useCallback((friend) => {
+    showActionSheet({
+      title: 'Remove Friend',
+      message: `Remove ${friend.name} from your friends list?`,
+      actions: [
+        {
+          label: 'Remove',
+          destructive: true,
+          onPress: async () => {
+            setActionLoading(`remove-${friend.id}`);
+            try {
+              await removeFriend(friend.id);
+            } catch (err) {
+              setError(err.message);
+            } finally {
+              setActionLoading(null);
+            }
+          },
+        },
+      ],
+    });
+  }, [showActionSheet, removeFriend]);
 
   const handleRefresh = useCallback(async () => {
     if (refresh) {
@@ -462,7 +472,7 @@ export default function FriendsPanel({
                     )}
                     <button
                       className="fp-remove-btn ios-touch-feedback"
-                      onClick={() => setConfirmRemove(friend)}
+                      onClick={() => handleRemove(friend)}
                       disabled={actionLoading === `remove-${friend.id}`}
                       title="Remove friend"
                     >
@@ -475,15 +485,6 @@ export default function FriendsPanel({
           </div>
         </div>
       )}
-
-      <ConfirmDialog
-        isOpen={!!confirmRemove}
-        message={`Remove ${confirmRemove?.name || 'this friend'} from your friends list?`}
-        confirmLabel="Remove"
-        onConfirm={handleRemove}
-        onCancel={() => setConfirmRemove(null)}
-        destructive
-      />
     </div>
   );
 }
