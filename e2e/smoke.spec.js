@@ -96,7 +96,7 @@ test('flag quiz shows the flag prompt and keeps wrong-answer feedback visible', 
 
   const feedback = page.getByTestId('flag-quiz-feedback');
   await expect(feedback).toBeVisible();
-  await expect(feedback).toContainText('✗');
+  await expect(feedback).toContainText('Incorrect');
 
   await page.waitForTimeout(1500);
   await expect(feedback).toBeVisible();
