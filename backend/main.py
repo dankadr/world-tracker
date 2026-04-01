@@ -22,6 +22,9 @@ from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, delete, func, or_, select, text
@@ -94,6 +97,16 @@ JWT_EXPIRE_DAYS = 30
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
+
+def _parse_allowed_origins(raw_origins: str, fallback_origin: str) -> list[str]:
+    parsed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    return parsed_origins or [fallback_origin]
+
+
+# ALLOWED_ORIGINS: comma-separated list of allowed CORS origins.
+# Falls back to [FRONTEND_URL] when unset or when the parsed list is empty.
+ALLOWED_ORIGINS = _parse_allowed_origins(os.getenv("ALLOWED_ORIGINS", ""), FRONTEND_URL)
+
 VALID_COUNTRIES = {
     "ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco",
     "ph", "br", "fr", "de", "it", "es", "mx", "gb", "in", "nz",
@@ -134,9 +147,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Travel Tracker API", lifespan=lifespan)
 
+
+def _rate_limit_key(request: Request) -> str:
+    """Use Vercel's platform-provided client IP header, otherwise remote address."""
+    if os.getenv("VERCEL"):
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        forwarded_hops = [hop.strip() for hop in forwarded_for.split(",") if hop.strip()]
+        if forwarded_hops:
+            return forwarded_hops[-1]
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_rate_limit_key)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -348,7 +376,8 @@ async def admin_decrypt(admin: CurrentUser = Depends(require_admin)):
 
 # --------------- Auth endpoint ---------------
 @app.post("/auth/google", response_model=GoogleLoginResponse)
-async def google_login(body: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def google_login(request: Request, body: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
     if not GOOGLE_CLIENT_ID:
         logger.error("GOOGLE_CLIENT_ID env var is not set")
         raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID not configured")
@@ -669,7 +698,9 @@ async def patch_visited_world(
 
 # --------------- Batch endpoint ---------------
 @app.post("/api/batch")
+@limiter.limit("60/minute")
 async def batch_actions(
+    request: Request,
     body: BatchRequest,
     user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

@@ -51,6 +51,8 @@ import { emitVisitedChange } from './utils/events';
 import { secureStorage } from './utils/secureStorage';
 import { ADMIN_EMAIL } from './utils/adminConfig';
 import { haptics } from './utils/haptics';
+import useTabSwipe from './hooks/useTabSwipe';
+import useComparisonMode from './hooks/useComparisonMode';
 import useShareMode from './hooks/useShareMode';
 import GlobalSearch from './components/GlobalSearch';
 import {
@@ -134,9 +136,9 @@ function AchievementToasts() {
   if (toasts.length === 0) return null;
 
   return createPortal(
-    <div className="toast-container">
+    <div className="toast-container" aria-live="assertive" aria-atomic="false">
       {toasts.map((t) => (
-        <div key={t.ts} className="toast-achievement">
+        <div key={t.ts} className="toast-achievement" role="alert">
           <span className="toast-icon">{t.icon}</span>
           <div className="toast-text">
             <span className="toast-label">Achievement Unlocked!</span>
@@ -319,12 +321,14 @@ export default function App() {
   const { friendOverlayData, loadOverlayData, loadFriendVisited, clearCache } = useFriendsData();
   const [showFriends, setShowFriends] = useState(false);
   const [friendsActive, setFriendsActive] = useState(false);
-
-  // Comparison state: { id, name, picture, visited (Set of country ids), visitedRegions (array of region ids for current country) }
-  const [comparisonFriend, setComparisonFriend] = useState(null);
-  const [comparisonData, setComparisonData] = useState(null); // raw API data
-  const [showComparisonStats, setShowComparisonStats] = useState(false);
-  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const {
+    comparisonFriend,
+    showComparisonStats,
+    openComparisonStats,
+    closeComparisonStats,
+    doCompare,
+    exitComparison: handleExitComparison,
+  } = useComparisonMode({ countryId, loadFriendVisited });
 
   // Load/clear friend overlay data when toggled
   useEffect(() => {
@@ -355,61 +359,23 @@ export default function App() {
     }
   }, [isMobile, switchTab]);
   const handleCloseBucketList = useCallback(() => setShowBucketList(false), []);
-  const handleCloseComparisonStats = useCallback(() => setShowComparisonStats(false), []);
+  const handleCloseComparisonStats = closeComparisonStats;
 
   // Comparison handlers
   const handleCompare = useCallback(async (friend) => {
     if (!friend) {
-      // Exit comparison
-      setComparisonFriend(null);
-      setComparisonData(null);
-      setShowComparisonStats(false);
+      handleExitComparison();
       return;
     }
-    setComparisonLoading(true);
-    try {
-      const data = await loadFriendVisited(friend.id);
-      if (data) {
-        setComparisonData(data);
-        const friendWorldCountries = new Set(data.world?.countries || []);
-        // Extract regions for the current country
-        const countryRegions = (data.regions || [])
-          .filter((r) => r.country_id === countryId)
-          .flatMap((r) => r.regions || []);
-        setComparisonFriend({
-          id: friend.id,
-          name: friend.name,
-          picture: friend.picture,
-          visited: friendWorldCountries,
-          visitedRegions: countryRegions,
-        });
-        if (isMobile) {
-          switchTab('map');
-        } else {
-          setShowFriends(false);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load comparison data:', err);
-    } finally {
-      setComparisonLoading(false);
+    const loaded = await doCompare(friend);
+    if (!loaded) return;
+
+    if (isMobile) {
+      switchTab('map');
+    } else {
+      setShowFriends(false);
     }
-  }, [loadFriendVisited, countryId]);
-
-  const handleExitComparison = useCallback(() => {
-    setComparisonFriend(null);
-    setComparisonData(null);
-    setShowComparisonStats(false);
-  }, []);
-
-  // Update comparison friend's region data when switching countries
-  useEffect(() => {
-    if (!comparisonData) return;
-    const countryRegions = (comparisonData.regions || [])
-      .filter((r) => r.country_id === countryId)
-      .flatMap((r) => r.regions || []);
-    setComparisonFriend((prev) => prev ? { ...prev, visitedRegions: countryRegions } : null);
-  }, [countryId, comparisonData]);
+  }, [doCompare, handleExitComparison, isMobile, switchTab]);
 
   const handleExploreCountry = useCallback((id) => {
     setCountryId(id);
@@ -472,8 +438,8 @@ export default function App() {
       });
       return;
     }
-    setShowComparisonStats(true);
-  }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country]);
+    openComparisonStats();
+  }, [comparisonFriend, isMobile, isShareMode, push, isWorldView, worldVisited, visited, country, openComparisonStats]);
   const sharedVisited = getSharedVisited(countryId);
 
   const displayVisited = isShareMode ? (sharedVisited || new Set()) : visited;
@@ -542,6 +508,9 @@ export default function App() {
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
+  const [sheetSnap, setSheetSnap] = useState(20); // 20 = SNAP_PEEK
+
+  useTabSwipe(activeTab, switchTab, sheetSnap);
   const longPressTimerRef = useRef(null);
   const longPressStartRef = useRef(null);
 
@@ -579,6 +548,7 @@ export default function App() {
   }, [isMobile]);
 
   const handleSheetSnap = useCallback((snapVal) => {
+    setSheetSnap(snapVal);
     // Reset expandTo after snap completes so it can be triggered again
     setSheetExpandTo(null);
   }, []);
@@ -596,6 +566,7 @@ export default function App() {
   return (
     <ActionSheetProvider>
     <div className={`app ${isMobile ? 'is-mobile' : ''} ${isTablet && isTouch ? 'touch-tablet' : ''} ${isTablet && isPortrait ? 'tablet-portrait' : ''}`}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
@@ -617,7 +588,7 @@ export default function App() {
       )}
 
       {isDataLoading ? (
-        <main className="map-container">
+        <main id="main-content" className="map-container">
           <MapSkeleton />
         </main>
       ) : isWorldView ? (
@@ -686,6 +657,7 @@ export default function App() {
             />
           )}
           <main
+            id="main-content"
             className="map-container"
             onTouchStart={handleLongPressStart}
             onTouchMove={handleLongPressMove}
@@ -848,7 +820,7 @@ export default function App() {
               }}
             />
           )}
-          <main className="map-container">
+          <main id="main-content" className="map-container">
             {!isMobile && (
               <button
                 className="sidebar-toggle"
