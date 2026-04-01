@@ -1,7 +1,7 @@
 # Bug: Regional Tracker Data Missing Until Tracker Is Opened
 
 **Date:** 2026-03-25
-**Status:** Needs re-verification — related auth/data-loading paths changed, but the current repo does not prove the bug is fully closed
+**Status:** Needs re-verification — PRs #129 and #134 targeted this issue, but the current repo still does not prove it is fully closed
 **Priority:** Critical
 
 ---
@@ -107,8 +107,9 @@ In practice, the first authenticated device render has this gap:
 
 ## Current Repo Status
 
+- PR #129 re-fetched regional data immediately after login sync via a `visitedchange` listener
+- PR #134 loaded regional visited data immediately after login
 - The repo has stronger visited-data hooks, cache handling, and auth bootstrapping than when this bug was originally reported
-- I did not find a dedicated regression test or an unambiguous code path proving all regional tracker data is blocked from rendering until auth hydration completes
 - Keep this as a verification item until login is exercised against multiple regional trackers without a page refresh
 
 ## Test Plan

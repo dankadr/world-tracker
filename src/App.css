@@ -1799,6 +1799,144 @@ body {
   color: var(--text-primary);
 }
 
+/* ======== Map Search ======== */
+.map-search {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50px;
+  z-index: 1000;
+  width: 220px;
+}
+
+.map-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  padding: 0 8px;
+}
+
+.map-search-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.map-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  padding: 7px 0;
+  outline: none;
+  min-width: 0;
+}
+
+.map-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.map-search-clear {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.6;
+}
+
+.map-search-clear:hover {
+  opacity: 1;
+}
+
+.map-search-results {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow-elevated);
+  overflow: hidden;
+}
+
+.map-search-result {
+  margin: 0;
+}
+
+.map-search-result-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.map-search-result-btn:hover,
+.map-search-result-btn:focus-visible,
+.map-search-result-btn.is-active {
+  background: var(--hover-bg);
+  outline: none;
+}
+
+.map-search-result-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.map-search-result-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ======== Fit Visited Button ======== */
+.fit-visited-btn {
+  position: absolute;
+  bottom: 32px;
+  left: 12px;
+  z-index: 1000;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.fit-visited-btn:hover {
+  box-shadow: var(--glass-specular-strong), var(--glass-hover-glow);
+  transform: scale(1.03);
+}
+
 /* ======== Stats Modal ======== */
 .modal-overlay {
   position: fixed;

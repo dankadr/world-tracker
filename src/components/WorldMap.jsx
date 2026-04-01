@@ -6,8 +6,14 @@ import MapLayerControl, { LAYERS } from './MapLayerControl';
 import FriendOverlayLegend from './FriendOverlayLegend';
 import ComparisonLegend from './ComparisonLegend';
 import UnescoLayer from './UnescoLayer';
+import MapSearch from './MapSearch';
 import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
+
+const STADIA_KEY = import.meta.env.VITE_STADIA_API_KEY ?? '';
+function resolveUrl(url) {
+  return url?.replace('{stadiaKey}', STADIA_KEY) ?? url;
+}
 
 export function computeZoomFactor(zoom) {
   if (zoom <= 6) return 1;
@@ -273,6 +279,40 @@ function FlyToTarget({ target, geoJsonRef, onDone }) {
   return null;
 }
 
+function FitVisited({ visited, geoJsonRef }) {
+  const map = useMap();
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation?.(el);
+    L.DomEvent.disableScrollPropagation?.(el);
+  }, []);
+
+  const handleClick = () => {
+    const bounds = L.latLngBounds([]);
+    geoJsonRef.current?.eachLayer((l) => {
+      if (visited.has(l.feature?.properties?.id)) {
+        bounds.extend(l.getBounds());
+      }
+    });
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+  };
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="fit-visited-btn leaflet-control"
+      onClick={handleClick}
+      title="Zoom to visited countries"
+      aria-label="Zoom to visited countries"
+    >
+      ⊡ Zoom to visited
+    </button>
+  );
+}
+
 export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode, flyToTarget, onFlyToDone }) {
   const geoJsonRef = useRef(null);
   // Use refs so event handlers always read current values even with stale closures
@@ -308,8 +348,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   useEffect(() => {
     setTileUrl((prev) => {
       const layer = LAYERS.find((l) => l.light === prev || l.dark === prev);
-      if (layer) return dark ? layer.dark : layer.light;
-      return dark ? LAYERS[0].dark : LAYERS[0].light;
+      if (layer) return resolveUrl(dark ? layer.dark : layer.light);
+      return resolveUrl(dark ? LAYERS[0].dark : LAYERS[0].light);
     });
   }, [dark]);
 
@@ -387,9 +427,9 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
       // Game mode overrides all other styles
       if (gameMode) {
-        if (id === gameMode.correctId)                              return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.incorrectId)                            return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
-        if (id === gameMode.targetId && gameMode.revealTarget)      return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
+        if (id === gameMode.correctId)   return { fillColor: '#22c55e', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.incorrectId) return { fillColor: '#ef4444', fillOpacity: 0.8, color: '#fff', weight: 2 };
+        if (id === gameMode.targetId && gameMode.revealTarget) return { fillColor: '#2563eb', fillOpacity: 0.9, color: '#fff', weight: 3 };
         return { fillColor: '#cfd8dc', fillOpacity: 0.3, color: 'rgba(0,0,0,0.05)', weight: 0.5 };
       }
 
@@ -530,7 +570,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         <TileLayer
           key={gameMode ? 'game-clean' : tileUrl}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-          url={gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl}
+          url={resolveUrl(gameMode ? (dark ? LAYERS[0].dark : LAYERS[0].light) : tileUrl)}
         />
         {friendsActive && !comparisonFriend && (
           <Pane name="friendLabelsPane" style={{ zIndex: 450, pointerEvents: 'none' }}>
@@ -576,6 +616,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         />}
         {unescoActive && <UnescoLayer />}
         {flyToTarget && <FlyToTarget target={flyToTarget} geoJsonRef={geoJsonRef} onDone={onFlyToDone} />}
+        {!gameMode && <MapSearch geoJsonRef={geoJsonRef} searchWorldData={modifiedWorldData} />}
+        {!gameMode && visited.size > 0 && <FitVisited visited={visited} geoJsonRef={geoJsonRef} />}
         {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
           <FriendOverlayLegend friendOverlayData={friendOverlayData} />
         )}

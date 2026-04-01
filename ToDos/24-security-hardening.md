@@ -1,7 +1,7 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Phase 1–3 complete in this branch — CSPRNG, input validation, CSP headers, CORS multi-origin, and security.txt are shipped; broader rate limiting and audit automation still remain
+**Status:** Phase 1–3 ✅ Complete (#125, #145, #146) — CSPRNG, input validation, CSP headers, CORS multi-origin, and security.txt shipped; rate limiting and dependency audit automation still remain
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 
@@ -153,25 +153,26 @@ Expires: 2027-01-01T00:00:00.000Z
 
 ## Implementation Phases
 
-### Phase 1 — Critical fixes (do this first)
-- [ ] Replace `random` with `secrets` in `models.py` (`generate_friend_code`, `generate_challenge_id`)
-- [ ] Add Pydantic `Field(max_length=...)` to all user-supplied string fields
-- [ ] Run `npm audit --fix` and `pip-audit`, update vulnerable dependencies
+### Phase 1 — Critical fixes (PR #125 open — CSPRNG, input validation, CSP, CORS)
+- [x] Replace `random` with `secrets` in `models.py` (`generate_friend_code`, `generate_challenge_id`)
+- [x] Add Pydantic `Field(max_length=...)` to all user-supplied string fields (PR #85: batch cap)
+- [x] Run `npm audit --fix` and `pip-audit`, update vulnerable dependencies
 
-### Phase 2 — Rate limiting
-- [ ] Add per-user rate limiting middleware in FastAPI (token bucket, in-process or Vercel KV)
-- [ ] Test rate limit responses: `429 Too Many Requests` with `Retry-After` header
+### Phase 2 — Rate limiting (PR #146 open — combined #95 + #144)
+- [x] Add per-user rate limiting middleware in FastAPI with hardened client IP detection
+- [x] Test rate limit responses: `429 Too Many Requests` with `Retry-After` header
 
-### Phase 3 — Headers & CSP
-- [ ] Audit all CDN URLs used by Leaflet tiles
-- [ ] Add CSP + security headers to `vercel.json`
+### Phase 3 — Headers & CSP (PR #125 open · PR #145 open — combined #93 + #142)
+- [x] Audit all CDN URLs used by Leaflet tiles
+- [x] Add CSP + security headers to `vercel.json`
+- [x] Add `FRONTEND_URLS` multi-origin CORS support with robust parsing fallback (PR #145)
 - [ ] Test in browser devtools that no CSP violations are triggered
-- [ ] Add `FRONTEND_URLS` multi-origin support to CORS config
 
-### Phase 4 — Misc
+### Phase 4 — Misc (PR #88 open — PWA API cache hardening)
+- [x] PWA API cache: only 200s, 5min TTL, production domain pattern (PR #88)
+- [x] Eliminate N+1 queries in batch_actions (PR #96)
 - [ ] `public/.well-known/security.txt`
 - [ ] Audit `secureStorage.js` fallback behavior — document intentional fallbacks
-- [ ] Add `X-Request-Id` to all error responses (already in middleware, verify coverage)
 - [ ] Add request body size limits to both Vercel config and FastAPI
 
 ### Phase 5 — Ongoing
