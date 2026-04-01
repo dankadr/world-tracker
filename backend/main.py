@@ -1153,16 +1153,26 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
     friend_ids = [r[0] for r in friends_result.all()]
     all_ids = [user.id] + friend_ids
 
+    # Batch fetch all data in 3 queries instead of 3×N
+    users_result = await db.execute(select(User).where(User.id.in_(all_ids)))
+    users_by_id = {u.id: u for u in users_result.scalars().all()}
+
+    worlds_result = await db.execute(select(VisitedWorld).where(VisitedWorld.user_id.in_(all_ids)))
+    worlds_by_uid = {w.user_id: w for w in worlds_result.scalars().all()}
+
+    regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id.in_(all_ids)))
+    regions_by_uid: dict = {}
+    for r in regions_result.scalars().all():
+        regions_by_uid.setdefault(r.user_id, []).append(r)
+
     entries = []
     for uid in all_ids:
-        u = (await db.execute(select(User).where(User.id == uid))).scalar_one_or_none()
+        u = users_by_id.get(uid)
         if not u:
             continue
-        world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == uid))).scalar_one_or_none()
+        world = worlds_by_uid.get(uid)
         countries_count = len(dec_json_safe(u.id, world.countries) or []) if world and world.countries else 0
-
-        regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id == uid))
-        regions_count = sum(len(dec_json_safe(u.id, r.regions) or []) for r in regions_result.scalars().all())
+        regions_count = sum(len(dec_json_safe(u.id, r.regions) or []) for r in regions_by_uid.get(uid, []))
 
         entries.append({
             "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
@@ -1170,8 +1180,8 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
             "is_self": u.id == user.id,
         })
 
-    # Sort by countries descending, then regions
-    entries.sort(key=lambda e: (e["countries_count"], e["regions_count"]), reverse=True)
+    # Sort by countries descending, then regions, then user ID for deterministic tie-breaking
+    entries.sort(key=lambda e: (e["countries_count"], e["regions_count"], -e["user_id"]), reverse=True)
     for i, e in enumerate(entries):
         e["rank"] = i + 1
 
