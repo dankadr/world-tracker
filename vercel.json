@@ -32,5 +32,9 @@
       "maxDuration": 300,
       "excludeFiles": "{node_modules,dist,src,public,scripts,e2e,docs,.superpowers}/**"
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/weekly-digest", "schedule": "0 9 * * 1" },
+    { "path": "/api/cron/bucket-reminders", "schedule": "0 10 * * *" }
+  ]
 }

@@ -56,6 +56,11 @@ try:
 except ImportError:
     from admin_tasks import encrypt_all, decrypt_all
 
+try:
+    from backend import email_service
+except ImportError:
+    import email_service  # type: ignore
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -429,6 +434,7 @@ async def google_login(request: Request, body: GoogleLoginRequest, db: AsyncSess
     result = await db.execute(select(User).where(User.google_id == google_id))
     user = result.scalar_one_or_none()
 
+    is_new_user = user is None
     if user:
         user.email = email
         # name/picture set after flush (need user.id for key derivation)
@@ -445,6 +451,28 @@ async def google_login(request: Request, body: GoogleLoginRequest, db: AsyncSess
     await db.commit()
 
     jwt_token = create_jwt(uid, user.email)
+
+    # Send welcome email on first login — wrapped so email failure never breaks auth
+    if is_new_user and email:
+        try:
+            prefs = await email_service.get_or_create_preferences(str(uid), db)
+            if not prefs.get("welcome_sent", False):
+                html = email_service.render_welcome_email(name)
+                await email_service.send_email(
+                    to=email,
+                    subject="Welcome to World Tracker — start exploring!",
+                    html=html,
+                    email_type="welcome",
+                    user_id=str(uid),
+                    db=db,
+                )
+                await db.execute(
+                    text("UPDATE email_preferences SET welcome_sent = TRUE WHERE user_id = :uid"),
+                    {"uid": str(uid)},
+                )
+                await db.commit()
+        except Exception as exc:
+            logger.error("Welcome email failed for user_id=%s: %s", uid, exc)
 
     return GoogleLoginResponse(
         jwt_token=jwt_token,
@@ -1938,6 +1966,93 @@ async def add_user_xp(
         next_level_xp=new_level_info["next_level_xp"],
         xp_gained=applied_delta,
     )
+
+
+# --------------- Email preferences endpoints ---------------
+
+@app.get("/api/email/preferences")
+async def get_email_preferences(
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the current user's email preferences, creating defaults if missing."""
+    prefs = await email_service.get_or_create_preferences(str(user.id), db)
+    # Remove internal DB metadata before returning
+    prefs.pop("user_id", None)
+    return prefs
+
+
+@app.put("/api/email/preferences")
+async def update_email_preferences(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Partially update the current user's email preferences.
+
+    Accepts a JSON body with any subset of the boolean preference fields.
+    Unknown keys are ignored.
+    """
+    allowed_fields = {
+        "weekly_digest", "monthly_recap", "friend_notifications",
+        "challenge_notifications", "bucket_list_reminders",
+        "milestone_celebrations", "marketing",
+    }
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
+    updates = {k: bool(v) for k, v in body.items() if k in allowed_fields}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid preference fields provided")
+
+    # Ensure row exists before updating
+    await email_service.get_or_create_preferences(str(user.id), db)
+
+    set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+    updates["uid"] = str(user.id)
+    await db.execute(
+        text(f"UPDATE email_preferences SET {set_clause}, updated_at = NOW() WHERE user_id = :uid"),
+        updates,
+    )
+    await db.commit()
+
+    prefs = await email_service.get_or_create_preferences(str(user.id), db)
+    prefs.pop("user_id", None)
+    return prefs
+
+
+@app.post("/api/email/unsubscribe/{token}")
+async def unsubscribe_email(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """One-click global unsubscribe — no auth required.
+
+    The token is a JWT signed with JWT_SECRET containing {"sub": user_id, "purpose": "unsubscribe"}.
+    Sets unsubscribed_at on email_preferences so no further emails are sent.
+    """
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("purpose") != "unsubscribe":
+            raise JWTError("wrong purpose")
+        user_id = str(payload["sub"])
+    except (JWTError, KeyError):
+        raise HTTPException(status_code=400, detail="Invalid or expired unsubscribe token")
+
+    # Ensure row exists then set unsubscribed_at
+    await email_service.get_or_create_preferences(user_id, db)
+    await db.execute(
+        text(
+            "UPDATE email_preferences SET unsubscribed_at = NOW(), updated_at = NOW() "
+            "WHERE user_id = :uid AND unsubscribed_at IS NULL"
+        ),
+        {"uid": user_id},
+    )
+    await db.commit()
+    return {"status": "unsubscribed", "message": "You have been unsubscribed from all World Tracker emails."}
 
 
 # --------------- Health check ---------------

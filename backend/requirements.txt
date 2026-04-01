@@ -12,5 +12,6 @@ google-auth==2.48.0
 requests==2.32.3
 pydantic==2.12.5
 slowapi==0.1.9
+resend>=2.0.0
 # sentry-sdk is optional — install separately if needed (not bundled to stay
 # under Vercel's 249 MB Lambda limit). The backend handles ImportError gracefully.

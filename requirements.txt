@@ -8,3 +8,4 @@ google-auth>=2.37.0
 requests>=2.32.0
 pydantic>=2.10.0
 slowapi>=0.1.9
+resend>=2.0.0
