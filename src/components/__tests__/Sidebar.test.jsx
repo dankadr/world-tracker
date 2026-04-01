@@ -17,6 +17,10 @@ const { mockCountryList } = vi.hoisted(() => ({
   ],
 }));
 
+vi.mock('../../context/ActionSheetContext', () => ({
+  useActionSheet: () => ({ showActionSheet: vi.fn() }),
+}));
+
 vi.mock('../../context/ThemeContext', () => ({
   useTheme: () => ({
     dark: false,
