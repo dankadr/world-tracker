@@ -1,7 +1,7 @@
 # Bug: XP Doesn't Auto-Load After Login
 
 **Date:** 2026-03-25
-**Status:** Needs re-verification — XP sync logic exists now, but this specific regression is not explicitly covered
+**Status:** Needs re-verification — prior fixes landed in PRs #127 and #131, but the current repo still lacks explicit proof this regression is closed
 **Priority:** High
 
 ---
@@ -30,9 +30,9 @@ After user logs in, XP shows as 0 or doesn't display correctly until page refres
 
 ## Current Repo Status
 
+- Prior fixes landed in PR #127 (load XP immediately from auth response on login) and PR #131 (follow-up fetch-on-login coverage)
 - `useXp.jsx` now fetches `/api/user/xp` after login and reconciles local vs remote XP
-- That is a stronger implementation than when this bug was filed, but there is no dedicated test or bug note proving this exact issue is closed
-- Keep this open until login-flow verification confirms immediate XP hydration on a fresh authenticated session
+- Keep this open until login-flow verification confirms immediate XP hydration on a fresh authenticated session without a reload
 
 ## Test Plan
 - [ ] Log in and check XP displays immediately

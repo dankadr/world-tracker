@@ -1,7 +1,7 @@
 # ToDo: Monetization & Premium Tier
 
 **Date:** 2026-03-16
-**Status:** Planned — no billing infrastructure exists yet
+**Status:** Planned — monetization ideas are documented, but there are no active implementation PRs
 **Priority:** Low-Medium (future)
 **Scope:** Define and implement a freemium model with a premium subscription using Stripe, while keeping the core tracker free forever
 
