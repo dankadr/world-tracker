@@ -1,7 +1,7 @@
 # ToDo: PWA & Offline Support
 
 **Date:** 2026-02-24
-**Status:** Partially complete — manifest, PWA plugin, install prompt, offline UI, and cache/queue infrastructure are in place
+**Status:** Mostly complete — service worker registration, offline routing, reconnect queue flushing, and background-sync signaling are now in place
 **Priority:** Medium-High
 **Scope:** Make the app a Progressive Web App with offline support, home screen install, and background sync
 
@@ -17,10 +17,21 @@ The app now has the first layer of PWA support — a manifest, service worker wi
 - **PWA build integration shipped:** `vite-plugin-pwa` is configured in `vite.config.js`
 - **Install UX shipped:** `src/components/InstallPrompt.jsx` handles Android install events and iOS manual install guidance
 - **Offline UX shipped:** `src/components/OfflineIndicator.jsx` exists
-- **Offline infra partially shipped:** `src/utils/syncQueue.js`, `src/utils/cache.js`, and runtime tile/API caching are present
+- **Offline infra shipped:** `src/utils/batchQueue.js`, `src/utils/cache.js`, and runtime tile/API caching are present
+- **Service worker registration shipped:** `src/main.jsx` now explicitly registers the worker and refreshes it on focus/online
+- **Background sync signaling shipped:** queued writes now retry on reconnect and can be nudged by the service worker via `sync`
+- **Offline navigation shipped:** `src/sw.js` now serves the app shell for navigations outside `/api`, `/auth`, and `/admin`
 - **Data storage:** localStorage / secureStorage for guest mode and offline-friendly fallbacks, API sync for authenticated users
 - **GeoJSON files:** Large JSON files in `src/data/` remain bundled into the app
-- **Still missing:** strong end-to-end offline verification, richer background sync behavior, and polished install/offline assets
+- **Still missing:** deeper end-to-end offline QA across devices and any future product decisions around richer install assets/screenshots
+
+## Progress Update (2026-04-01)
+
+- Added explicit manual service worker registration so the app, not the plugin default, owns update and offline lifecycle wiring
+- Extended the worker with navigation fallback, more tile/font caching, `skipWaiting`, `clientsClaim`, and a `sync` hook that tells open tabs to flush queued writes
+- Hardened `src/utils/batchQueue.js` so queued writes persist, retry when connectivity returns, and request background sync when the browser supports it
+- Updated the offline banner to surface queued change counts and show when offline support is ready on-device
+- Added focused tests for batch-queue reconnect behavior and the service-worker registration bridge
 
 ## Implementation Plan
 
