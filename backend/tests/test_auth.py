@@ -92,6 +92,46 @@ async def test_health_endpoint_returns_ok(client):
     assert data["status"] == "ok"
     assert "timestamp" in data
 
+async def test_cors_allows_configured_frontend_origin(client):
+    """CORS allows requests from the configured FRONTEND_URL / ALLOWED_ORIGINS."""
+    resp = await client.options(
+        "/api/health",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    # The test app defaults FRONTEND_URL=http://localhost:5173
+    assert resp.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+async def test_cors_does_not_echo_unknown_origin(client):
+    """CORS does not include an unknown origin in the allow header."""
+    resp = await client.get(
+        "/api/health",
+        headers={"Origin": "https://evil.example.com"},
+    )
+    assert resp.headers.get("access-control-allow-origin") != "https://evil.example.com"
+
+
+def test_parse_allowed_origins_falls_back_for_blank_input():
+    """Blank or whitespace-only ALLOWED_ORIGINS falls back to FRONTEND_URL."""
+    from main import _parse_allowed_origins
+
+    assert _parse_allowed_origins("", "https://rightworld.io") == ["https://rightworld.io"]
+    assert _parse_allowed_origins("   ", "https://rightworld.io") == ["https://rightworld.io"]
+    assert _parse_allowed_origins(" ,  , ", "https://rightworld.io") == ["https://rightworld.io"]
+
+
+def test_parse_allowed_origins_keeps_non_empty_entries():
+    """Configured origins are stripped and preserved."""
+    from main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(
+        " https://rightworld.io, https://app.rightworld.io  ,",
+        "https://fallback.example",
+    ) == ["https://rightworld.io", "https://app.rightworld.io"]
+
 
 async def test_google_login_rate_limited_after_10_requests(client):
     """Returns 429 on the 11th auth request from the same client."""

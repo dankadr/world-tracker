@@ -97,6 +97,16 @@ JWT_EXPIRE_DAYS = 30
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
+
+def _parse_allowed_origins(raw_origins: str, fallback_origin: str) -> list[str]:
+    parsed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    return parsed_origins or [fallback_origin]
+
+
+# ALLOWED_ORIGINS: comma-separated list of allowed CORS origins.
+# Falls back to [FRONTEND_URL] when unset or when the parsed list is empty.
+ALLOWED_ORIGINS = _parse_allowed_origins(os.getenv("ALLOWED_ORIGINS", ""), FRONTEND_URL)
+
 VALID_COUNTRIES = {
     "ch", "us", "usparks", "nyc", "no", "ca", "capitals", "jp", "au", "unesco",
     "ph", "br", "fr", "de", "it", "es", "mx", "gb", "in", "nz",
@@ -154,7 +164,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
