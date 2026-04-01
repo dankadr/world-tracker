@@ -49,7 +49,7 @@ vi.mock('../../utils/easterEggs', () => ({
 }));
 
 describe('WorldSidebar', () => {
-  it('shows a desktop header settings button and opens the settings panel', async () => {
+  it('shows a desktop footer settings toggle and opens the settings panel', async () => {
     const user = userEvent.setup();
 
     render(
