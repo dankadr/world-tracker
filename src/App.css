@@ -1845,18 +1845,30 @@ body {
 }
 
 .map-search-result {
+  margin: 0;
+}
+
+.map-search-result-btn {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 7px 12px;
+  border: none;
+  background: transparent;
   cursor: pointer;
   font-size: 0.82rem;
+  font-family: inherit;
   color: var(--text-primary);
+  text-align: left;
   transition: background 0.12s;
 }
 
-.map-search-result:hover {
+.map-search-result-btn:hover,
+.map-search-result-btn:focus-visible,
+.map-search-result-btn.is-active {
   background: var(--hover-bg);
+  outline: none;
 }
 
 .map-search-result-icon {

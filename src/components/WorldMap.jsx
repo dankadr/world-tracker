@@ -262,6 +262,15 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
 
 function FitVisited({ visited, geoJsonRef }) {
   const map = useMap();
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation?.(el);
+    L.DomEvent.disableScrollPropagation?.(el);
+  }, []);
+
   const handleClick = () => {
     const bounds = L.latLngBounds([]);
     geoJsonRef.current?.eachLayer((l) => {
@@ -272,9 +281,16 @@ function FitVisited({ visited, geoJsonRef }) {
     if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
   };
   return (
-    <div className="fit-visited-btn leaflet-control" onClick={handleClick} title="Zoom to visited countries">
+    <button
+      ref={buttonRef}
+      type="button"
+      className="fit-visited-btn leaflet-control"
+      onClick={handleClick}
+      title="Zoom to visited countries"
+      aria-label="Zoom to visited countries"
+    >
       ⊡ Zoom to visited
-    </div>
+    </button>
   );
 }
 
@@ -580,7 +596,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           unescoActive={unescoActive}
         />}
         {unescoActive && <UnescoLayer />}
-        {!gameMode && <MapSearch geoJsonRef={geoJsonRef} />}
+        {!gameMode && <MapSearch geoJsonRef={geoJsonRef} searchWorldData={modifiedWorldData} />}
         {!gameMode && visited.size > 0 && <FitVisited visited={visited} geoJsonRef={geoJsonRef} />}
         {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
           <FriendOverlayLegend friendOverlayData={friendOverlayData} />

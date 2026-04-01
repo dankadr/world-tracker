@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import worldData from '../data/world.json';
@@ -6,29 +6,40 @@ import capitalsData from '../data/capitals.json';
 
 const MAX_RESULTS = 6;
 
-export default function MapSearch({ geoJsonRef }) {
+function getResultKey(result) {
+  return `${result.type}-${result.id}`;
+}
+
+export default function MapSearch({ geoJsonRef, searchWorldData = worldData }) {
   const map = useMap();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
+  const availableCountryIds = useMemo(
+    () => new Set(searchWorldData.features.map((feature) => feature.properties.id)),
+    [searchWorldData]
+  );
 
   const search = useCallback((q) => {
     if (!q.trim()) {
       setResults([]);
       setOpen(false);
+      setActiveIndex(-1);
       return;
     }
     const lower = q.toLowerCase();
 
-    const countries = worldData.features
+    const countries = searchWorldData.features
       .filter((f) => f.properties.name?.toLowerCase().includes(lower))
       .slice(0, MAX_RESULTS)
       .map((f) => ({ type: 'country', id: f.properties.id, name: f.properties.name }));
 
     const remaining = MAX_RESULTS - countries.length;
     const capitals = capitalsData.features
+      .filter((f) => availableCountryIds.has(f.properties.country || f.properties.id))
       .filter((f) => f.properties.name?.toLowerCase().includes(lower))
       .slice(0, remaining)
       .map((f) => ({
@@ -42,7 +53,8 @@ export default function MapSearch({ geoJsonRef }) {
     const combined = [...countries, ...capitals];
     setResults(combined);
     setOpen(combined.length > 0);
-  }, []);
+    setActiveIndex(combined.length > 0 ? 0 : -1);
+  }, [availableCountryIds, searchWorldData]);
 
   const handleChange = (e) => {
     const q = e.target.value;
@@ -50,10 +62,18 @@ export default function MapSearch({ geoJsonRef }) {
     search(q);
   };
 
+  const closeResults = useCallback((shouldBlur = false) => {
+    setOpen(false);
+    setActiveIndex(-1);
+    if (shouldBlur) {
+      inputRef.current?.blur();
+    }
+  }, []);
+
   const handleSelect = (result) => {
     setQuery('');
     setResults([]);
-    setOpen(false);
+    closeResults();
     if (result.type === 'country') {
       if (!geoJsonRef.current) return;
       geoJsonRef.current.eachLayer((l) => {
@@ -68,18 +88,37 @@ export default function MapSearch({ geoJsonRef }) {
     }
   };
 
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      closeResults(true);
+      return;
+    }
+    if (results.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((index) => (index < results.length - 1 ? index + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((index) => (index > 0 ? index - 1 : results.length - 1));
+    } else if (e.key === 'Enter' && open && activeIndex >= 0) {
+      e.preventDefault();
+      handleSelect(results[activeIndex]);
+    }
+  };
+
   // Close on outside click or Escape
   useEffect(() => {
     if (!open) return;
     function handleClick(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-        setOpen(false);
+        closeResults();
       }
     }
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        setOpen(false);
-        inputRef.current?.blur();
+        closeResults(true);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -90,14 +129,14 @@ export default function MapSearch({ geoJsonRef }) {
       document.removeEventListener('touchstart', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open]);
+  }, [closeResults, open]);
 
   // Prevent map interactions when interacting with search
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
-    L.DomEvent.disableClickPropagation(el);
-    L.DomEvent.disableScrollPropagation(el);
+    L.DomEvent.disableClickPropagation?.(el);
+    L.DomEvent.disableScrollPropagation?.(el);
   }, []);
 
   return (
@@ -112,14 +151,17 @@ export default function MapSearch({ geoJsonRef }) {
           className="map-search-input"
           type="text"
           placeholder="Search country or city…"
+          aria-label="Search for a country or city"
           value={query}
           onChange={handleChange}
+          onKeyDown={handleInputKeyDown}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
         />
         {query && (
           <button
+            type="button"
             className="map-search-clear"
-            onClick={() => { setQuery(''); setResults([]); setOpen(false); }}
+            onClick={() => { setQuery(''); setResults([]); closeResults(); }}
             aria-label="Clear search"
           >
             ×
@@ -127,15 +169,18 @@ export default function MapSearch({ geoJsonRef }) {
         )}
       </div>
       {open && results.length > 0 && (
-        <ul className="map-search-results">
-          {results.map((r) => (
-            <li
-              key={r.id}
-              className="map-search-result"
-              onClick={() => handleSelect(r)}
-            >
-              <span className="map-search-result-icon">{r.type === 'country' ? '🌍' : '📍'}</span>
-              <span className="map-search-result-name">{r.name}</span>
+        <ul className="map-search-results" aria-label="Search results">
+          {results.map((r, index) => (
+            <li key={getResultKey(r)} className="map-search-result">
+              <button
+                type="button"
+                className={`map-search-result-btn${index === activeIndex ? ' is-active' : ''}`}
+                onClick={() => handleSelect(r)}
+                onMouseEnter={() => setActiveIndex(index)}
+              >
+                <span className="map-search-result-icon">{r.type === 'country' ? '🌍' : '📍'}</span>
+                <span className="map-search-result-name">{r.name}</span>
+              </button>
             </li>
           ))}
         </ul>
