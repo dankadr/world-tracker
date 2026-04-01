@@ -97,6 +97,14 @@ body {
   transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
+.sidebar-mobile-summary {
+  display: none;
+}
+
+.sidebar-mobile-chrome {
+  display: block;
+}
+
 .sidebar-header {
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--divider);
@@ -2388,6 +2396,86 @@ body {
   /* Sidebar inside bottom sheet: compact */
   .sidebar-header {
     padding: 8px 14px 6px;
+  }
+
+  .sidebar-mobile-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 20px);
+    margin: 0 10px;
+    padding: 0 14px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-primary);
+    text-align: left;
+    font-family: inherit;
+    transition: max-height 0.28s ease, opacity 0.22s ease, margin 0.28s ease,
+      padding 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+  }
+
+  .sidebar.mobile-chrome-collapsed .sidebar-mobile-summary {
+    margin: 8px 10px 6px;
+    padding: 10px 14px;
+    max-height: 72px;
+    opacity: 1;
+    background: var(--glass-bg);
+    border-color: var(--glass-border-subtle);
+    box-shadow: var(--glass-specular);
+  }
+
+  .sidebar-mobile-summary-flag {
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .sidebar-mobile-summary-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sidebar-mobile-summary-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .sidebar-mobile-summary-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-mobile-summary-action {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .sidebar-mobile-chrome {
+    max-height: 960px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.28s ease, opacity 0.22s ease, transform 0.28s ease;
+  }
+
+  .sidebar.mobile-chrome-collapsed .sidebar-mobile-chrome {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
   }
 
   .sidebar-title {
