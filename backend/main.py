@@ -473,7 +473,7 @@ async def was_recently_emailed(user_id: int | str, email_type: str, db: AsyncSes
             LIMIT 1
             """
         ),
-        {"uid": str(user_id), "email_type": email_type, "cutoff": cutoff},
+        {"uid": int(user_id), "email_type": email_type, "cutoff": cutoff},
     )
     return row.first() is not None
 
@@ -544,7 +544,7 @@ async def compute_bucket_reminders(target_user: User, db: AsyncSession) -> list[
     reminders = []
     for item in items:
         target_date = dec_str_safe(target_user.id, item.target_date)
-        if not target_date or target_date not in month_window:
+        if not target_date or target_date[:7] not in month_window:
             continue
         reminders.append({
             "tracker_id": item.tracker_id,

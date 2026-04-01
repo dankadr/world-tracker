@@ -418,6 +418,7 @@ export default function WorldSidebar({
             onClick={() => setShowSettings((v) => !v)}
             aria-expanded={showSettings}
             aria-controls="world-sidebar-settings-panel"
+            aria-label="Open settings"
             type="button"
           >
             <span className="sidebar-settings-toggle-label"><span aria-hidden="true">⚙</span> Settings</span>
