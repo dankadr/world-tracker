@@ -384,11 +384,11 @@ export default function App() {
 
   const handleSearchSelect = useCallback((entry) => {
     if (entry.type === 'country') {
-      // Navigate to the world map for the selected country.
+      // Switch to the world map.
       setView('world');
       if (isMobile) switchTab('map');
     } else if (entry.type === 'region') {
-      // Navigate to the tracker detail view for the region's country.
+      // Open the region's tracker in detail view.
       setCountryId(entry.trackerId);
       setView('detail');
       if (isMobile) switchTab('map');
@@ -397,6 +397,7 @@ export default function App() {
       setView('detail');
       if (isMobile) switchTab('map');
     } else if (entry.type === 'unesco') {
+      // Switch to the world map.
       setView('world');
       if (isMobile) switchTab('map');
     }
