@@ -56,6 +56,7 @@ export default function GlobalSearch({ onClose, onSelect }) {
   const [query, setQuery] = useState('');
   const { groups, isLoading, recentSearches, recordSearch, clearRecent } = useGlobalSearch(query);
   const inputRef = useRef(null);
+  const trimmedQuery = query.trim();
 
   // Focus input on mount
   useEffect(() => {
@@ -76,6 +77,12 @@ export default function GlobalSearch({ onClose, onSelect }) {
   // Reset active index when results change
   useEffect(() => { setActiveIdx(-1); }, [groups]);
 
+  const handleSelect = useCallback((item) => {
+    recordSearch(item);
+    onSelect(item);
+    onClose();
+  }, [recordSearch, onSelect, onClose]);
+
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -88,16 +95,10 @@ export default function GlobalSearch({ onClose, onSelect }) {
       const item = flatItems[activeIdx];
       if (item) handleSelect(item);
     }
-  }, [flatItems, activeIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flatItems, activeIdx, handleSelect]);
 
-  const handleSelect = useCallback((item) => {
-    recordSearch(item);
-    onSelect(item);
-    onClose();
-  }, [recordSearch, onSelect, onClose]);
-
-  const showRecent = !query && recentSearches.length > 0;
-  const showEmpty = query.length >= 2 && !isLoading && groups.length === 0;
+  const showRecent = trimmedQuery.length === 0 && recentSearches.length > 0;
+  const showEmpty = trimmedQuery.length >= 2 && !isLoading && groups.length === 0;
 
   let flatIdx = 0;
 
@@ -168,7 +169,7 @@ export default function GlobalSearch({ onClose, onSelect }) {
           )}
 
           {/* Prompt when no query and no recent */}
-          {!query && !showRecent && (
+          {trimmedQuery.length === 0 && !showRecent && (
             <div className="gs-status gs-status--hint">
               Type to search countries, regions, and UNESCO sites
             </div>

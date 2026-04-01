@@ -261,3 +261,14 @@
     display: none;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-backdrop,
+  .gs-modal,
+  .gs-clear-btn,
+  .gs-clear-recent,
+  .gs-result-item {
+    animation: none;
+    transition: none;
+  }
+}

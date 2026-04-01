@@ -384,11 +384,11 @@ export default function App() {
 
   const handleSearchSelect = useCallback((entry) => {
     if (entry.type === 'country') {
-      // Navigate to world view and select the country
+      // Navigate to the world map for the selected country.
       setView('world');
       if (isMobile) switchTab('map');
     } else if (entry.type === 'region') {
-      // Navigate to the tracker and highlight the region
+      // Navigate to the tracker detail view for the region's country.
       setCountryId(entry.trackerId);
       setView('detail');
       if (isMobile) switchTab('map');

@@ -32,15 +32,18 @@ const GEO_MODULES = {
   'india.json': () => import('../data/india.json'),
   'new-zealand.json': () => import('../data/new-zealand.json'),
   'england.json': () => import('../data/england.json'),
+  'capitals.json': () => import('../data/capitals.json'),
 };
 
 let cachedIndex = null;
 let buildPromise = null;
+let buildGeneration = 0;
 
 /**
  * Reset the index cache (call when visited data changes).
  */
 export function resetIndex() {
+  buildGeneration += 1;
   cachedIndex = null;
   buildPromise = null;
 }
@@ -53,11 +56,21 @@ export async function getIndex() {
   if (cachedIndex) return cachedIndex;
   if (buildPromise) return buildPromise;
 
-  buildPromise = _buildIndex().then((idx) => {
-    cachedIndex = idx;
-    buildPromise = null;
+  const generation = buildGeneration;
+  const pendingBuild = _buildIndex().then((idx) => {
+    if (generation === buildGeneration) {
+      cachedIndex = idx;
+    }
     return idx;
   });
+
+  const trackedBuild = pendingBuild.finally(() => {
+    if (buildPromise === trackedBuild) {
+      buildPromise = null;
+    }
+  });
+
+  buildPromise = trackedBuild;
   return buildPromise;
 }
 
@@ -80,29 +93,37 @@ async function _buildIndex() {
   }
 
   // ── Tracker regions ───────────────────────────────────────────────────
-  for (const tracker of countriesConfig) {
-    const loader = GEO_MODULES[tracker.geoFile];
-    if (!loader) continue;
-    try {
-      const mod = await loader();
-      const geo = mod.default || mod;
-      for (const feature of geo.features || []) {
-        const { id, name } = feature.properties;
-        if (!id || !name) continue;
-        // Skip boroughs (sub-regions not shown as primary regions)
-        if (feature.properties.isBorough) continue;
-        entries.push({
-          id: `region:${tracker.id}:${id}`,
-          type: 'region',
-          trackerId: tracker.id,
-          regionId: id,
-          label: name,
-          sublabel: `${tracker.name} · ${tracker.regionLabelSingular || tracker.regionLabel}`,
-          flag: tracker.flag || null,
-        });
+  const trackerGeoResults = await Promise.all(
+    countriesConfig.map(async (tracker) => {
+      const loader = GEO_MODULES[tracker.geoFile];
+      if (!loader) return { tracker, geo: null };
+
+      try {
+        const mod = await loader();
+        return { tracker, geo: mod.default || mod };
+      } catch {
+        return { tracker, geo: null };
       }
-    } catch {
-      // Skip unavailable data files silently
+    })
+  );
+
+  for (const { tracker, geo } of trackerGeoResults) {
+    if (!geo?.features) continue;
+
+    for (const feature of geo.features) {
+      const { id, name } = feature.properties || {};
+      if (!id || !name) continue;
+      // Skip boroughs (sub-regions not shown as primary regions)
+      if (feature.properties?.isBorough) continue;
+      entries.push({
+        id: `region:${tracker.id}:${id}`,
+        type: 'region',
+        trackerId: tracker.id,
+        regionId: id,
+        label: name,
+        sublabel: `${tracker.name} · ${tracker.regionLabelSingular || tracker.regionLabel}`,
+        flag: tracker.flag || null,
+      });
     }
   }
 
