@@ -18,7 +18,6 @@ export default function ActionSheet({ isOpen, title, message, actions = [], onCa
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
-
   if (!isOpen) return null;
 
   const handleOverlayClick = () => {

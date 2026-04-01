@@ -26,7 +26,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from typing import Annotated
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -95,6 +95,8 @@ JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-please")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 30
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# Support multiple origins (comma-separated) for mobile app / staging environments
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_URLS", FRONTEND_URL).split(",") if o.strip()]
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 
@@ -205,7 +207,7 @@ async def log_requests(request: Request, call_next):
 
 # --------------- Schemas ---------------
 class GoogleLoginRequest(BaseModel):
-    token: str
+    token: str = Field(max_length=4096)
 
 
 class GoogleLoginResponse(BaseModel):
@@ -214,10 +216,31 @@ class GoogleLoginResponse(BaseModel):
 
 
 class VisitedRequest(BaseModel):
-    regions: list[str]
+    regions: list[str] = Field(max_length=2000)
     dates: dict[str, str] | None = None
     notes: dict[str, str] | None = None
-    wishlist: list[str] | None = None
+    wishlist: list[str] | None = Field(default=None, max_length=2000)
+
+    @field_validator('regions', 'wishlist', mode='before')
+    @classmethod
+    def limit_string_items(cls, v):
+        if v is None:
+            return v
+        return [s[:200] for s in v]
+
+    @field_validator('notes', mode='before')
+    @classmethod
+    def limit_note_values(cls, v):
+        if v is None:
+            return v
+        return {k[:200]: val[:10_000] for k, val in v.items()}
+
+    @field_validator('dates', mode='before')
+    @classmethod
+    def limit_date_values(cls, v):
+        if v is None:
+            return v
+        return {k[:200]: val[:10] for k, val in v.items()}
 
 
 class VisitedResponse(BaseModel):
@@ -229,7 +252,12 @@ class VisitedResponse(BaseModel):
 
 
 class WorldVisitedRequest(BaseModel):
-    countries: list[str]
+    countries: list[str] = Field(max_length=300)
+
+    @field_validator('countries', mode='before')
+    @classmethod
+    def limit_country_ids(cls, v):
+        return [s[:10] for s in v]
 
 
 class WorldVisitedResponse(BaseModel):
@@ -237,36 +265,36 @@ class WorldVisitedResponse(BaseModel):
 
 
 class ToggleRegionRequest(BaseModel):
-    region: str
-    action: str  # "add" or "remove"
+    region: str = Field(max_length=200)
+    action: str = Field(max_length=10)  # "add" or "remove"
 
 
 class ToggleWishlistRequest(BaseModel):
-    region: str
-    action: str  # "add" or "remove"
+    region: str = Field(max_length=200)
+    action: str = Field(max_length=10)  # "add" or "remove"
 
 
 class ToggleWorldRequest(BaseModel):
-    country: str
-    action: str  # "add" or "remove"
+    country: str = Field(max_length=10)
+    action: str = Field(max_length=10)  # "add" or "remove"
 
 
 class FriendRequestCreate(BaseModel):
-    friend_code: str
+    friend_code: str = Field(min_length=4, max_length=20)
 
 
 class WishlistItemCreate(BaseModel):
-    priority: str = "medium"  # high | medium | low
-    target_date: str | None = None  # YYYY-MM
-    notes: str | None = None
-    category: str = "solo"  # solo | friends | family | work
+    priority: str = Field(default="medium", max_length=10)  # high | medium | low
+    target_date: str | None = Field(default=None, max_length=7)  # YYYY-MM
+    notes: str | None = Field(default=None, max_length=2000)
+    category: str = Field(default="solo", max_length=20)  # solo | friends | family | work
 
 
 class WishlistItemUpdate(BaseModel):
-    priority: str | None = None
-    target_date: str | None = None
-    notes: str | None = None
-    category: str | None = None
+    priority: str | None = Field(default=None, max_length=10)
+    target_date: str | None = Field(default=None, max_length=7)
+    notes: str | None = Field(default=None, max_length=2000)
+    category: str | None = Field(default=None, max_length=20)
 
 
 class WishlistItemResponse(BaseModel):
@@ -280,7 +308,7 @@ class WishlistItemResponse(BaseModel):
 
 
 class BatchAction(BaseModel):
-    action: str  # region_toggle | world_toggle | wishlist_upsert | wishlist_delete
+    action: str = Field(max_length=50)  # region_toggle | world_toggle | wishlist_upsert | wishlist_delete
     payload: dict
 
 
@@ -289,19 +317,19 @@ class BatchRequest(BaseModel):
 
 
 class ChallengeCreate(BaseModel):
-    title: str
-    description: str | None = None
-    tracker_id: str  # 'world', 'ch', 'us', etc.
-    target_regions: list[str]  # region IDs or ['*'] for all
-    challenge_type: str = "collaborative"  # 'collaborative' | 'race'
-    difficulty: str | None = None  # 'easy' | 'medium' | 'hard'
-    duration: str | None = None  # 'open-ended' | '48h' | '1w' | '1m'
-    invite_friend_ids: list[int] = []
+    title: str = Field(min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
+    tracker_id: str = Field(max_length=20)  # 'world', 'ch', 'us', etc.
+    target_regions: list[str] = Field(max_length=500)  # region IDs or ['*'] for all
+    challenge_type: str = Field(default="collaborative", max_length=20)  # 'collaborative' | 'race'
+    difficulty: str | None = Field(default=None, max_length=10)  # 'easy' | 'medium' | 'hard'
+    duration: str | None = Field(default=None, max_length=20)  # 'open-ended' | '48h' | '1w' | '1m'
+    invite_friend_ids: list[int] = Field(default=[], max_length=50)
 
 
 class ChallengeUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
 
 
 # --------------- Auth helpers ---------------

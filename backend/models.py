@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 from datetime import datetime, timezone
 
@@ -12,9 +12,9 @@ except ImportError:
 
 
 def generate_friend_code(length=8):
-    """Generate a random 8-char alphanumeric code like 'AXQJ7K2M'."""
+    """Generate a cryptographically random 8-char alphanumeric code like 'AXQJ7K2M'."""
     chars = string.ascii_uppercase + string.digits
-    return ''.join(random.choices(chars, k=length))
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 
 class User(Base):
@@ -143,9 +143,8 @@ class XpLog(Base):
 
 
 def generate_challenge_id():
-    """Generate a random 12-char alphanumeric challenge ID."""
-    chars = string.ascii_lowercase + string.digits
-    return ''.join(random.choices(chars, k=12))
+    """Generate a cryptographically random 12-char URL-safe challenge ID."""
+    return secrets.token_urlsafe(9)[:12]
 
 
 class Challenge(Base):
