@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c07a30" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- box -->
+  <rect x="3" y="10" width="18" height="11" rx="1.5" fill="#d89648" fill-opacity="0.15"/>
+  <rect x="3" y="10" width="18" height="11" rx="1.5"/>
+  <!-- arrow up out of box -->
+  <line x1="12" y1="15" x2="12" y2="3"/>
+  <polyline points="8,7 12,3 16,7"/>
+</svg>

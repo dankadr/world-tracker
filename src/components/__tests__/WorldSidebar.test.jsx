@@ -66,7 +66,7 @@ describe('WorldSidebar', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /open settings/i }));
+    await user.click(screen.getByRole('button', { name: /^settings$/i }));
 
     expect(screen.getByText('Settings Panel')).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe('WorldSidebar', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /open settings/i }));
+    await user.click(screen.getByRole('button', { name: /^settings$/i }));
     await user.click(screen.getByRole('button', { name: /reset everything/i }));
     await user.click(screen.getByRole('button', { name: /confirm reset/i }));
 
