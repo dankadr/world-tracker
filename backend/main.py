@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Depends, HTTPException, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import jwt, JWTError
@@ -103,6 +103,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # Support multiple origins (comma-separated) for mobile app / staging environments
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_URLS", FRONTEND_URL).split(",") if o.strip()]
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+CRON_SECRET = os.getenv("CRON_SECRET", "")
 
 
 def _parse_allowed_origins(raw_origins: str, fallback_origin: str) -> list[str]:
@@ -377,6 +378,182 @@ async def require_admin(user: CurrentUser = Depends(get_current_user)):
     return user
 
 
+async def require_cron_secret(authorization: str = Header(None)):
+    """Dependency for scheduled routes triggered by Vercel cron or manual ops."""
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail="CRON_SECRET not configured")
+    if authorization != f"Bearer {CRON_SECRET}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
+
+
+def build_unsubscribe_token(user_id: int) -> str:
+    payload = {
+        "sub": str(user_id),
+        "purpose": "unsubscribe",
+        "exp": datetime.now(timezone.utc) + timedelta(days=365),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def build_unsubscribe_url(user_id: int) -> str:
+    return f"{FRONTEND_URL.rstrip('/')}/api/email/unsubscribe/{build_unsubscribe_token(user_id)}"
+
+
+def decode_unsubscribe_token(token: str) -> int:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("purpose") != "unsubscribe":
+            raise JWTError("wrong purpose")
+        return int(payload["sub"])
+    except (JWTError, KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid or expired unsubscribe token")
+
+
+async def unsubscribe_user_email(user_id: int, db: AsyncSession) -> dict:
+    await email_service.get_or_create_preferences(user_id, db)
+    await db.execute(
+        text(
+            """
+            UPDATE email_preferences
+            SET unsubscribed_at = NOW(),
+                weekly_digest = FALSE,
+                monthly_recap = FALSE,
+                friend_notifications = FALSE,
+                challenge_notifications = FALSE,
+                bucket_list_reminders = FALSE,
+                milestone_celebrations = FALSE,
+                marketing = FALSE,
+                updated_at = NOW()
+            WHERE user_id = :uid
+            """
+        ),
+        {"uid": user_id},
+    )
+    await db.commit()
+    return {"status": "unsubscribed", "message": "You have been unsubscribed from all World Tracker emails."}
+
+
+def render_unsubscribe_page(message: str) -> str:
+    safe_message = message.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Tracker Email Preferences</title>
+</head>
+<body style="margin:0;padding:0;background:#faf6f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:48px auto;padding:0 16px;">
+    <div style="background:#fff;border:1px solid #ede8e0;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+      <div style="background:linear-gradient(135deg,#c07a30,#d89648);padding:28px 32px;color:#fff;">
+        <h1 style="margin:0;font-size:28px;">World Tracker</h1>
+        <p style="margin:8px 0 0;font-size:14px;opacity:0.88;">Email preferences updated</p>
+      </div>
+      <div style="padding:32px;">
+        <p style="margin:0 0 16px;color:#4a3820;font-size:16px;line-height:1.6;">{safe_message}</p>
+        <a href="{FRONTEND_URL.rstrip('/')}" style="display:inline-block;background:#c07a30;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;">
+          Open World Tracker
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>"""
+
+
+async def was_recently_emailed(user_id: int | str, email_type: str, db: AsyncSession, *, within_days: int) -> bool:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=within_days)
+    row = await db.execute(
+        text(
+            """
+            SELECT 1
+            FROM email_log
+            WHERE user_id = :uid AND email_type = :email_type AND sent_at >= :cutoff
+            LIMIT 1
+            """
+        ),
+        {"uid": str(user_id), "email_type": email_type, "cutoff": cutoff},
+    )
+    return row.first() is not None
+
+
+async def compute_weekly_digest_summary(target_user: User, db: AsyncSession) -> dict:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+    uid = target_user.id
+
+    world_record = (await db.execute(
+        select(VisitedWorld).where(VisitedWorld.user_id == uid)
+    )).scalar_one_or_none()
+    regions_records = (await db.execute(
+        select(VisitedRegions).where(VisitedRegions.user_id == uid)
+    )).scalars().all()
+    wishlist_items = (await db.execute(
+        select(WishlistItem).where(WishlistItem.user_id == uid)
+    )).scalars().all()
+
+    countries_count = len(dec_json_safe(uid, world_record.countries) or []) if world_record and world_record.countries else 0
+    regions_count = sum(len(dec_json_safe(uid, record.regions) or []) for record in regions_records)
+    bucket_list_count = len(wishlist_items)
+    recent_region_updates = sum(1 for record in regions_records if record.updated_at and record.updated_at >= cutoff)
+    recent_wishlist_updates = sum(1 for item in wishlist_items if item.updated_at and item.updated_at >= cutoff)
+    recent_world_update = bool(world_record and world_record.updated_at and world_record.updated_at >= cutoff)
+
+    activity_bits = []
+    if recent_world_update:
+        activity_bits.append("your world map changed")
+    if recent_region_updates:
+        suffix = "" if recent_region_updates == 1 else "s"
+        activity_bits.append(f"{recent_region_updates} regional tracker{suffix} updated")
+    if recent_wishlist_updates:
+        suffix = "" if recent_wishlist_updates == 1 else "s"
+        activity_bits.append(f"{recent_wishlist_updates} bucket-list item{suffix} changed")
+    if not activity_bits:
+        activity_bits.append("no new changes landed this week, but your map is ready for the next trip")
+
+    return {
+        "countries_count": countries_count,
+        "regions_count": regions_count,
+        "bucket_list_count": bucket_list_count,
+        "level": target_user.level or 1,
+        "xp": target_user.xp or 0,
+        "activity_summary": "; ".join(activity_bits),
+        "has_recent_activity": recent_world_update or recent_region_updates > 0 or recent_wishlist_updates > 0,
+    }
+
+
+def _month_key(dt: datetime) -> str:
+    return dt.strftime("%Y-%m")
+
+
+def _add_months(dt: datetime, count: int) -> datetime:
+    month_index = (dt.month - 1) + count
+    year = dt.year + month_index // 12
+    month = month_index % 12 + 1
+    return dt.replace(year=year, month=month, day=1)
+
+
+async def compute_bucket_reminders(target_user: User, db: AsyncSession) -> list[dict]:
+    month_window = {_month_key(_add_months(datetime.now(timezone.utc), offset)) for offset in range(3)}
+    items = (await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.user_id == target_user.id)
+        .order_by(WishlistItem.target_date.asc(), WishlistItem.created_at.asc())
+    )).scalars().all()
+
+    reminders = []
+    for item in items:
+        target_date = dec_str_safe(target_user.id, item.target_date)
+        if not target_date or target_date not in month_window:
+            continue
+        reminders.append({
+            "tracker_id": item.tracker_id,
+            "region_id": item.region_id,
+            "target_date": target_date,
+        })
+    return reminders
+
+
 @app.post("/admin/encrypt")
 async def admin_encrypt(admin: CurrentUser = Depends(require_admin)):
     """Encrypt all sensitive DB columns. Idempotent — skips already-encrypted rows."""
@@ -455,22 +632,27 @@ async def google_login(request: Request, body: GoogleLoginRequest, db: AsyncSess
     # Send welcome email on first login — wrapped so email failure never breaks auth
     if is_new_user and email:
         try:
-            prefs = await email_service.get_or_create_preferences(str(uid), db)
+            prefs = await email_service.get_or_create_preferences(uid, db)
             if not prefs.get("welcome_sent", False):
-                html = email_service.render_welcome_email(name)
-                await email_service.send_email(
+                html = email_service.render_welcome_email(
+                    name=name,
+                    unsubscribe_url=build_unsubscribe_url(uid),
+                    app_url=FRONTEND_URL,
+                )
+                resend_id = await email_service.send_email(
                     to=email,
                     subject="Welcome to World Tracker — start exploring!",
                     html=html,
                     email_type="welcome",
-                    user_id=str(uid),
+                    user_id=uid,
                     db=db,
                 )
-                await db.execute(
-                    text("UPDATE email_preferences SET welcome_sent = TRUE WHERE user_id = :uid"),
-                    {"uid": str(uid)},
-                )
-                await db.commit()
+                if resend_id:
+                    await db.execute(
+                        text("UPDATE email_preferences SET welcome_sent = TRUE WHERE user_id = :uid"),
+                        {"uid": uid},
+                    )
+                    await db.commit()
         except Exception as exc:
             logger.error("Welcome email failed for user_id=%s: %s", uid, exc)
 
@@ -1976,7 +2158,7 @@ async def get_email_preferences(
     db: AsyncSession = Depends(get_db),
 ):
     """Return the current user's email preferences, creating defaults if missing."""
-    prefs = await email_service.get_or_create_preferences(str(user.id), db)
+    prefs = await email_service.get_or_create_preferences(user.id, db)
     # Remove internal DB metadata before returning
     prefs.pop("user_id", None)
     return prefs
@@ -2009,17 +2191,17 @@ async def update_email_preferences(
         raise HTTPException(status_code=400, detail="No valid preference fields provided")
 
     # Ensure row exists before updating
-    await email_service.get_or_create_preferences(str(user.id), db)
+    await email_service.get_or_create_preferences(user.id, db)
 
     set_clause = ", ".join(f"{col} = :{col}" for col in updates)
-    updates["uid"] = str(user.id)
+    updates["uid"] = user.id
     await db.execute(
         text(f"UPDATE email_preferences SET {set_clause}, updated_at = NOW() WHERE user_id = :uid"),
         updates,
     )
     await db.commit()
 
-    prefs = await email_service.get_or_create_preferences(str(user.id), db)
+    prefs = await email_service.get_or_create_preferences(user.id, db)
     prefs.pop("user_id", None)
     return prefs
 
@@ -2034,25 +2216,106 @@ async def unsubscribe_email(
     The token is a JWT signed with JWT_SECRET containing {"sub": user_id, "purpose": "unsubscribe"}.
     Sets unsubscribed_at on email_preferences so no further emails are sent.
     """
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        if payload.get("purpose") != "unsubscribe":
-            raise JWTError("wrong purpose")
-        user_id = str(payload["sub"])
-    except (JWTError, KeyError):
-        raise HTTPException(status_code=400, detail="Invalid or expired unsubscribe token")
+    return await unsubscribe_user_email(decode_unsubscribe_token(token), db)
 
-    # Ensure row exists then set unsubscribed_at
-    await email_service.get_or_create_preferences(user_id, db)
-    await db.execute(
-        text(
-            "UPDATE email_preferences SET unsubscribed_at = NOW(), updated_at = NOW() "
-            "WHERE user_id = :uid AND unsubscribed_at IS NULL"
-        ),
-        {"uid": user_id},
-    )
-    await db.commit()
-    return {"status": "unsubscribed", "message": "You have been unsubscribed from all World Tracker emails."}
+
+@app.get("/api/email/unsubscribe/{token}", response_class=HTMLResponse)
+async def unsubscribe_email_page(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await unsubscribe_user_email(decode_unsubscribe_token(token), db)
+    return HTMLResponse(render_unsubscribe_page(result["message"]))
+
+
+@app.get("/api/cron/weekly-digest")
+async def send_weekly_digest_emails(
+    _: bool = Depends(require_cron_secret),
+    db: AsyncSession = Depends(get_db),
+):
+    users = (await db.execute(select(User).where(User.email.is_not(None)))).scalars().all()
+
+    sent = 0
+    skipped = 0
+    for target_user in users:
+        prefs = await email_service.get_or_create_preferences(target_user.id, db)
+        if prefs.get("unsubscribed_at") or not prefs.get("weekly_digest", True):
+            skipped += 1
+            continue
+        if await was_recently_emailed(target_user.id, "weekly_digest", db, within_days=6):
+            skipped += 1
+            continue
+
+        summary = await compute_weekly_digest_summary(target_user, db)
+        if not summary["has_recent_activity"]:
+            skipped += 1
+            continue
+
+        html = email_service.render_weekly_digest_email(
+            name=dec_str_safe(target_user.id, target_user.name) or "Explorer",
+            summary=summary,
+            unsubscribe_url=build_unsubscribe_url(target_user.id),
+            app_url=FRONTEND_URL,
+        )
+        resend_id = await email_service.send_email(
+            to=target_user.email,
+            subject="Your weekly World Tracker snapshot",
+            html=html,
+            email_type="weekly_digest",
+            user_id=target_user.id,
+            db=db,
+        )
+        if resend_id:
+            sent += 1
+        else:
+            skipped += 1
+
+    return {"status": "ok", "sent": sent, "skipped": skipped}
+
+
+@app.get("/api/cron/bucket-reminders")
+async def send_bucket_list_reminders(
+    _: bool = Depends(require_cron_secret),
+    db: AsyncSession = Depends(get_db),
+):
+    users = (await db.execute(select(User).where(User.email.is_not(None)))).scalars().all()
+
+    sent = 0
+    skipped = 0
+    for target_user in users:
+        prefs = await email_service.get_or_create_preferences(target_user.id, db)
+        if prefs.get("unsubscribed_at") or not prefs.get("bucket_list_reminders", True):
+            skipped += 1
+            continue
+        if await was_recently_emailed(target_user.id, "bucket_list_reminder", db, within_days=20):
+            skipped += 1
+            continue
+
+        reminders = await compute_bucket_reminders(target_user, db)
+        if not reminders:
+            skipped += 1
+            continue
+
+        html = email_service.render_bucket_reminder_email(
+            name=dec_str_safe(target_user.id, target_user.name) or "Explorer",
+            items=reminders,
+            unsubscribe_url=build_unsubscribe_url(target_user.id),
+            app_url=FRONTEND_URL,
+        )
+        resend_id = await email_service.send_email(
+            to=target_user.email,
+            subject="Your bucket list has trips coming up",
+            html=html,
+            email_type="bucket_list_reminder",
+            user_id=target_user.id,
+            db=db,
+        )
+        if resend_id:
+            sent += 1
+        else:
+            skipped += 1
+
+    return {"status": "ok", "sent": sent, "skipped": skipped}
 
 
 # --------------- Health check ---------------

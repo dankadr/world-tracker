@@ -57,6 +57,13 @@
   min-width: 0;
 }
 
+.settings-copy-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .settings-row-icon {
   font-size: 16px;
   flex-shrink: 0;
@@ -87,6 +94,12 @@
   color: var(--text-muted);
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
   flex-shrink: 0;
+}
+
+.settings-row-caption {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
 }
 
 .settings-row-divider {
@@ -135,4 +148,20 @@
 
 .settings-toggle.on .settings-toggle-thumb {
   transform: translateX(20px);
+}
+
+.settings-helper-text,
+.settings-error-text {
+  margin: 8px 4px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+}
+
+.settings-helper-text {
+  color: var(--text-muted);
+}
+
+.settings-error-text {
+  color: #b54132;
 }

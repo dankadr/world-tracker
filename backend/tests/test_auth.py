@@ -1,6 +1,6 @@
 """Tests for POST /auth/google."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 async def test_google_login_missing_client_id(client):
@@ -41,6 +41,9 @@ async def test_google_login_new_user(client, mock_db):
             "google.oauth2.id_token.verify_oauth2_token",
             return_value=fake_idinfo,
         ),
+        patch("main.email_service.get_or_create_preferences", AsyncMock(return_value={"welcome_sent": False})),
+        patch("main.email_service.render_welcome_email", return_value="<html />"),
+        patch("main.email_service.send_email", AsyncMock(return_value="resend-123")),
     ):
         resp = await client.post("/auth/google", json={"token": "valid-token"})
 
@@ -73,6 +76,7 @@ async def test_google_login_existing_user(client, mock_db):
             "google.oauth2.id_token.verify_oauth2_token",
             return_value=fake_idinfo,
         ),
+        patch("main.email_service.get_or_create_preferences", AsyncMock(return_value={"welcome_sent": True})),
     ):
         resp = await client.post("/auth/google", json={"token": "valid-token"})
 
@@ -82,6 +86,58 @@ async def test_google_login_existing_user(client, mock_db):
     assert data["user"]["id"] == 42
     assert data["user"]["email"] == "existing@example.com"
     assert data["user"]["sub"] == "google-uid-42"
+
+
+async def test_google_login_new_user_sends_welcome_email_once(client, mock_db):
+    mock_db.execute.return_value.scalar_one_or_none.return_value = None
+
+    fake_idinfo = {
+        "sub": "google-uid-456",
+        "email": "fresh@example.com",
+        "name": "Fresh User",
+        "picture": "https://example.com/pic.jpg",
+    }
+    send_email = AsyncMock(return_value="resend-456")
+    render_welcome_email = MagicMock(return_value="<html>welcome</html>")
+
+    with (
+        patch("main.GOOGLE_CLIENT_ID", "test-client-id"),
+        patch("google.oauth2.id_token.verify_oauth2_token", return_value=fake_idinfo),
+        patch("main.email_service.get_or_create_preferences", AsyncMock(return_value={"welcome_sent": False})),
+        patch("main.email_service.render_welcome_email", render_welcome_email),
+        patch("main.email_service.send_email", send_email),
+    ):
+        resp = await client.post("/auth/google", json={"token": "valid-token"})
+
+    assert resp.status_code == 200
+    render_welcome_email.assert_called_once()
+    send_email.assert_awaited_once()
+
+
+async def test_google_login_existing_user_skips_welcome_email(client, mock_db):
+    existing = MagicMock()
+    existing.id = 77
+    existing.email = "existing@example.com"
+    existing.name = "Existing User"
+    existing.picture = "https://example.com/old.jpg"
+    mock_db.execute.return_value.scalar_one_or_none.return_value = existing
+
+    fake_idinfo = {
+        "sub": "google-uid-77",
+        "email": "existing@example.com",
+        "name": "Existing User",
+        "picture": "https://example.com/new.jpg",
+    }
+
+    with (
+        patch("main.GOOGLE_CLIENT_ID", "test-client-id"),
+        patch("google.oauth2.id_token.verify_oauth2_token", return_value=fake_idinfo),
+        patch("main.email_service.send_email", AsyncMock()) as send_email,
+    ):
+        resp = await client.post("/auth/google", json={"token": "valid-token"})
+
+    assert resp.status_code == 200
+    send_email.assert_not_called()
 
 
 async def test_health_endpoint_returns_ok(client):

@@ -1,7 +1,7 @@
 # ToDo: Email System — Notifications, Digests & Engagement
 
 **Date:** 2026-02-24
-**Status:** Planned — user email identities exist, but no email delivery system has been built
+**Status:** In progress — welcome email, preferences, unsubscribe flow, and cron-backed digest/reminder endpoints are now implemented
 **Priority:** Medium
 **Scope:** Add email-based notifications, weekly digests, and engagement emails
 
@@ -9,22 +9,34 @@
 
 ## Overview
 
-Currently the app has no email functionality at all. Users authenticate via Google (which provides their email), but no emails are ever sent. This plan adds a full email system covering transactional emails (welcome, friend requests), engagement emails (weekly digest, achievement notifications), and planning emails (bucket list reminders).
+The repo now has the first usable slice of the email system: new-user welcome emails, persisted email preferences, a real unsubscribe flow, and scheduled endpoints for weekly digests and bucket-list reminders. The broader notification matrix in this document is still future work, but the email platform itself is no longer hypothetical.
 
-## Reality Check (2026-03-25)
+## Reality Check (2026-04-01)
 
-- Google auth does give the app a user email and basic profile identity
-- There is still no Resend integration, no email preferences table, no templates, and no scheduled email jobs
-- This plan remains entirely future-facing
+- Google auth gives the app a user email and now triggers a welcome-email path for new accounts
+- `backend/email_service.py` exists and is wired to Resend, HTML templates, preference checks, and send logging
+- `backend/main.py` exposes `/api/email/preferences`, unsubscribe endpoints, and cron-backed email jobs
+- `vercel.json` already schedules weekly digest and bucket-reminder cron paths
+- Frontend settings UI now exposes account-level email preferences
+- Still missing: richer transactional coverage (friend/challenge emails), monthly recap, year-in-review mail, and deeper analytics/personalization
 
 ## Current State
 
-- **Auth:** Google Sign-In returns user's email — stored in the users table via `backend/models.py`
-- **Backend:** FastAPI at `backend/main.py` — single file, 1,691 lines
-- **Database:** PostgreSQL (Neon serverless in production)
-- **No email service configured**
-- **No email templates**
-- **No user preferences for notifications**
+- **Auth:** Google Sign-In returns the user's email and now attempts a welcome email for first-login accounts
+- **Backend:** FastAPI at `backend/main.py` exposes preferences, unsubscribe, weekly digest, and bucket-reminder routes
+- **Database:** PostgreSQL (Neon serverless in production) with auto-created `email_preferences` and `email_log` tables
+- **Email service:** `backend/email_service.py` wraps Resend, logging, branded HTML templates, and unsubscribe links
+- **Frontend preferences UI:** `src/components/EmailPreferences.jsx` is embedded in `SettingsPanel`
+- **Scheduled jobs:** `/api/cron/weekly-digest` and `/api/cron/bucket-reminders` are implemented to match existing Vercel cron config
+
+## Progress Update (2026-04-01)
+
+- Fixed the welcome-email path so it only marks `welcome_sent` after a successful send and now includes a working unsubscribe link
+- Added automatic creation of `email_preferences` and `email_log` tables during backend startup instead of relying on a one-off manual SQL step
+- Added GET and POST unsubscribe flows, including an HTML landing page for one-click unsubscribe links
+- Implemented cron-protected weekly digest and bucket-reminder endpoints with duplicate-send guards
+- Added frontend email-preferences controls to Settings so signed-in users can manage delivery preferences in-app
+- Added backend and frontend tests covering auth welcome-email behavior, preference routes, unsubscribe, cron delivery flow, and the new UI
 
 ## Email Types
 

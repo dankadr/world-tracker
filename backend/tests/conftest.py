@@ -49,6 +49,8 @@ def mock_db():
     result.scalars.return_value.all.return_value = []
     result.scalar.return_value = 0
     result.all.return_value = []
+    result.first.return_value = None
+    result.mappings.return_value.one_or_none.return_value = None
     db.execute.return_value = result
     return db
 

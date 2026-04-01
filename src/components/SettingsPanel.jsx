@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import DataExport from './DataExport';
 import DataImport from './DataImport';
+import EmailPreferences from './EmailPreferences';
 import './SettingsPanel.css';
 
 const APP_VERSION = '1.0.0';
@@ -103,6 +104,8 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
           )}
         </div>
       </div>
+
+      <EmailPreferences />
 
       {onOpenAdmin && (
         <div className="settings-section">
