@@ -104,8 +104,8 @@ export default function CapitalQuiz({ subMode = 'country_to_capital', onBack, on
           {question.prompt}
         </div>
         {status === 'reviewing' && (
-          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: isCorrect ? '#22c55e' : '#ef4444', textAlign: 'center' }}>
-            {isCorrect ? '✓ Correct!' : `✗ ${question.answer}`}
+          <div role="status" aria-live="polite" style={{ fontSize: '1.1rem', fontWeight: 600, color: isCorrect ? '#22c55e' : '#ef4444', textAlign: 'center' }}>
+            {isCorrect ? 'Correct!' : `Incorrect — ${question.answer}`}
           </div>
         )}
         <div style={{ width: '100%', maxWidth: 400 }}>
