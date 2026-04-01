@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import useKeyboardAvoidance from '../hooks/useKeyboardAvoidance';
 import { haptics } from '../utils/haptics';
 
 /**
@@ -51,7 +52,11 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
   const [snapKey, setSnapKey] = useState('peek');
   const [, forceRerender] = useState(0);
   const sheetRef = useRef(null);
+  const sheetBodyRef = useRef(null);
   const dragState = useRef(null);
+
+  useKeyboardAvoidance(sheetBodyRef);
+  // Rolling window of last 3 touch positions for velocity calc
   const touchHistory = useRef([]);
   const suppressTapRef = useRef(false);
 
@@ -228,7 +233,7 @@ export default function MobileBottomSheet({ children, peekContent, onSnapChange,
           </div>
         )}
       </div>
-      <div className="sheet-body" style={{ display: isPeek ? 'none' : 'flex' }}>
+      <div className="sheet-body" ref={sheetBodyRef} style={{ display: isPeek ? 'none' : 'flex' }}>
         {children}
       </div>
     </div>

@@ -11,7 +11,7 @@ export default function GameResultScreen({ title, score, timeTaken, isNewBest, o
   const pct = total > 0 ? Math.round((score.correct / total) * 100) : 0;
 
   return (
-    <div className="game-result-screen">
+    <div className="game-result-screen" role="status" aria-live="polite" aria-label={`${title} results: ${score.correct} out of ${total} correct, ${pct}%`}>
       <p className="game-result-title">{title} — Results</p>
 
       <div className="game-result-score">{score.correct}/{total}</div>
@@ -21,20 +21,20 @@ export default function GameResultScreen({ title, score, timeTaken, isNewBest, o
 
       <div className="game-result-breakdown">
         <div className="game-result-stat">
-          <span className="game-result-stat-num" style={{ color: '#22c55e' }}>✓ {score.correct}</span>
+          <span className="game-result-stat-num" style={{ color: '#22c55e' }}><span aria-hidden="true">✓</span> {score.correct}</span>
           <span className="game-result-stat-label">correct</span>
         </div>
         <div className="game-result-stat">
-          <span className="game-result-stat-num" style={{ color: '#ef4444' }}>✗ {score.incorrect}</span>
+          <span className="game-result-stat-num" style={{ color: '#ef4444' }}><span aria-hidden="true">✗</span> {score.incorrect}</span>
           <span className="game-result-stat-label">wrong</span>
         </div>
         <div className="game-result-stat">
-          <span className="game-result-stat-num" style={{ color: '#f59e0b' }}>⤼ {score.skipped}</span>
+          <span className="game-result-stat-num" style={{ color: '#f59e0b' }}><span aria-hidden="true">⤼</span> {score.skipped}</span>
           <span className="game-result-stat-label">skipped</span>
         </div>
       </div>
 
-      {isNewBest && <div className="game-result-new-best">🏆 New best score!</div>}
+      {isNewBest && <div className="game-result-new-best" role="status"><span aria-hidden="true">🏆</span> New best score!</div>}
 
       <div className="game-result-actions">
         <button className="game-btn game-btn-primary" onClick={onPlayAgain}>Play Again</button>
