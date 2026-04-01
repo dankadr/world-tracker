@@ -70,14 +70,16 @@ async def client(mock_db):
 
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
-    try:
-        from main import limiter
-        limiter._storage.reset()
-    except Exception:
-        pass
+    def reset_storage(phase: str) -> None:
+        try:
+            from main import limiter
+            storage = limiter._storage
+            reset = storage.reset
+        except (ImportError, AttributeError) as exc:
+            pytest.fail(f"Rate limiter reset unavailable {phase}: {exc}")
+
+        reset()
+
+    reset_storage("before test")
     yield
-    try:
-        from main import limiter
-        limiter._storage.reset()
-    except Exception:
-        pass
+    reset_storage("after test")
