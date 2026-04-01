@@ -76,10 +76,12 @@ export default function FlagQuiz({ onBack, onQuit, onPlayAgain }) {
         {status === 'reviewing' && (
           <div
             data-testid="flag-quiz-feedback"
+            role="status"
+            aria-live="polite"
             style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.1rem', fontWeight: 600, color: isCorrect ? '#22c55e' : '#ef4444', textAlign: 'center' }}
           >
-            {!isCorrect && <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{question.flag}</span>}
-            <span>{isCorrect ? '✓ Correct!' : `✗ ${question.name}`}</span>
+            {!isCorrect && <span aria-hidden="true" style={{ fontSize: '1.5rem', lineHeight: 1 }}>{question.flag}</span>}
+            <span>{isCorrect ? 'Correct!' : `Incorrect — ${question.name}`}</span>
           </div>
         )}
         <div style={{ width: '100%', maxWidth: 400 }}>

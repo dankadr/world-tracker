@@ -34,12 +34,13 @@ export default function XpNotification() {
   if (notifications.length === 0) return null;
 
   return createPortal(
-    <div className="xp-toast-container">
+    <div className="xp-toast-container" aria-live="polite" aria-atomic="false">
       {notifications.map((n) => (
         <div
           key={n.id}
           className={`xp-toast ${n.levelUp ? 'xp-toast-levelup' : ''}`}
           onClick={() => dismissNotification(n.id)}
+          role="status"
           style={{ pointerEvents: 'auto' }}
         >
           {n.levelUp ? (

@@ -66,3 +66,20 @@ async def client(mock_db):
             yield c
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    def reset_storage(phase: str) -> None:
+        try:
+            from main import limiter
+            storage = limiter._storage
+            reset = storage.reset
+        except (ImportError, AttributeError) as exc:
+            pytest.fail(f"Rate limiter reset unavailable {phase}: {exc}")
+
+        reset()
+
+    reset_storage("before test")
+    yield
+    reset_storage("after test")
