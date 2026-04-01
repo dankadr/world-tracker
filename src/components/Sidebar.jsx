@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { countryList } from '../data/countries';
 import { useTheme } from '../context/ThemeContext';
 import AuthButton from './AuthButton';
@@ -10,7 +10,7 @@ import StatsModal from './StatsModal';
 import AvatarCanvas from './AvatarCanvas';
 import AvatarEditor from './AvatarEditor';
 import LevelBadge from './LevelBadge';
-import ConfirmDialog from './ConfirmDialog';
+import { useActionSheet } from '../context/ActionSheetContext';
 import AddToBucketListModal from './AddToBucketListModal';
 import SettingsPanel from './SettingsPanel';
 import useAvatar from '../hooks/useAvatar';
@@ -46,14 +46,15 @@ export default function Sidebar({
   onAddToBucketList,
   isMobile,
   onShowOnboarding,
+  onListFocus,
 }) {
   const { dark, toggle: toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { showActionSheet } = useActionSheet();
   const [editingDate, setEditingDate] = useState(null);
   const [editingNote, setEditingNote] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showAvatar, setShowAvatar] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -62,6 +63,8 @@ export default function Sidebar({
   const { config: avatarConfig, setPart: setAvatarPart, resetAvatar } = useAvatar();
 
   const tabsRef = useRef(null);
+  const listRef = useRef(null);
+  const [mobileChromeCollapsed, setMobileChromeCollapsed] = useState(false);
 
   // Redirect vertical wheel events to horizontal scroll on the tab strip.
   // Uses addEventListener (not onWheel) so we can pass { passive: false } and
@@ -198,122 +201,195 @@ export default function Sidebar({
     );
   };
 
-  return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-header-top">
-          <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar" aria-label="Customize avatar">
-            <AvatarCanvas config={avatarConfig} size={40} />
-            <div className="avatar-level-badge-wrap">
-              <LevelBadge size={20} />
-            </div>
-          </button>
-          <div className="sidebar-title-group">
-            <h1 className="sidebar-title">
-              <img src="/logo-sidebar-sm.png" alt="Right World Tracker" className="sidebar-logo" />
-              Right World Tracker
-            </h1>
-            <p className="sidebar-subtitle">Your world. Your journey.</p>
-          </div>
-          <div className="header-actions">
-            {!isMobile && !readOnly && onOpenFriends && (
-              <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends" aria-label="Friends">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                {friendsPendingCount > 0 && (
-                  <span className="friends-badge">{friendsPendingCount}</span>
-                )}
-              </button>
-            )}
-            {!readOnly && onOpenBucketList && (
-              <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List" aria-label="Bucket List">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M12 17v5" />
-                  <path d="M6 4v4l3 3v5l6-3V8l3-4z" />
-                </svg>
-                {bucketListItems?.length > 0 && (
-                  <span className="friends-badge">{bucketListItems.length}</span>
-                )}
-              </button>
-            )}
-            {!isMobile && !readOnly && (
-              <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics" aria-label="Statistics">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <line x1="18" y1="20" x2="18" y2="10" />
-                  <line x1="12" y1="20" x2="12" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="14" />
-                </svg>
-              </button>
-            )}
-            {!isMobile && !readOnly && (
-              <button
-                className="header-icon-btn"
-                onClick={() => setShowSettingsModal(true)}
-                title="Settings"
-                aria-label="Open settings"
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.4.58.92.6 1.46V11a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
-            )}
-            {!isMobile && (
-              <button
-                className="theme-toggle"
-                onClick={toggleTheme}
-                title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                <span aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+  const restoreMobileChrome = useCallback(() => {
+    const listEl = listRef.current;
+    setMobileChromeCollapsed(false);
+    if (!listEl) return;
 
-      {onBackToWorld && !readOnly && (
-        <button className="back-to-world-btn" onClick={onBackToWorld}>
-          <span className="back-to-world-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M2 12h20" />
-              <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
-            </svg>
+    if (typeof listEl.scrollTo === 'function') {
+      listEl.scrollTo({ top: 0 });
+    } else {
+      listEl.scrollTop = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileChromeCollapsed(false);
+      return;
+    }
+
+    const listEl = listRef.current;
+    if (listEl) {
+      listEl.scrollTop = 0;
+    }
+    setMobileChromeCollapsed(false);
+  }, [country.id, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const listEl = listRef.current;
+    if (!listEl) return;
+
+    let frameId = 0;
+    const syncMobileChrome = () => {
+      const nextCollapsed = listEl.scrollTop > 24;
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        setMobileChromeCollapsed((current) => {
+          if (current === nextCollapsed) return current;
+          if (nextCollapsed) onListFocus?.();
+          return nextCollapsed;
+        });
+      });
+    };
+
+    syncMobileChrome();
+    listEl.addEventListener('scroll', syncMobileChrome, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      listEl.removeEventListener('scroll', syncMobileChrome);
+    };
+  }, [isMobile, onListFocus]);
+
+  return (
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${isMobile && mobileChromeCollapsed ? 'mobile-chrome-collapsed' : ''}`}>
+      {isMobile && (
+        <button
+          type="button"
+          className={`sidebar-mobile-summary${mobileChromeCollapsed ? ' is-visible' : ''}`}
+          onClick={restoreMobileChrome}
+          aria-label={`Show ${country.name} controls`}
+        >
+          <span className="sidebar-mobile-summary-flag" aria-hidden="true">{country.flag}</span>
+          <span className="sidebar-mobile-summary-text">
+            <span className="sidebar-mobile-summary-title">{country.name}</span>
+            <span className="sidebar-mobile-summary-subtitle">
+              {count} / {total} {country.regionLabel.toLowerCase()} · {pct}% visited
+            </span>
           </span>
-          <span>Back to World Map</span>
+          <span className="sidebar-mobile-summary-action">Show controls</span>
         </button>
       )}
 
-      {!readOnly && <AuthButton />}
+      <div className="sidebar-mobile-chrome" aria-hidden={isMobile && mobileChromeCollapsed ? 'true' : undefined}>
+        <div className="sidebar-header">
+          <div className="sidebar-header-top">
+            <button className="avatar-preview-btn" onClick={() => setShowAvatar(true)} title="Customize avatar" aria-label="Customize avatar">
+              <AvatarCanvas config={avatarConfig} size={40} />
+              <div className="avatar-level-badge-wrap">
+                <LevelBadge size={20} />
+              </div>
+            </button>
+            <div className="sidebar-title-group">
+              <h1 className="sidebar-title">
+                <img src="/logo-sidebar-sm.png" alt="Right World Tracker" className="sidebar-logo" />
+                Right World Tracker
+              </h1>
+              <p className="sidebar-subtitle">Your world. Your journey.</p>
+            </div>
+            <div className="header-actions">
+              {!isMobile && !readOnly && onOpenFriends && (
+                <button className="header-icon-btn friends-header-btn" onClick={onOpenFriends} title="Friends" aria-label="Friends">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  {friendsPendingCount > 0 && (
+                    <span className="friends-badge">{friendsPendingCount}</span>
+                  )}
+                </button>
+              )}
+              {!readOnly && onOpenBucketList && (
+                <button className="header-icon-btn bucket-header-btn" onClick={onOpenBucketList} title="Bucket List" aria-label="Bucket List">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 17v5" />
+                    <path d="M6 4v4l3 3v5l6-3V8l3-4z" />
+                  </svg>
+                  {bucketListItems?.length > 0 && (
+                    <span className="friends-badge">{bucketListItems.length}</span>
+                  )}
+                </button>
+              )}
+              {!isMobile && !readOnly && (
+                <button className="header-icon-btn" onClick={() => setShowStats(true)} title="Statistics" aria-label="Statistics">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                  </svg>
+                </button>
+              )}
+              {!isMobile && !readOnly && (
+                <button
+                  className="header-icon-btn"
+                  onClick={() => setShowSettingsModal(true)}
+                  title="Settings"
+                  aria-label="Open settings"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 4.6H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.4.58.92.6 1.46V11a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </button>
+              )}
+              {!isMobile && (
+                <button
+                  className="theme-toggle"
+                  onClick={toggleTheme}
+                  title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                  aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  <span aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
-      <OverallProgress />
-
-      <nav className="country-tabs" ref={tabsRef}>
-        {countryList.map((c) => (
-          <button
-            key={c.id}
-            className={`country-tab ${c.id === country.id ? 'active' : ''}`}
-            onClick={() => onCountryChange(c.id)}
-            title={c.name}
-          >
-            <span className="tab-flag">{c.flag}</span>
-            <span className="tab-name">{c.name}</span>
+        {onBackToWorld && !readOnly && (
+          <button className="back-to-world-btn" onClick={onBackToWorld}>
+            <span className="back-to-world-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M2 12h20" />
+                <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
+              </svg>
+            </span>
+            <span>Back to World Map</span>
           </button>
-        ))}
-      </nav>
+        )}
 
-      {!readOnly && (
-        <CitySearch country={country} visited={visited} onToggle={onToggle} searchRef={searchRef} onSearchFocus={onSearchFocus} />
-      )}
+        {!readOnly && <AuthButton />}
 
-      {!readOnly && <Achievements />}
+        <OverallProgress />
 
-      <div className="canton-list">
+        <nav className="country-tabs" ref={tabsRef}>
+          {countryList.map((c) => (
+            <button
+              key={c.id}
+              className={`country-tab ${c.id === country.id ? 'active' : ''}`}
+              onClick={() => onCountryChange(c.id)}
+              title={c.name}
+            >
+              <span className="tab-flag">{c.flag}</span>
+              <span className="tab-name">{c.name}</span>
+            </button>
+          ))}
+        </nav>
+
+        {!readOnly && (
+          <CitySearch country={country} visited={visited} onToggle={onToggle} searchRef={searchRef} onSearchFocus={onSearchFocus} />
+        )}
+
+        {!readOnly && <Achievements />}
+      </div>
+
+      <div className="canton-list" ref={listRef}>
         <h2 className="list-heading">All {country.regionLabel}</h2>
         {hasBoroughs ? (
           Object.entries(groupedRegions).sort(([a], [b]) => a.localeCompare(b)).map(([borough, items]) => {
@@ -348,8 +424,16 @@ export default function Sidebar({
           {showSettings && (
             <div id="sidebar-settings-panel">
               <SettingsPanel
-                onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-                onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+                onReset={() => showActionSheet({
+                  title: 'Reset Progress',
+                  message: `Reset all ${country.regionLabel} progress?`,
+                  actions: [{ label: 'Reset', destructive: true, onPress: onReset }],
+                })}
+                onResetAll={() => showActionSheet({
+                  title: 'Reset All Countries',
+                  message: 'Reset ALL countries? This cannot be undone.',
+                  actions: [{ label: 'Reset All', destructive: true, onPress: onResetAll }],
+                })}
                 onShowOnboarding={onShowOnboarding}
                 onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
               />
@@ -369,8 +453,16 @@ export default function Sidebar({
       {showSettingsModal && (
         <SwipeableModal onClose={() => setShowSettingsModal(false)} maxWidth={480}>
           <SettingsPanel
-            onReset={() => setConfirmAction({ type: 'reset', message: `Reset all ${country.regionLabel} progress?` })}
-            onResetAll={() => setConfirmAction({ type: 'resetAll', message: 'Reset ALL countries? This cannot be undone.' })}
+            onReset={() => showActionSheet({
+              title: 'Reset Progress',
+              message: `Reset all ${country.regionLabel} progress?`,
+              actions: [{ label: 'Reset', destructive: true, onPress: onReset }],
+            })}
+            onResetAll={() => showActionSheet({
+              title: 'Reset All Countries',
+              message: 'Reset ALL countries? This cannot be undone.',
+              actions: [{ label: 'Reset All', destructive: true, onPress: onResetAll }],
+            })}
             onShowOnboarding={onShowOnboarding}
             onOpenAdmin={isAdmin ? () => setShowAdmin(true) : undefined}
           />
@@ -386,17 +478,6 @@ export default function Sidebar({
           onClose={() => setShowAvatar(false)}
         />
       )}
-      <ConfirmDialog
-        isOpen={!!confirmAction}
-        message={confirmAction?.message || ''}
-        confirmLabel="Reset"
-        onConfirm={() => {
-          if (confirmAction?.type === 'reset') onReset();
-          else if (confirmAction?.type === 'resetAll') onResetAll();
-          setConfirmAction(null);
-        }}
-        onCancel={() => setConfirmAction(null)}
-      />
       <AddToBucketListModal
         isOpen={!!bucketListModal}
         onClose={() => setBucketListModal(null)}

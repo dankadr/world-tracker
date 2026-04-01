@@ -1,3 +1,24 @@
+/* ======== Skip Navigation Link (a11y) ======== */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--bg, #fff);
+  color: var(--text, #1a1a1a);
+  border: 2px solid var(--accent, #c9a84c);
+  border-radius: 0 0 4px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+  outline: none;
+}
+
 /* ======== Liquid Glass Design System ======== */
 :root {
   --glass-bg: rgba(255, 248, 220, 0.28);
@@ -74,6 +95,14 @@ body {
   box-shadow: var(--glass-specular), var(--glass-shadow-elevated);
   z-index: 1000;
   transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.sidebar-mobile-summary {
+  display: none;
+}
+
+.sidebar-mobile-chrome {
+  display: block;
 }
 
 .sidebar-header {
@@ -1770,6 +1799,144 @@ body {
   color: var(--text-primary);
 }
 
+/* ======== Map Search ======== */
+.map-search {
+  position: absolute;
+  top: 12px;
+  left: 50px;
+  z-index: 1000;
+  width: 220px;
+}
+
+.map-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  padding: 0 8px;
+}
+
+.map-search-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.map-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  padding: 7px 0;
+  outline: none;
+  min-width: 0;
+}
+
+.map-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.map-search-clear {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.6;
+}
+
+.map-search-clear:hover {
+  opacity: 1;
+}
+
+.map-search-results {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow-elevated);
+  overflow: hidden;
+}
+
+.map-search-result {
+  margin: 0;
+}
+
+.map-search-result-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.map-search-result-btn:hover,
+.map-search-result-btn:focus-visible,
+.map-search-result-btn.is-active {
+  background: var(--hover-bg);
+  outline: none;
+}
+
+.map-search-result-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.map-search-result-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ======== Fit Visited Button ======== */
+.fit-visited-btn {
+  position: absolute;
+  bottom: 32px;
+  left: 12px;
+  z-index: 1000;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-specular), var(--glass-shadow);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.fit-visited-btn:hover {
+  box-shadow: var(--glass-specular-strong), var(--glass-hover-glow);
+  transform: scale(1.03);
+}
+
 /* ======== Stats Modal ======== */
 .modal-overlay {
   position: fixed;
@@ -2367,6 +2534,86 @@ body {
   /* Sidebar inside bottom sheet: compact */
   .sidebar-header {
     padding: 8px 14px 6px;
+  }
+
+  .sidebar-mobile-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 20px);
+    margin: 0 10px;
+    padding: 0 14px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-primary);
+    text-align: left;
+    font-family: inherit;
+    transition: max-height 0.28s ease, opacity 0.22s ease, margin 0.28s ease,
+      padding 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+  }
+
+  .sidebar.mobile-chrome-collapsed .sidebar-mobile-summary {
+    margin: 8px 10px 6px;
+    padding: 10px 14px;
+    max-height: 72px;
+    opacity: 1;
+    background: var(--glass-bg);
+    border-color: var(--glass-border-subtle);
+    box-shadow: var(--glass-specular);
+  }
+
+  .sidebar-mobile-summary-flag {
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .sidebar-mobile-summary-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sidebar-mobile-summary-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .sidebar-mobile-summary-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-mobile-summary-action {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .sidebar-mobile-chrome {
+    max-height: 960px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.28s ease, opacity 0.22s ease, transform 0.28s ease;
+  }
+
+  .sidebar.mobile-chrome-collapsed .sidebar-mobile-chrome {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
   }
 
   .sidebar-title {
@@ -4426,6 +4673,36 @@ body {
 
 .world-country-item {
   margin-bottom: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.world-country-item .canton-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.world-country-info-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.world-country-info-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-secondary);
 }
 
 .world-country-continent {

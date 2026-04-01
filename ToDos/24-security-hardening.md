@@ -1,7 +1,7 @@
 # ToDo: Security Hardening
 
 **Date:** 2026-03-16
-**Status:** Phases 1–4 🔄 In Progress — current open hardening PRs: #125, #145, #146
+**Status:** Phase 1–3 ✅ Complete (#125, #145, #146) — CSPRNG, input validation, CSP headers, CORS multi-origin, and security.txt shipped; rate limiting and dependency audit automation still remain
 **Priority:** High
 **Scope:** Fix identified security weaknesses across frontend and backend: cryptographic RNG, rate limiting, input validation, CSP headers, and dependency audit
 
