@@ -164,15 +164,15 @@ export default function MapQuiz({ filter = 'all', worldVisited = new Set(), onBa
         </div>
       </div>
       {status === 'reviewing' && (
-        <div style={{
+        <div role="status" aria-live="polite" style={{
           position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
           background: isCorrect ? '#22c55e' : '#ef4444', color: '#fff',
           borderRadius: 10, padding: '10px 24px', fontWeight: 700, fontSize: '1rem', zIndex: 500,
           textAlign: 'center', whiteSpace: 'nowrap',
         }}>
-          {isCorrect ? '✓ Correct!' : (
+          {isCorrect ? 'Correct!' : (
             <>
-              <div>✗ {question.name}</div>
+              <div>Incorrect — {question.name}</div>
               {incorrectId && CENTROIDS[incorrectId] && CENTROIDS[question.id] && (
                 <div style={{ fontSize: '0.8rem', fontWeight: 500, marginTop: 4, opacity: 0.9 }}>
                   {Math.round(haversineKm(CENTROIDS[incorrectId], CENTROIDS[question.id])).toLocaleString()} km away

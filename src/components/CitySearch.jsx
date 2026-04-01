@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { findRegion } from '../utils/geo';
+import useKeyboardAvoidance from '../hooks/useKeyboardAvoidance';
 
 // Map country IDs to ISO 3166-1 alpha-2 codes for Nominatim countrycodes param
 const ISO_CODES = { ch: 'ch', us: 'us', usparks: 'us', nyc: 'us', no: 'no', ca: 'ca' };
@@ -13,6 +14,8 @@ export default function CitySearch({ country, visited, onToggle, searchRef, onSe
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const timerRef = useRef(null);
   const wrapperRef = useRef(null);
+
+  useKeyboardAvoidance(wrapperRef);
 
   // Clear state when country changes
   useEffect(() => {
