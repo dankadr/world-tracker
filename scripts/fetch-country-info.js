@@ -59,9 +59,9 @@ async function main() {
     const currencySymbol = currencyCode ? (currencies[currencyCode]?.symbol || currencyCode) : null;
     const currencyName = currencyCode ? (currencies[currencyCode]?.name || null) : null;
 
-    // Language — pick first listed
+    // Language — join all official languages (sorted for determinism)
     const languages = c.languages || {};
-    const language = Object.values(languages)[0] || null;
+    const language = Object.values(languages).sort().join(', ') || null;
 
     // Continent (RestCountries uses 'region' for continent)
     const continent = c.region || null;
