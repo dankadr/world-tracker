@@ -1802,7 +1802,7 @@ body {
 /* ======== Map Search ======== */
 .map-search {
   position: absolute;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   left: 50px;
   z-index: 1000;
   width: 220px;
