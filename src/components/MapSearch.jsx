@@ -80,7 +80,9 @@ export default function MapSearch({ geoJsonRef, searchWorldData = worldData }) {
         if (l.feature?.properties?.id === result.id) {
           try {
             map.fitBounds(l.getBounds(), { padding: [40, 40] });
-          } catch (_) {}
+          } catch (err) {
+            console.warn('[MapSearch] fitBounds failed:', err);
+          }
         }
       });
     } else {
