@@ -1169,16 +1169,31 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
     for uid in all_ids:
         u = users_by_id.get(uid)
         if not u:
+            if uid == user.id:
+                logger.warning("leaderboard: authenticated user id=%s not found in User table", uid)
             continue
-        world = worlds_by_uid.get(uid)
-        countries_count = len(dec_json_safe(u.id, world.countries) or []) if world and world.countries else 0
-        regions_count = sum(len(dec_json_safe(u.id, r.regions) or []) for r in regions_by_uid.get(uid, []))
+        try:
+            world = worlds_by_uid.get(uid)
+            raw_countries = dec_json_safe(u.id, world.countries) if world and world.countries else []
+            countries_count = len(raw_countries) if isinstance(raw_countries, list) else 0
+            if not isinstance(raw_countries, list) and raw_countries is not None:
+                logger.warning("leaderboard: uid=%s countries data is not a list (got %s), treating as 0", uid, type(raw_countries).__name__)
 
-        entries.append({
-            "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
-            "countries_count": countries_count, "regions_count": regions_count,
-            "is_self": u.id == user.id,
-        })
+            regions_count = 0
+            for r in regions_by_uid.get(uid, []):
+                raw_regions = dec_json_safe(u.id, r.regions)
+                if isinstance(raw_regions, list):
+                    regions_count += len(raw_regions)
+                elif raw_regions is not None:
+                    logger.warning("leaderboard: uid=%s regions data is not a list (got %s), skipping", uid, type(raw_regions).__name__)
+
+            entries.append({
+                "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
+                "countries_count": countries_count, "regions_count": regions_count,
+                "is_self": u.id == user.id,
+            })
+        except Exception as exc:
+            logger.error("leaderboard: skipping uid=%s due to decryption error: %s", uid, exc, exc_info=True)
 
     # Sort by countries descending, then regions, then user ID for deterministic tie-breaking
     entries.sort(key=lambda e: (e["countries_count"], e["regions_count"], -e["user_id"]), reverse=True)
