@@ -27,7 +27,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from typing import Annotated
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import and_, delete, func, or_, select, text
+from sqlalchemy import and_, delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
@@ -1336,8 +1336,20 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
     if not is_completed:
         return
 
-    # Mark challenge as completed
-    challenge.completed_at = datetime.now(timezone.utc)
+    # Atomically claim completion with UPDATE WHERE completed_at IS NULL.
+    # If two concurrent requests both see completed_at=None above, only one
+    # will update a row here — the other gets rowcount=0 and returns early.
+    now = datetime.now(timezone.utc)
+    claim_result = await db.execute(
+        update(Challenge)
+        .where(Challenge.id == challenge.id, Challenge.completed_at.is_(None))
+        .values(completed_at=now)
+        .returning(Challenge.id)
+    )
+    if not claim_result.scalar_one_or_none():
+        return  # Another concurrent request already completed this challenge
+
+    challenge.completed_at = now  # Keep in-memory object in sync
 
     # Award XP to participants
     participants_result = await db.execute(
@@ -1369,7 +1381,7 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
             key=lambda x: x[2]["visited_count"] if x[2] else 0,
             reverse=True
         )
-        
+
         # Award XP based on rank
         xp_awards = [250, 150, 100]  # 1st, 2nd, 3rd place
         for i, (cp, u, prog) in enumerate(sorted_participants[:3]):
