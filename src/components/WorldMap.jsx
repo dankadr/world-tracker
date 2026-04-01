@@ -254,7 +254,26 @@ function ComparisonWorldOverlay({ worldData, visited, friendVisited, friendName 
   );
 }
 
-export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode }) {
+function FlyToTarget({ target, geoJsonRef, onDone }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!target) return;
+    if (target.type === 'country') {
+      geoJsonRef.current?.eachLayer((l) => {
+        if (l.feature?.properties?.id === target.id) {
+          try { map.fitBounds(l.getBounds(), { padding: [60, 60] }); } catch (_) {}
+        }
+      });
+    } else if (target.type === 'latlng') {
+      map.flyTo([target.lat, target.lng], 6, { duration: 1.2 });
+    }
+    onDone?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target]);
+  return null;
+}
+
+export default function WorldMap({ visited, onToggle, onExploreCountry, friendsActive, onFriendsToggle, friendOverlayData, comparisonFriend, onExitComparison, wishlist, comparisonMode, gameMode, flyToTarget, onFlyToDone }) {
   const geoJsonRef = useRef(null);
   // Use refs so event handlers always read current values even with stale closures
   const gameModeRef = useRef(gameMode);
@@ -556,6 +575,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           unescoActive={unescoActive}
         />}
         {unescoActive && <UnescoLayer />}
+        {flyToTarget && <FlyToTarget target={flyToTarget} geoJsonRef={geoJsonRef} onDone={onFlyToDone} />}
         {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
           <FriendOverlayLegend friendOverlayData={friendOverlayData} />
         )}

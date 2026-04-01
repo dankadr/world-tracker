@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import useGlobalSearch from '../hooks/useGlobalSearch';
 import './GlobalSearch.css';
 
@@ -71,7 +71,7 @@ export default function GlobalSearch({ onClose, onSelect }) {
   }, [onClose]);
 
   // Flatten all visible items for keyboard navigation
-  const flatItems = groups.flatMap((g) => g.items);
+  const flatItems = useMemo(() => groups.flatMap((g) => g.items), [groups]);
   const [activeIdx, setActiveIdx] = useState(-1);
 
   // Reset active index when results change

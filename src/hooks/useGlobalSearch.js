@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Fuse from 'fuse.js';
-import { getIndex, resetIndex } from '../utils/searchIndex';
+import { getIndex } from '../utils/searchIndex';
 
 const DEBOUNCE_MS = 150;
 const MIN_QUERY_LENGTH = 2;
@@ -67,16 +67,6 @@ export default function useGlobalSearch(query) {
     const entries = await getIndex();
     fuseRef.current = new Fuse(entries, FUSE_OPTIONS);
     return fuseRef.current;
-  }, []);
-
-  // Listen for visited-data changes and bust index cache
-  useEffect(() => {
-    const handler = () => {
-      resetIndex();
-      fuseRef.current = null;
-    };
-    window.addEventListener('visitedchange', handler);
-    return () => window.removeEventListener('visitedchange', handler);
   }, []);
 
   // Re-run search when query changes (debounced)

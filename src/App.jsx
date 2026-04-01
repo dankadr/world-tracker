@@ -167,6 +167,7 @@ export default function App() {
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [flyToTarget, setFlyToTarget] = useState(null);
   const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
@@ -384,11 +385,10 @@ export default function App() {
 
   const handleSearchSelect = useCallback((entry) => {
     if (entry.type === 'country') {
-      // Switch to the world map.
       setView('world');
+      setFlyToTarget({ type: 'country', id: entry.trackerId });
       if (isMobile) switchTab('map');
     } else if (entry.type === 'region') {
-      // Open the region's tracker in detail view.
       setCountryId(entry.trackerId);
       setView('detail');
       if (isMobile) switchTab('map');
@@ -397,8 +397,10 @@ export default function App() {
       setView('detail');
       if (isMobile) switchTab('map');
     } else if (entry.type === 'unesco') {
-      // Switch to the world map.
       setView('world');
+      if (entry.lat != null && entry.lng != null) {
+        setFlyToTarget({ type: 'latlng', lat: entry.lat, lng: entry.lng });
+      }
       if (isMobile) switchTab('map');
     }
   }, [isMobile, switchTab]);
@@ -685,6 +687,8 @@ export default function App() {
               onExitComparison={handleExitComparison}
               wishlist={worldWishlist}
               comparisonMode={!!comparisonFriend}
+              flyToTarget={flyToTarget}
+              onFlyToDone={() => setFlyToTarget(null)}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#d4b866' }}>
