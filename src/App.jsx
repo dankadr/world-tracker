@@ -550,6 +550,10 @@ export default function App() {
     if (isMobile) setSheetExpandTo(50);
   }, [isMobile]);
 
+  const handleRegionListFocus = useCallback(() => {
+    if (isMobile) setSheetExpandTo(92);
+  }, [isMobile]);
+
   const handleSheetSnap = useCallback((snapVal) => {
     setSheetSnap(snapVal);
     // Reset expandTo after snap completes so it can be triggered again
@@ -783,6 +787,7 @@ export default function App() {
                 searchRef={searchRef}
                 onBackToWorld={handleBackToWorld}
                 onSearchFocus={handleSearchFocus}
+                onListFocus={handleRegionListFocus}
                 onOpenFriends={handleOpenFriends}
                 friendsPendingCount={pendingCount}
                 isMobile={isMobile}
