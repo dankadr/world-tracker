@@ -1,7 +1,7 @@
 # ToDo: Performance & Architecture Refactor
 
 **Date:** 2026-02-24
-**Status:** Partially complete — test infrastructure, navigation context, caching, and batching exist, but the major shell/router split has not happened
+**Status:** Partially complete — Goal 1 App.jsx extraction started (PR #138: useShareMode + useComparisonMode)
 **Priority:** High
 **Scope:** Refactor frontend and backend for maintainability, performance, and testability
 

@@ -1,7 +1,7 @@
 # ToDo: Geography Mini Games
 
 **Date:** 2026-03-06
-**Status:** In Progress — core game suite shipped, stabilization and expansion still pending
+**Status:** In Progress — stabilization PR #109 open (quiz pool filter, testids, onQuit cleanup)
 **Priority:** Medium
 **Scope:** Add interactive geography mini games where users test their knowledge on blank maps by guessing countries, states, cantons, and regions
 

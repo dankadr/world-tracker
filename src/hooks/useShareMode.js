@@ -3,6 +3,7 @@ import { decodeShareData } from '../utils/shareUrl';
 import countries from '../data/countries';
 
 function parseShareHash() {
+  if (typeof window === 'undefined') return null;
   const hash = window.location.hash;
   if (!hash.startsWith('#share=')) return null;
   return decodeShareData(hash.slice(7));
@@ -34,6 +35,7 @@ export default function useShareMode({ setView, setCountryId }) {
 
   const exitShareMode = useCallback(() => {
     setShareData(null);
+    if (typeof window === 'undefined') return;
     window.location.hash = '';
   }, []);
 

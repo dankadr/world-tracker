@@ -1,7 +1,7 @@
 # ToDo: Code Quality & Incremental Refactor
 
 **Date:** 2026-03-16
-**Status:** Partially complete — some cleanup items already landed, but the larger refactor backlog remains
+**Status:** Phase 3 🔄 In Progress (PR #138) · earlier cleanup work already landed
 **Priority:** Medium (ongoing)
 **Scope:** Fix identified code quality issues: App.jsx god component, duplicate hook files, hardcoded backend config, missing error boundaries, and test coverage gaps
 
@@ -170,20 +170,20 @@ Fix in this refactor: replace with `secrets` module. Small fix, big security win
 
 ## Implementation Phases
 
-### Phase 1 — Quick wins (< 1 hour each)
-- [ ] Delete `useXp.js` after confirming `useXp.jsx` is canonical
-- [ ] Fix `VALID_COUNTRIES` — use regex validation instead of hardcoded set
-- [ ] Add `MapErrorBoundary` around WorldMap and SwissMap (app-level `ErrorBoundary` already exists; this is now about map-local recovery)
-- [ ] Replace `random` with `secrets` in `models.py`
+### Phase 1 — Quick wins
+- [x] Delete `useXp.js` after confirming `useXp.jsx` is canonical
+- [x] Fix `VALID_COUNTRIES` — use regex validation instead of hardcoded set
+- [ ] Add `MapErrorBoundary` around WorldMap and SwissMap
+- [ ] Replace `random` with `secrets` in `models.py` (see also #24)
 
 ### Phase 2 — Lazy loading
 - [ ] Add `React.lazy` + `Suspense` for GamesPanel, AdminPanel, YearInReviewScreen, AvatarEditor
 - [ ] Add `ScreenSkeleton` component for Suspense fallback
 - [ ] Verify bundle analyzer output shows improvement
 
-### Phase 3 — App.jsx extraction (one hook per PR)
-- [ ] Extract `useShareMode` hook
-- [ ] Extract `useComparisonMode` hook
+### Phase 3 — App.jsx extraction (PR #138 open)
+- [x] Extract `useShareMode` hook
+- [x] Extract `useComparisonMode` hook
 - [ ] Extract `useMilestoneConfetti` hook
 - [ ] Extract `useBucketListActions` hook
 - [ ] Extract `MapActionButtons`, `WorldStatsCard`, `RegionStatsCard`, `ShareBanner` components

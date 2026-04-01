@@ -19,7 +19,15 @@ vi.mock('../../utils/easterEggs', () => ({
 
 vi.mock('leaflet', () => ({
   default: {
-    DomEvent: { stopPropagation: () => {} },
+    DomEvent: {
+      stopPropagation: () => {},
+      disableClickPropagation: () => {},
+      disableScrollPropagation: () => {},
+    },
+    latLngBounds: () => ({
+      extend: () => {},
+      isValid: () => false,
+    }),
   },
 }));
 
