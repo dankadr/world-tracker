@@ -63,7 +63,8 @@ export default function CustomMarkersLayer({ markers, visible, onAdd, onUpdate, 
 
     function onContextMenu(e) {
       e.preventDefault();
-      const latlng = map.containerPointToLatLng(L.point(e.clientX, e.clientY));
+      const rect = container.getBoundingClientRect();
+      const latlng = map.containerPointToLatLng(L.point(e.clientX - rect.left, e.clientY - rect.top));
       setModalState({ mode: 'add', lat: latlng.lat, lng: latlng.lng, marker: null });
     }
 
@@ -74,7 +75,8 @@ export default function CustomMarkersLayer({ markers, visible, onAdd, onUpdate, 
       const startY = touch.clientY;
 
       longPressRef.current = setTimeout(() => {
-        const latlng = map.containerPointToLatLng(L.point(startX, startY));
+        const rect = container.getBoundingClientRect();
+        const latlng = map.containerPointToLatLng(L.point(startX - rect.left, startY - rect.top));
         setModalState({ mode: 'add', lat: latlng.lat, lng: latlng.lng, marker: null });
         longPressRef.current = null;
       }, LONG_PRESS_MS);

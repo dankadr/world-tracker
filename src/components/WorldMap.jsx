@@ -13,6 +13,12 @@ import worldData from '../data/world.json';
 import { applyEasterEggModifications, isGreaterIsraelEnabled } from '../utils/easterEggs';
 import { getExplorationDepth, depthToColor } from '../utils/explorationDepth';
 
+export function computeZoomFactor(zoom) {
+  if (zoom <= 6) return 1;
+  if (zoom >= 10) return 0;
+  return (10 - zoom) / 4;
+}
+
 const VISITED_COLOR = '#c9a84c';
 const VISITED_HOVER = '#b8943a';
 
@@ -106,6 +112,31 @@ function MapController({ center, zoom }) {
       initialized.current = true;
     }
   }, [map, center, zoom]);
+  return null;
+}
+
+function OverlayFader({ gameModeRef, gameMode }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const pane = map.getPane('countryPane');
+    if (!pane) return;
+
+    function onZoomEnd() {
+      if (gameModeRef.current) {
+        pane.style.opacity = 1;
+        return;
+      }
+      pane.style.opacity = computeZoomFactor(map.getZoom());
+    }
+
+    // Apply at mount time AND whenever gameMode changes
+    onZoomEnd();
+
+    map.on('zoomend', onZoomEnd);
+    return () => { map.off('zoomend', onZoomEnd); };
+  }, [map, gameModeRef, gameMode]); // gameMode triggers re-run when game mode activates/deactivates
+
   return null;
 }
 
@@ -307,27 +338,6 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     });
   }, [gameMode]);
 
-  // Update GeoJSON styles when visited set changes (without remounting)
-  useEffect(() => {
-    if (gameMode) return;
-    const layer = geoJsonRef.current;
-    if (!layer) return;
-    layer.eachLayer((l) => {
-      const id = l.feature?.properties?.id;
-      if (!id) return;
-      l.setStyle(getStyle(l.feature));
-      const isVisited = visited.has(id);
-      const isWishlisted = wishlistActive && wishlist?.has(id);
-      syncFeatureTestAttributes(l, {
-        id,
-        name: l.feature?.properties?.name || id,
-        isVisited,
-        isWishlisted,
-        isGameTarget: false,
-      });
-    });
-  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, depthMode, allVisitedKeys, getStyle]);
-
   const getStyle = useCallback(
     (feature) => {
       const id = feature.properties.id;
@@ -375,6 +385,27 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
     },
     [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, depthMode, allVisitedKeys, dark]
   );
+
+  // Update GeoJSON styles when visited set changes (without remounting)
+  useEffect(() => {
+    if (gameMode) return;
+    const layer = geoJsonRef.current;
+    if (!layer) return;
+    layer.eachLayer((l) => {
+      const id = l.feature?.properties?.id;
+      if (!id) return;
+      l.setStyle(getStyle(l.feature));
+      const isVisited = visited.has(id);
+      const isWishlisted = wishlistActive && wishlist?.has(id);
+      syncFeatureTestAttributes(l, {
+        id,
+        name: l.feature?.properties?.name || id,
+        isVisited,
+        isWishlisted,
+        isGameTarget: false,
+      });
+    });
+  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, depthMode, allVisitedKeys, getStyle]);
 
   const onEachFeature = useCallback(
     (feature, layer) => {
@@ -489,12 +520,13 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         zoomControl={true}
         scrollWheelZoom={true}
         minZoom={2}
-        maxZoom={8}
+        maxZoom={18}
         worldCopyJump={true}
         maxBounds={[[-90, -Infinity], [90, Infinity]]}
         maxBoundsViscosity={0.7}
       >
         <MapController center={[20, 0]} zoom={2} />
+        <OverlayFader gameModeRef={gameModeRef} gameMode={gameMode} />
         {gameMode?.targetId && gameMode?.revealTarget && <GameFocuser targetId={gameMode.targetId} geoJsonRef={geoJsonRef} />}
         <TileLayer
           key={gameMode ? 'game-clean' : tileUrl}
@@ -511,13 +543,15 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
             />
           </Pane>
         )}
-        <GeoJSON
-          key={`world-geojson-${greaterIsraelEnabled}`}
-          ref={geoJsonRef}
-          data={modifiedWorldData}
-          style={getStyle}
-          onEachFeature={onEachFeature}
-        />
+        <Pane name="countryPane" style={{ zIndex: 400 }}>
+          <GeoJSON
+            key={`world-geojson-${greaterIsraelEnabled}`}
+            ref={geoJsonRef}
+            data={modifiedWorldData}
+            style={getStyle}
+            onEachFeature={onEachFeature}
+          />
+        </Pane>
         {friendsActive && !comparisonFriend && friendOverlayData && Object.keys(friendOverlayData).length > 0 && (
           <FriendsWorldOverlay
             worldData={modifiedWorldData}
