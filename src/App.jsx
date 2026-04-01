@@ -63,10 +63,51 @@ import {
 } from './utils/progressCelebrations';
 
 
+// ---------------------------------------------------------------------------
+// Achievement-seen persistence helpers
+//
+// Achievement IDs are not sensitive, so we store them in plain (unencrypted)
+// localStorage.  This gives us synchronous reads AND synchronous writes —
+// eliminating the async-write gap that caused the replay bug.
+//
+// Root cause of the bug: secureStorage.setItem encrypts asynchronously.
+// If the page closes between the sync memCache write and the async
+// localStorage write, the seenKey is lost.  On the next session warmCache
+// can't find it, getItemSync returns null, seen = [], and the baseline is
+// rebuilt from whatever partial data is in memory at the time.  The first
+// user action then fires achievements against a stale baseline.
+// ---------------------------------------------------------------------------
+function getAchSeenKey(userId) {
+  return userId ? `swiss-tracker-seen-${userId}-ach` : 'swiss-tracker-achievements-seen';
+}
+
+function readAchSeen(userId) {
+  const key = getAchSeenKey(userId);
+  const plain = localStorage.getItem(key);
+  if (plain) return parseStoredIdList(plain);
+
+  // One-time migration: copy old encrypted value out of memCache (populated by
+  // warmCache) into the new plain key so existing users don't replay old toasts.
+  if (userId) {
+    const oldKey = `swiss-tracker-u${userId}-achievements-seen`;
+    const cached = secureStorage.getItemSync(oldKey);
+    if (cached) {
+      localStorage.setItem(key, cached);
+      secureStorage.removeItem(oldKey);
+      return parseStoredIdList(cached);
+    }
+  }
+  return [];
+}
+
+function writeAchSeen(userId, ids) {
+  localStorage.setItem(getAchSeenKey(userId), JSON.stringify(ids));
+}
+
 function AchievementToasts() {
   const { user, cacheReady } = useAuth();
   const userId = user?.id || null;
-  const seenKey = userId ? `swiss-tracker-u${userId}-achievements-seen` : 'swiss-tracker-achievements-seen';
+  const seenKey = getAchSeenKey(userId); // used only as useEffect dependency
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
   const { grantXpOnce, revokeXpIfGranted, XP_RULES: xpRules } = useXp();
@@ -74,7 +115,7 @@ function AchievementToasts() {
   const checkAchievements = useCallback(() => {
     const achievements = getAchievements(userId);
     const currentUnlocked = achievements.filter((a) => a.check()).map((a) => a.id);
-    const seen = parseStoredIdList(secureStorage.getItemSync(seenKey));
+    const seen = readAchSeen(userId); // synchronous plain-localStorage read
 
     if (prevUnlocked.current === null) {
       // If both seen and currentUnlocked are empty, data hasn't loaded yet.
@@ -82,7 +123,7 @@ function AchievementToasts() {
       if (seen.length === 0 && currentUnlocked.length === 0) return;
       prevUnlocked.current = createAchievementBaseline(seen, currentUnlocked);
       if (seen.length === 0) {
-        secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
+        writeAchSeen(userId, currentUnlocked); // synchronous write — no async gap
       }
       return;
     }
@@ -109,7 +150,7 @@ function AchievementToasts() {
     // achievements lost after unmarking a region/country are removed.
     // This lets them re-trigger a toast if re-earned later.
     prevUnlocked.current = new Set(currentUnlocked);
-    secureStorage.setItem(seenKey, JSON.stringify(currentUnlocked)); // fire-and-forget
+    writeAchSeen(userId, currentUnlocked); // synchronous write — no async gap
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
 
   useEffect(() => {
