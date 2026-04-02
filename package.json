@@ -1,5 +1,6 @@
 {
-  "name": "swiss-tracker",
+  "name": "world-tracker",
+  "description": "Track every country and region you've visited on an interactive map",
   "private": true,
   "version": "1.0.0",
   "type": "module",
