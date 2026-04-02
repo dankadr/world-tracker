@@ -8,6 +8,7 @@ export default function useKeyboardShortcuts({
   searchRef,
   closeModals,
   onOpenEasterEggPrompt,
+  onOpenGlobalSearch,
 }) {
   useEffect(() => {
     function handleKey(e) {
@@ -17,6 +18,12 @@ export default function useKeyboardShortcuts({
       if (e.key === 'Escape') {
         closeModals?.();
         if (document.activeElement) document.activeElement.blur();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        onOpenGlobalSearch?.();
         return;
       }
 
@@ -55,6 +62,5 @@ export default function useKeyboardShortcuts({
 
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [toggleTheme, countryId, setCountryId, searchRef, closeModals, onOpenEasterEggPrompt]);
+  }, [toggleTheme, countryId, setCountryId, searchRef, closeModals, onOpenEasterEggPrompt, onOpenGlobalSearch]);
 }
-
