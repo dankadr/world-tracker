@@ -121,6 +121,18 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
       )}
 
       <div className="settings-section">
+        <a
+          className="settings-kofi-btn"
+          href="https://ko-fi.com/dantracker"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className="settings-kofi-icon">☕</span>
+          <span>Buy Me a Tea</span>
+        </a>
+      </div>
+
+      <div className="settings-section">
         <p className="settings-section-label">About</p>
         <div className="settings-group">
           <a
@@ -145,19 +157,6 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
             <div className="settings-row-left">
               <span className="settings-row-icon">💬</span>
               <span className="settings-row-title">Send Feedback</span>
-            </div>
-            <span className="settings-row-chevron">›</span>
-          </a>
-          <div className="settings-row-divider" />
-          <a
-            className="settings-row settings-row-btn"
-            href="https://ko-fi.com/dantracker"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="settings-row-left">
-              <span className="settings-row-icon">☕</span>
-              <span className="settings-row-title">Buy Me a Tea</span>
             </div>
             <span className="settings-row-chevron">›</span>
           </a>
