@@ -1,7 +1,7 @@
 # ToDo: Bug Fixes & Quality Improvements
 
 **Date:** 2026-03-14
-**Status:** In Progress — bug list is triaged against the current repo, but several items need a fresh pass after the latest PR churn
+**Status:** All launch-blocking items resolved — remaining medium/low items are post-launch
 **Priority:** High (ongoing)
 **Scope:** Fix known bugs, improve stability, establish bug tracking process
 
@@ -90,7 +90,7 @@ These changes mean several previously-open bugs are now closed or downgraded to 
 - **Issue:** On desktop, there is no visible settings menu or settings entry point.
 - **Required behavior:** Desktop users should have a clear, accessible way to open settings without relying on the mobile-only UI.
 - **Current repo status:** Newly reported; not yet triaged against the current desktop layout.
-- **Status:** Open
+- **Status:** Fixed — settings accessible via footer drawer (PR #166)
 
 #### G. Achievement popups replay on every app reopen
 - **Severity:** Critical
@@ -98,7 +98,7 @@ These changes mean several previously-open bugs are now closed or downgraded to 
 - **Issue:** When reopening the site/app, all previously earned achievement popups appear again at once every time.
 - **Required behavior:** Achievement popups should only appear when an achievement is newly unlocked, and previously shown unlocks should stay dismissed across app restarts.
 - **Current repo status:** Newly reported; persistence and popup replay behavior not yet triaged.
-- **Status:** Open
+- **Status:** Fixed (PR #174)
 
 ### Confirmed and Recently Fixed
 
