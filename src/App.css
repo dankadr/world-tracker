@@ -1212,7 +1212,7 @@ body {
   position: fixed;
   bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
   left: 16px;
-  z-index: 510;
+  z-index: 1100;
   display: flex;
   align-items: center;
   gap: 5px;
