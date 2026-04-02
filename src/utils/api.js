@@ -252,6 +252,29 @@ export async function deleteWishlistItem(token, trackerId, regionId) {
   return res.json();
 }
 
+// ── Email preferences API ──
+
+export async function fetchEmailPreferences(token) {
+  const res = await fetch('/api/email/preferences', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch email preferences');
+  return res.json();
+}
+
+export async function updateEmailPreferences(token, updates) {
+  const res = await fetch('/api/email/preferences', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+  if (!notifyIfExpired(res).ok) throw new Error('Failed to update email preferences');
+  return res.json();
+}
+
 // ── Challenges API ──
 
 export async function fetchChallenges(token) {

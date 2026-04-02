@@ -251,6 +251,39 @@ def _backfill_wishlist_items(conn):
         logger.warning("backfill wishlist failed: %s", exc)
 
 
+def _ensure_email_tables(conn):
+    """Create email tables used by the Resend integration if they do not exist yet."""
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS email_preferences (
+            user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            welcome_sent BOOLEAN DEFAULT FALSE,
+            weekly_digest BOOLEAN DEFAULT TRUE,
+            monthly_recap BOOLEAN DEFAULT TRUE,
+            friend_notifications BOOLEAN DEFAULT TRUE,
+            challenge_notifications BOOLEAN DEFAULT TRUE,
+            bucket_list_reminders BOOLEAN DEFAULT TRUE,
+            milestone_celebrations BOOLEAN DEFAULT TRUE,
+            marketing BOOLEAN DEFAULT FALSE,
+            unsubscribed_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        )
+    """))
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS email_log (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            email_type TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            sent_at TIMESTAMP DEFAULT NOW(),
+            resend_id TEXT,
+            status TEXT DEFAULT 'sent'
+        )
+    """))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_email_log_user_id ON email_log(user_id)"))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_email_log_email_type ON email_log(email_type, sent_at DESC)"))
+
+
 async def init_db():
     """Create tables if they don't exist, and add missing columns to existing tables.
 
@@ -267,7 +300,9 @@ async def init_db():
             await conn.run_sync(_sync_add_missing_columns)
             # 3. Backfill friend codes for existing users
             await conn.run_sync(_backfill_friend_codes)
-            # 4. Backfill legacy wishlist entries
+            # 4. Ensure raw-SQL email tables exist
+            await conn.run_sync(_ensure_email_tables)
+            # 5. Backfill legacy wishlist entries
             await conn.run_sync(_backfill_wishlist_items)
         logger.info("init_db: success")
     except Exception as e:
