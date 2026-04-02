@@ -151,7 +151,7 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
           <div className="settings-row-divider" />
           <a
             className="settings-row settings-row-btn"
-            href="https://ko-fi.com/YOUR_KOFI_USERNAME"
+            href="https://ko-fi.com/dantracker"
             target="_blank"
             rel="noopener noreferrer"
           >
