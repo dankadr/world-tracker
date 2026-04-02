@@ -10,6 +10,15 @@ let isFlushing = false; // prevents concurrent flushes during multi-chunk sends
 const BATCH_INTERVAL = 2000; // ms
 const BATCH_CHUNK_SIZE = 50; // must match server-side Field(max_length=50)
 const QUEUE_STORAGE_KEY = 'swiss-tracker-batch-queue';
+const DEFAULT_SYNC_TAG = 'world-tracker-sync';
+const LISTENER_CLEANUP_KEY = '__wtBatchQueueCleanup__';
+
+function emitQueueChange() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('batchqueuechange', {
+    detail: { count: queue.length },
+  }));
+}
 
 function persistQueue() {
   try {
@@ -17,6 +26,7 @@ function persistQueue() {
   } catch {
     // ignore storage errors (quota/private mode)
   }
+  emitQueueChange();
 }
 
 function restoreQueue() {
@@ -38,12 +48,44 @@ function restoreQueue() {
 
 restoreQueue();
 
-if (typeof window !== 'undefined') {
-  const flushOnLeave = () => {
-    if (queue.length > 0) flushBatch();
+function setupBrowserListeners() {
+  const flushWhenConnected = () => {
+    if (!navigator.onLine || queue.length === 0) return;
+    void flushBatch();
   };
+
+  const flushOnLeave = () => {
+    if (queue.length > 0) void flushBatch();
+  };
+
+  const flushWhenVisible = () => {
+    if (document.visibilityState === 'visible') {
+      flushWhenConnected();
+    }
+  };
+
+  window.addEventListener('online', flushWhenConnected);
+  window.addEventListener('pageshow', flushWhenConnected);
+  document.addEventListener('visibilitychange', flushWhenVisible);
   window.addEventListener('pagehide', flushOnLeave);
   window.addEventListener('beforeunload', flushOnLeave);
+
+  if (navigator.onLine && queue.length > 0) {
+    setTimeout(flushWhenConnected, 0);
+  }
+
+  return () => {
+    window.removeEventListener('online', flushWhenConnected);
+    window.removeEventListener('pageshow', flushWhenConnected);
+    document.removeEventListener('visibilitychange', flushWhenVisible);
+    window.removeEventListener('pagehide', flushOnLeave);
+    window.removeEventListener('beforeunload', flushOnLeave);
+  };
+}
+
+if (typeof window !== 'undefined') {
+  window[LISTENER_CLEANUP_KEY]?.();
+  window[LISTENER_CLEANUP_KEY] = setupBrowserListeners();
 }
 
 /**
@@ -55,8 +97,28 @@ if (typeof window !== 'undefined') {
 export function addToBatch(action, payload, token) {
   queue.push({ action, payload, token });
   persistQueue();
+  void requestBackgroundSync();
   if (!timer) {
     timer = setTimeout(flushBatch, BATCH_INTERVAL);
+  }
+}
+
+export function getQueuedBatchCount() {
+  return queue.length;
+}
+
+export async function requestBackgroundSync(tag = DEFAULT_SYNC_TAG) {
+  if (typeof navigator === 'undefined' || queue.length === 0 || !('serviceWorker' in navigator)) {
+    return false;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    if (!registration?.sync?.register) return false;
+    await registration.sync.register(tag);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -97,12 +159,14 @@ export async function flushBatch() {
           console.error('flushBatch error:', res.status);
           queue.unshift(...batch.slice(i));
           persistQueue();
+          void requestBackgroundSync();
           return;
         }
       } catch (err) {
         console.error('flushBatch error:', err);
         queue.unshift(...batch.slice(i));
         persistQueue();
+        void requestBackgroundSync();
         return;
       }
       // Invalidate bulk cache so next background revalidation picks up server state

@@ -8,11 +8,12 @@ export default defineConfig({
     react(),
     process.env.ANALYZE && visualizer({ open: true, gzipSize: true, filename: 'dist/stats.html' }),
     VitePWA({
+      injectRegister: null,
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
-      includeAssets: ['favicon.png'],
+      includeAssets: ['favicon.png', 'logo.png', 'logo.webp', 'manifest.json', 'icons/*.png'],
       manifest: false, // We provide our own public/manifest.json
       injectManifest: {
         // Only pre-cache app shell files — exclude large PNGs
