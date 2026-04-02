@@ -49,7 +49,7 @@ vi.mock('../../utils/easterEggs', () => ({
 }));
 
 describe('WorldSidebar', () => {
-  it('shows a desktop header settings button and opens the settings panel', async () => {
+  it('shows a footer settings toggle and opens the settings panel', async () => {
     const user = userEvent.setup();
 
     render(
@@ -66,7 +66,7 @@ describe('WorldSidebar', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /open settings/i }));
+    await user.click(screen.getByRole('button', { name: /settings/i }));
 
     expect(screen.getByText('Settings Panel')).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe('WorldSidebar', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /open settings/i }));
+    await user.click(screen.getByRole('button', { name: /settings/i }));
     await user.click(screen.getByRole('button', { name: /reset everything/i }));
     await user.click(screen.getByRole('button', { name: /confirm reset/i }));
 
