@@ -120,19 +120,7 @@ export default function SettingsPanel({ onReset, onResetAll, onShowOnboarding, o
         </div>
       )}
 
-      <div className="settings-section">
-        <a
-          className="settings-kofi-btn"
-          href="https://ko-fi.com/dantracker"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span className="settings-kofi-icon">☕</span>
-          <span>Buy Me a Tea</span>
-        </a>
-      </div>
-
-      <div className="settings-section">
+<div className="settings-section">
         <p className="settings-section-label">About</p>
         <div className="settings-group">
           <a

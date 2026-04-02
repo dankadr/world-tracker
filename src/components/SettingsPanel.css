@@ -102,37 +102,6 @@
   background: var(--bg-secondary, rgba(0, 0, 0, 0.02));
 }
 
-.settings-kofi-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 13px;
-  border-radius: 12px;
-  background: #FF5E5B;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
-  text-decoration: none;
-  transition: opacity 150ms ease, transform 100ms ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.settings-kofi-btn:hover {
-  opacity: 0.9;
-}
-
-.settings-kofi-btn:active {
-  opacity: 0.85;
-  transform: scale(0.98);
-}
-
-.settings-kofi-icon {
-  font-size: 18px;
-}
-
 .settings-toggle {
   position: relative;
   width: 51px;
