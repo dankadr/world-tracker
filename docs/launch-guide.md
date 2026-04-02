@@ -1,6 +1,6 @@
-# Launch Guide — World Tracker
+# Launch Guide — Right World Tracker
 
-A step-by-step playbook for launching World Tracker: where to post, what to write, when to post, and how to follow up.
+A step-by-step playbook for launching Right World Tracker: where to post, what to write, when to post, and how to follow up.
 
 ---
 
@@ -13,7 +13,7 @@ Before posting anywhere, confirm these are live on production:
 - [ ] Toggle a few countries, reload — data persists
 - [ ] Check dark mode — no jarring white panels
 - [ ] Open on mobile — layout is correct, bottom sheet works
-- [ ] Offline: turn off wifi, interact, turn wifi back on — changes sync
+- [ ] Offline: turn off Wi‑Fi, interact, turn Wi‑Fi back on — changes sync
 - [ ] Share URL works — visit a country, hit Share, open the URL in an incognito tab
 
 ---
@@ -32,7 +32,7 @@ Use this or a variation of it everywhere. Keep it concrete and benefit-focused.
 
 **Best for:** Maximum launch-day exposure. PH drives early adopters, makers, and tech-savvy travelers.
 
-**When:** Tuesday, Wednesday, or Thursday. Post at **12:01 AM PST** (when the PH day resets). The earlier in the day you're live, the more upvotes you accumulate. Never launch on a Monday or Friday.
+**When:** Tuesday, Wednesday, or Thursday. Post at **12:01 AM Pacific Time (PT)** (when the PH day resets). The earlier in the day you're live, the more upvotes you accumulate. Never launch on a Monday or Friday.
 
 **What to write:**
 
@@ -253,7 +253,7 @@ If you want maximum coordinated exposure:
 | T-7 | Prepare Product Hunt listing, write all copy, get screenshots ready |
 | T-3 | Soft-post on Twitter/X (no big push yet), get a few early eyes |
 | T-1 | Tell friends to be ready to upvote/comment on PH tomorrow morning |
-| **Launch day** | **12:01 AM PST — go live on PH** |
+| **Launch day** | **12:01 AM PT — go live on PH** |
 | Launch day +2h | Post Show HN |
 | Launch day +4h | Post r/solotravel |
 | Launch day +6h | Post r/webdev |
