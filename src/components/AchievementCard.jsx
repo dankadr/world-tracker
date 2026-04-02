@@ -1,5 +1,6 @@
 import { getDetailItems } from '../utils/achievementDetail';
 import { formatProgressText } from '../utils/achievementProgress';
+import Icon from './Icon';
 import './AchievementCard.css';
 
 const MAX_CHIPS = 8;
@@ -20,7 +21,7 @@ function ChipList({ items, variant }) {
 }
 
 export default function AchievementCard({ achievement, isExpanded, onToggle }) {
-  const { id, icon, title, desc, unlocked, progress, rule } = achievement;
+  const { id, icon, iconPath, title, desc, unlocked, progress, rule } = achievement;
   const { current, target, pct } = progress;
   const ruleType = rule?.type;
 
@@ -46,7 +47,18 @@ export default function AchievementCard({ achievement, isExpanded, onToggle }) {
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
     >
       {/* Collapsed header — always visible */}
-      <span className="badge-icon">{icon}</span>
+      <span className="badge-icon" aria-hidden="true">
+        {iconPath ? (
+          <Icon
+            name={iconPath}
+            size={24}
+            className="badge-icon-asset"
+            fallback={icon}
+          />
+        ) : (
+          icon
+        )}
+      </span>
       <span className="badge-title">{title}</span>
       {!isExpanded && <span className="badge-desc">{desc}</span>}
 

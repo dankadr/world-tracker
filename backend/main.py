@@ -27,7 +27,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from typing import Annotated
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import and_, delete, func, or_, select, text
+from sqlalchemy import and_, delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Conditional imports: allow running from repo root (Vercel) or backend/ (Docker)
@@ -1153,25 +1153,50 @@ async def get_leaderboard(user: CurrentUser = Depends(get_current_user), db: Asy
     friend_ids = [r[0] for r in friends_result.all()]
     all_ids = [user.id] + friend_ids
 
+    # Batch fetch all data in 3 queries instead of 3×N
+    users_result = await db.execute(select(User).where(User.id.in_(all_ids)))
+    users_by_id = {u.id: u for u in users_result.scalars().all()}
+
+    worlds_result = await db.execute(select(VisitedWorld).where(VisitedWorld.user_id.in_(all_ids)))
+    worlds_by_uid = {w.user_id: w for w in worlds_result.scalars().all()}
+
+    regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id.in_(all_ids)))
+    regions_by_uid: dict = {}
+    for r in regions_result.scalars().all():
+        regions_by_uid.setdefault(r.user_id, []).append(r)
+
     entries = []
     for uid in all_ids:
-        u = (await db.execute(select(User).where(User.id == uid))).scalar_one_or_none()
+        u = users_by_id.get(uid)
         if not u:
+            if uid == user.id:
+                logger.warning("leaderboard: authenticated user id=%s not found in User table", uid)
             continue
-        world = (await db.execute(select(VisitedWorld).where(VisitedWorld.user_id == uid))).scalar_one_or_none()
-        countries_count = len(dec_json_safe(u.id, world.countries) or []) if world and world.countries else 0
+        try:
+            world = worlds_by_uid.get(uid)
+            raw_countries = dec_json_safe(u.id, world.countries) if world and world.countries else []
+            countries_count = len(raw_countries) if isinstance(raw_countries, list) else 0
+            if not isinstance(raw_countries, list) and raw_countries is not None:
+                logger.warning("leaderboard: uid=%s countries data is not a list (got %s), treating as 0", uid, type(raw_countries).__name__)
 
-        regions_result = await db.execute(select(VisitedRegions).where(VisitedRegions.user_id == uid))
-        regions_count = sum(len(dec_json_safe(u.id, r.regions) or []) for r in regions_result.scalars().all())
+            regions_count = 0
+            for r in regions_by_uid.get(uid, []):
+                raw_regions = dec_json_safe(u.id, r.regions)
+                if isinstance(raw_regions, list):
+                    regions_count += len(raw_regions)
+                elif raw_regions is not None:
+                    logger.warning("leaderboard: uid=%s regions data is not a list (got %s), skipping", uid, type(raw_regions).__name__)
 
-        entries.append({
-            "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
-            "countries_count": countries_count, "regions_count": regions_count,
-            "is_self": u.id == user.id,
-        })
+            entries.append({
+                "user_id": u.id, "name": dec_str_safe(u.id, u.name), "picture": dec_str_safe(u.id, u.picture),
+                "countries_count": countries_count, "regions_count": regions_count,
+                "is_self": u.id == user.id,
+            })
+        except Exception as exc:
+            logger.error("leaderboard: skipping uid=%s due to decryption error: %s", uid, exc, exc_info=True)
 
-    # Sort by countries descending, then regions
-    entries.sort(key=lambda e: (e["countries_count"], e["regions_count"]), reverse=True)
+    # Sort by countries descending, then regions, then user ID for deterministic tie-breaking
+    entries.sort(key=lambda e: (e["countries_count"], e["regions_count"], -e["user_id"]), reverse=True)
     for i, e in enumerate(entries):
         e["rank"] = i + 1
 
@@ -1336,8 +1361,20 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
     if not is_completed:
         return
 
-    # Mark challenge as completed
-    challenge.completed_at = datetime.now(timezone.utc)
+    # Atomically claim completion with UPDATE WHERE completed_at IS NULL.
+    # If two concurrent requests both see completed_at=None above, only one
+    # will update a row here — the other gets rowcount=0 and returns early.
+    now = datetime.now(timezone.utc)
+    claim_result = await db.execute(
+        update(Challenge)
+        .where(Challenge.id == challenge.id, Challenge.completed_at.is_(None))
+        .values(completed_at=now)
+        .returning(Challenge.id)
+    )
+    if not claim_result.scalar_one_or_none():
+        return  # Another concurrent request already completed this challenge
+
+    challenge.completed_at = now  # Keep in-memory object in sync
 
     # Award XP to participants
     participants_result = await db.execute(
@@ -1369,7 +1406,7 @@ async def _check_and_award_challenge_completion(challenge, progress, db: AsyncSe
             key=lambda x: x[2]["visited_count"] if x[2] else 0,
             reverse=True
         )
-        
+
         # Award XP based on rank
         xp_awards = [250, 150, 100]  # 1st, 2nd, 3rd place
         for i, (cp, u, prog) in enumerate(sorted_participants[:3]):

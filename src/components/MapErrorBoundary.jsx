@@ -36,7 +36,7 @@ export default class MapErrorBoundary extends Component {
           background: 'var(--bg-secondary, #f5f0e8)',
           color: 'var(--text-primary, #333)',
         }}>
-          <span style={{ fontSize: '2rem' }}>🗺️</span>
+          <span style={{ fontSize: '2rem' }} aria-hidden="true">🗺️</span>
           <p style={{ margin: 0, fontWeight: 500 }}>Failed to load map</p>
           <button
             onClick={this.handleRetry}
