@@ -16,6 +16,14 @@ function notifyIfExpired(res) {
   return res;
 }
 
+const DEFAULT_TIMEOUT_MS = 20_000; // 20 s — covers slow serverless cold starts
+
+function fetchWithTimeout(url, options = {}) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), DEFAULT_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(id));
+}
+
 const VISITED_TTL = 5 * 60 * 1000; // 5 minutes
 
 function visitedCacheKey(token) {
@@ -53,7 +61,7 @@ export async function fetchAllVisited(token, force = false) {
   if (!force && _bulkPromise && _bulkToken === token) return _bulkPromise;
 
   _bulkToken = token;
-  _bulkPromise = fetch('/api/visited/all', {
+  _bulkPromise = fetchWithTimeout('/api/visited/all', {
     headers: { Authorization: `Bearer ${token}` },
   })
     .then((res) => (notifyIfExpired(res).ok ? res.json() : null))
@@ -87,7 +95,7 @@ export function invalidateBulkCache(token) {
  */
 export async function deleteAllVisited(token) {
   try {
-    const res = await fetch('/api/visited/all', {
+    const res = await fetchWithTimeout('/api/visited/all', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -100,7 +108,7 @@ export async function deleteAllVisited(token) {
 // ── Friends API ──
 
 export async function fetchMe(token) {
-  const res = await fetch('/api/me', {
+  const res = await fetchWithTimeout('/api/me', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch profile');
@@ -108,7 +116,7 @@ export async function fetchMe(token) {
 }
 
 export async function lookupFriendCode(token, friendCode) {
-  const res = await fetch(`/api/user/${friendCode}`, {
+  const res = await fetchWithTimeout(`/api/user/${friendCode}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('User not found');
@@ -116,7 +124,7 @@ export async function lookupFriendCode(token, friendCode) {
 }
 
 export async function sendFriendRequest(token, friendCode) {
-  const res = await fetch('/api/friends/request', {
+  const res = await fetchWithTimeout('/api/friends/request', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ friend_code: friendCode }),
@@ -130,7 +138,7 @@ export async function sendFriendRequest(token, friendCode) {
 }
 
 export async function fetchFriendRequests(token) {
-  const res = await fetch('/api/friends/requests', {
+  const res = await fetchWithTimeout('/api/friends/requests', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch requests');
@@ -138,7 +146,7 @@ export async function fetchFriendRequests(token) {
 }
 
 export async function acceptFriendRequest(token, requestId) {
-  const res = await fetch(`/api/friends/requests/${requestId}/accept`, {
+  const res = await fetchWithTimeout(`/api/friends/requests/${requestId}/accept`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -147,7 +155,7 @@ export async function acceptFriendRequest(token, requestId) {
 }
 
 export async function declineFriendRequest(token, requestId) {
-  const res = await fetch(`/api/friends/requests/${requestId}/decline`, {
+  const res = await fetchWithTimeout(`/api/friends/requests/${requestId}/decline`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -156,7 +164,7 @@ export async function declineFriendRequest(token, requestId) {
 }
 
 export async function cancelFriendRequest(token, requestId) {
-  const res = await fetch(`/api/friends/requests/${requestId}`, {
+  const res = await fetchWithTimeout(`/api/friends/requests/${requestId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -165,7 +173,7 @@ export async function cancelFriendRequest(token, requestId) {
 }
 
 export async function fetchFriends(token) {
-  const res = await fetch('/api/friends', {
+  const res = await fetchWithTimeout('/api/friends', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch friends');
@@ -173,7 +181,7 @@ export async function fetchFriends(token) {
 }
 
 export async function removeFriend(token, friendId) {
-  const res = await fetch(`/api/friends/${friendId}`, {
+  const res = await fetchWithTimeout(`/api/friends/${friendId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -182,7 +190,7 @@ export async function removeFriend(token, friendId) {
 }
 
 export async function fetchFriendVisited(token, friendId) {
-  const res = await fetch(`/api/friends/${friendId}/visited`, {
+  const res = await fetchWithTimeout(`/api/friends/${friendId}/visited`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch friend data');
@@ -190,7 +198,7 @@ export async function fetchFriendVisited(token, friendId) {
 }
 
 export async function fetchLeaderboard(token) {
-  const res = await fetch('/api/friends/leaderboard', {
+  const res = await fetchWithTimeout('/api/friends/leaderboard', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch leaderboard');
@@ -198,7 +206,7 @@ export async function fetchLeaderboard(token) {
 }
 
 export async function fetchActivity(token) {
-  const res = await fetch('/api/friends/activity', {
+  const res = await fetchWithTimeout('/api/friends/activity', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch activity');
@@ -208,7 +216,7 @@ export async function fetchActivity(token) {
 // ── Wishlist / Bucket List API ──
 
 export async function fetchWishlist(token) {
-  const res = await fetch('/api/wishlist', {
+  const res = await fetchWithTimeout('/api/wishlist', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch wishlist');
@@ -216,7 +224,7 @@ export async function fetchWishlist(token) {
 }
 
 export async function fetchWishlistForTracker(token, trackerId) {
-  const res = await fetch(`/api/wishlist/${trackerId}`, {
+  const res = await fetchWithTimeout(`/api/wishlist/${trackerId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch wishlist');
@@ -224,7 +232,7 @@ export async function fetchWishlistForTracker(token, trackerId) {
 }
 
 export async function upsertWishlistItem(token, trackerId, regionId, data = {}) {
-  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+  const res = await fetchWithTimeout(`/api/wishlist/${trackerId}/${regionId}`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -234,7 +242,7 @@ export async function upsertWishlistItem(token, trackerId, regionId, data = {}) 
 }
 
 export async function updateWishlistItem(token, trackerId, regionId, updates) {
-  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+  const res = await fetchWithTimeout(`/api/wishlist/${trackerId}/${regionId}`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
@@ -244,7 +252,7 @@ export async function updateWishlistItem(token, trackerId, regionId, updates) {
 }
 
 export async function deleteWishlistItem(token, trackerId, regionId) {
-  const res = await fetch(`/api/wishlist/${trackerId}/${regionId}`, {
+  const res = await fetchWithTimeout(`/api/wishlist/${trackerId}/${regionId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -255,7 +263,7 @@ export async function deleteWishlistItem(token, trackerId, regionId) {
 // ── Challenges API ──
 
 export async function fetchChallenges(token) {
-  const res = await fetch('/api/challenges', {
+  const res = await fetchWithTimeout('/api/challenges', {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch challenges');
@@ -263,7 +271,7 @@ export async function fetchChallenges(token) {
 }
 
 export async function createChallenge(token, data) {
-  const res = await fetch('/api/challenges', {
+  const res = await fetchWithTimeout('/api/challenges', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -277,7 +285,7 @@ export async function createChallenge(token, data) {
 }
 
 export async function fetchChallengeDetail(token, challengeId) {
-  const res = await fetch(`/api/challenges/${challengeId}`, {
+  const res = await fetchWithTimeout(`/api/challenges/${challengeId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!notifyIfExpired(res).ok) throw new Error('Failed to fetch challenge detail');
@@ -285,7 +293,7 @@ export async function fetchChallengeDetail(token, challengeId) {
 }
 
 export async function joinChallenge(token, challengeId) {
-  const res = await fetch(`/api/challenges/${challengeId}/join`, {
+  const res = await fetchWithTimeout(`/api/challenges/${challengeId}/join`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -298,7 +306,7 @@ export async function joinChallenge(token, challengeId) {
 }
 
 export async function leaveChallenge(token, challengeId) {
-  const res = await fetch(`/api/challenges/${challengeId}/leave`, {
+  const res = await fetchWithTimeout(`/api/challenges/${challengeId}/leave`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -307,7 +315,7 @@ export async function leaveChallenge(token, challengeId) {
 }
 
 export async function deleteChallenge(token, challengeId) {
-  const res = await fetch(`/api/challenges/${challengeId}`, {
+  const res = await fetchWithTimeout(`/api/challenges/${challengeId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -316,7 +324,7 @@ export async function deleteChallenge(token, challengeId) {
 }
 
 export async function triggerEncrypt(token) {
-  const res = await fetch('/admin/encrypt', {
+  const res = await fetchWithTimeout('/admin/encrypt', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -329,7 +337,7 @@ export async function triggerEncrypt(token) {
 }
 
 export async function triggerDecrypt(token) {
-  const res = await fetch('/admin/decrypt', {
+  const res = await fetchWithTimeout('/admin/decrypt', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
