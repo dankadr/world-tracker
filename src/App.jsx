@@ -6,6 +6,7 @@ import { ActionSheetProvider } from './context/ActionSheetContext';
 import RegionMap from './components/SwissMap';
 import Sidebar from './components/Sidebar';
 import WorldMap from './components/WorldMap';
+import MapErrorBoundary from './components/MapErrorBoundary';
 import WorldSidebar from './components/WorldSidebar';
 import ExportButton from './components/ExportButton';
 import Confetti from './components/Confetti';
@@ -722,19 +723,21 @@ export default function App() {
                 <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
-            <WorldMap
-              visited={worldVisited}
-              onToggle={handleToggleWorldCountry}
-              friendsActive={friendsActive}
-              onFriendsToggle={handleFriendsToggle}
-              friendOverlayData={friendOverlayData}
-              comparisonFriend={comparisonFriend}
-              onExitComparison={handleExitComparison}
-              wishlist={worldWishlist}
-              comparisonMode={!!comparisonFriend}
-              flyToTarget={flyToTarget}
-              onFlyToDone={() => setFlyToTarget(null)}
-            />
+            <MapErrorBoundary>
+              <WorldMap
+                visited={worldVisited}
+                onToggle={handleToggleWorldCountry}
+                friendsActive={friendsActive}
+                onFriendsToggle={handleFriendsToggle}
+                friendOverlayData={friendOverlayData}
+                comparisonFriend={comparisonFriend}
+                onExitComparison={handleExitComparison}
+                wishlist={worldWishlist}
+                comparisonMode={!!comparisonFriend}
+                flyToTarget={flyToTarget}
+                onFlyToDone={() => setFlyToTarget(null)}
+              />
+            </MapErrorBoundary>
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#d4b866' }}>
                 <div className="stats-card-header">
@@ -882,20 +885,22 @@ export default function App() {
                 <span aria-hidden="true">{sidebarCollapsed ? '\u25B6' : '\u25C0'}</span>
               </button>
             )}
-            <RegionMap
-              country={country}
-              visited={displayVisited}
-              onToggle={handleToggle}
-              wishlist={isShareMode ? new Set() : regionWishlist}
-              dates={isShareMode ? {} : dates}
-              notes={isShareMode ? {} : notes}
-              friendsActive={friendsActive}
-              onFriendsToggle={handleFriendsToggle}
-              friendOverlayData={friendOverlayData}
-              comparisonFriend={comparisonFriend}
-              onExitComparison={handleExitComparison}
-              comparisonMode={!!comparisonFriend}
-            />
+            <MapErrorBoundary>
+              <RegionMap
+                country={country}
+                visited={displayVisited}
+                onToggle={handleToggle}
+                wishlist={isShareMode ? new Set() : regionWishlist}
+                dates={isShareMode ? {} : dates}
+                notes={isShareMode ? {} : notes}
+                friendsActive={friendsActive}
+                onFriendsToggle={handleFriendsToggle}
+                friendOverlayData={friendOverlayData}
+                comparisonFriend={comparisonFriend}
+                onExitComparison={handleExitComparison}
+                comparisonMode={!!comparisonFriend}
+              />
+            </MapErrorBoundary>
             {!isShareMode && !isMobile && <ExportButton country={country} />}
             {!isMobile && !isShareMode && (
               <div className="map-action-buttons">
