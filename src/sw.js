@@ -125,8 +125,8 @@ registerRoute(
 );
 
 async function notifyClientsToFlushQueue() {
-  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  clients.forEach((client) => client.postMessage({ type: 'FLUSH_BATCH_QUEUE' }));
+  const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  windowClients.forEach((client) => client.postMessage({ type: 'FLUSH_BATCH_QUEUE' }));
 }
 
 self.addEventListener('message', (event) => {

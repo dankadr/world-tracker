@@ -55,7 +55,7 @@ function setupBrowserListeners() {
   };
 
   const flushOnLeave = () => {
-    if (queue.length > 0) flushBatch();
+    if (queue.length > 0) void flushBatch();
   };
 
   const flushWhenVisible = () => {
