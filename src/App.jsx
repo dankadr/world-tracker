@@ -54,6 +54,7 @@ import { haptics } from './utils/haptics';
 import useTabSwipe from './hooks/useTabSwipe';
 import useComparisonMode from './hooks/useComparisonMode';
 import useShareMode from './hooks/useShareMode';
+import GlobalSearch from './components/GlobalSearch';
 import {
   createAchievementBaseline,
   getCrossedMilestone,
@@ -206,6 +207,8 @@ export default function App() {
   const { applyColors, setColor, colors } = useCustomColors();
   const { toggle: toggleTheme } = useTheme();
   const searchRef = useRef(null);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [flyToTarget, setFlyToTarget] = useState(null);
   const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
@@ -421,6 +424,28 @@ export default function App() {
     setView('detail');
   }, []);
 
+  const handleSearchSelect = useCallback((entry) => {
+    if (entry.type === 'country') {
+      setView('world');
+      setFlyToTarget({ type: 'country', id: entry.trackerId });
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'region') {
+      setCountryId(entry.trackerId);
+      setView('detail');
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'tracker') {
+      setCountryId(entry.trackerId);
+      setView('detail');
+      if (isMobile) switchTab('map');
+    } else if (entry.type === 'unesco') {
+      setView('world');
+      if (entry.lat != null && entry.lng != null) {
+        setFlyToTarget({ type: 'latlng', lat: entry.lat, lng: entry.lng });
+      }
+      if (isMobile) switchTab('map');
+    }
+  }, [isMobile, switchTab]);
+
   const handleBackToWorld = useCallback(() => {
     setView('world');
   }, []);
@@ -523,6 +548,7 @@ export default function App() {
     searchRef,
     closeModals,
     onOpenEasterEggPrompt: handleOpenEasterEggPrompt,
+    onOpenGlobalSearch: () => setShowGlobalSearch(true),
   });
 
   const [sheetExpandTo, setSheetExpandTo] = useState(null);
@@ -595,6 +621,12 @@ export default function App() {
       {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
+      {showGlobalSearch && (
+        <GlobalSearch
+          onClose={() => setShowGlobalSearch(false)}
+          onSelect={handleSearchSelect}
+        />
+      )}
       <Onboarding />
       {isShareMode && (
         <div className="share-banner">
@@ -700,6 +732,8 @@ export default function App() {
               onExitComparison={handleExitComparison}
               wishlist={worldWishlist}
               comparisonMode={!!comparisonFriend}
+              flyToTarget={flyToTarget}
+              onFlyToDone={() => setFlyToTarget(null)}
             />
             {!isMobile && (
               <div className="floating-stats world-floating-stats" style={{ '--accent': '#d4b866' }}>
