@@ -1432,33 +1432,42 @@ body {
 
 /* ======== Dark Mode ======== */
 [data-theme="dark"] {
-  --glass-bg: rgba(13, 27, 42, 0.55);
-  --glass-bg-heavy: rgba(13, 27, 42, 0.78);
-  --glass-bg-subtle: rgba(13, 27, 42, 0.30);
-  --glass-border: rgba(43, 122, 140, 0.22);
-  --glass-border-subtle: rgba(43, 122, 140, 0.12);
-  --glass-highlight: rgba(43, 122, 140, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.55);
-  --glass-specular: inset 1px 1px 0 rgba(43, 122, 140, 0.14),
-                     inset 0 0 8px rgba(43, 122, 140, 0.06);
-  --glass-specular-strong: inset 1px 1px 0 rgba(43, 122, 140, 0.20),
-                            inset 0 0 12px rgba(43, 122, 140, 0.10);
-  --glass-hover-glow: 0 0 20px rgba(43, 122, 140, 0.18);
-  --body-bg: linear-gradient(135deg, #050e18 0%, #0d1b2a 40%, #112236 100%);
-  --text-primary: #e8d5a3;
-  --text-secondary: #b8a870;
-  --text-tertiary: #7a8a9a;
-  --text-muted: #4a5a6a;
-  --text-on-glass: #e8d5a3;
-  --bar-track: rgba(43, 122, 140, 0.10);
-  --divider: rgba(43, 122, 140, 0.16);
-  --input-bg: rgba(5, 14, 24, 0.60);
-  --hover-bg: rgba(27, 58, 92, 0.45);
+  /* Accent — brighter tier for dark bg contrast */
+  --accent: #4DAEC0;
+  --accent-light: #6DC8D8;
+  --accent-dark: #2B7A8C;
+  --tab-active: #4DAEC0;
+
+  /* Glass — deep navy, teal borders */
+  --glass-bg: rgba(10, 22, 36, 0.58);
+  --glass-bg-heavy: rgba(10, 22, 36, 0.82);
+  --glass-bg-subtle: rgba(10, 22, 36, 0.30);
+  --glass-border: rgba(77, 174, 192, 0.20);
+  --glass-border-subtle: rgba(77, 174, 192, 0.11);
+  --glass-highlight: rgba(77, 174, 192, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.50);
+  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.60);
+  --glass-specular: inset 1px 1px 0 rgba(77, 174, 192, 0.14),
+                     inset 0 0 8px rgba(77, 174, 192, 0.06);
+  --glass-specular-strong: inset 1px 1px 0 rgba(77, 174, 192, 0.22),
+                            inset 0 0 12px rgba(77, 174, 192, 0.10);
+  --glass-hover-glow: 0 0 20px rgba(77, 174, 192, 0.22);
+  --body-bg: linear-gradient(135deg, #050e18 0%, #0a1a2c 40%, #0f2238 100%);
+
+  /* Text — cool off-white, matches light-mode palette tone */
+  --text-primary: #dceef4;
+  --text-secondary: #9cc0d0;
+  --text-tertiary: #6a8a9a;
+  --text-muted: #3e5a6a;
+  --text-on-glass: #dceef4;
+  --bar-track: rgba(77, 174, 192, 0.10);
+  --divider: rgba(77, 174, 192, 0.16);
+  --input-bg: rgba(5, 14, 24, 0.65);
+  --hover-bg: rgba(20, 50, 72, 0.50);
 }
 
 [data-theme="dark"] body {
-  color: #e8d5a3;
+  color: #dceef4;
 }
 
 [data-theme="dark"] .sidebar-title {
