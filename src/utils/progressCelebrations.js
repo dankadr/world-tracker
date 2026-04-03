@@ -46,3 +46,34 @@ export function markMilestoneShown(shownMilestones, trackerId, milestone) {
   nextShown.add(milestoneId);
   return { shouldFire: true, shownMilestones: nextShown, milestoneId };
 }
+
+const TOGGLE_COOLDOWN_MS = 1500;
+
+/**
+ * Returns true and records the timestamp if the country can be toggled.
+ * Returns false (blocking the toggle) if the same country was toggled
+ * within TOGGLE_COOLDOWN_MS milliseconds.
+ *
+ * @param {Map<string, number>} cooldownMap - shared mutable Map (from useRef)
+ * @param {string} countryCode
+ * @param {number} [now=Date.now()]
+ */
+export function checkToggleCooldown(cooldownMap, countryCode, now = Date.now()) {
+  const lastToggle = cooldownMap.get(countryCode);
+  if (lastToggle !== undefined && now - lastToggle < TOGGLE_COOLDOWN_MS) return false;
+  cooldownMap.set(countryCode, now);
+  return true;
+}
+
+export function getAchShownKey(userId) {
+  return userId ? `swiss-tracker-shown-ach-${userId}` : 'swiss-tracker-shown-ach';
+}
+
+export function readAchShown(userId) {
+  const plain = localStorage.getItem(getAchShownKey(userId));
+  return plain ? parseStoredIdList(plain) : [];
+}
+
+export function writeAchShown(userId, ids) {
+  localStorage.setItem(getAchShownKey(userId), JSON.stringify([...ids]));
+}

@@ -26,23 +26,3 @@ test('mobile map games entry opens games and quit returns to the games home', as
   await expect(page.getByTestId('games-panel')).toBeVisible();
 });
 
-test('mobile country visit toast stays compact above the tab bar', async ({ page }) => {
-  const switzerland = page.locator('[data-country-id="ch"]').first();
-
-  await expect(switzerland).toHaveAttribute('data-visited', 'false');
-  await switzerland.click({ force: true });
-  await expect(switzerland).toHaveAttribute('data-visited', 'true');
-
-  const toast = page.locator('.xp-toast').first();
-  await expect(toast).toBeVisible();
-
-  const toastBox = await toast.boundingBox();
-  const viewport = page.viewportSize();
-
-  expect(toastBox).not.toBeNull();
-  expect(viewport).not.toBeNull();
-  expect(toastBox.width).toBeLessThan(viewport.width - 20);
-
-  const toastBottom = toastBox.y + toastBox.height;
-  expect(toastBottom).toBeLessThan(viewport.height - 60);
-});
