@@ -325,9 +325,10 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   const wishlistRef = useRef(wishlist);
   useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
   const { dark } = useTheme();
-  const [tileUrl, setTileUrl] = useState(
-    dark ? LAYERS[1].dark : LAYERS[1].light
-  );
+  const [tileUrl, setTileUrl] = useState(() => {
+    const streets = LAYERS.find((l) => l.id === 'streets');
+    return dark ? streets.dark : streets.light;
+  });
   const [wishlistActive, setWishlistActive] = useState(true);
   const wishlistActiveRef = useRef(wishlistActive);
   useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);

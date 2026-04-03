@@ -8,7 +8,7 @@ import { ThemeProvider } from '../../context/ThemeContext';
 
 const mockPane = vi.hoisted(() => ({ style: {} }));
 
-vi.mock('../MapLayerControl', () => ({ default: () => null, LAYERS: [{ light: 'light-0', dark: 'dark-0' }, { light: 'light-1', dark: 'dark-1' }] }));
+vi.mock('../MapLayerControl', () => ({ default: () => null, LAYERS: [{ id: 'clean', light: 'light-0', dark: 'dark-0' }, { id: 'labels', light: 'light-1', dark: 'dark-1' }, { id: 'streets', light: 'light-streets', dark: 'dark-streets' }] }));
 vi.mock('../UnescoLayer', () => ({ default: () => null }));
 vi.mock('../FriendOverlayLegend', () => ({ default: () => null }));
 vi.mock('../ComparisonLegend', () => ({ default: () => null }));
