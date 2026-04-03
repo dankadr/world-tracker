@@ -2,6 +2,13 @@ name: CI
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Minimal token permissions — read-only by default
+permissions:
+  contents: read
 
 jobs:
   frontend:
@@ -45,6 +52,10 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    # Skip E2E on fork PRs — they can't access deployment secrets and are slow
+    if: >
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v4
 
