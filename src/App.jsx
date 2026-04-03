@@ -60,7 +60,6 @@ import {
   checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
-  getAchShownKey,
   getNewlyUnlockedIds,
   markMilestoneShown,
   parseStoredIdList,
@@ -164,7 +163,8 @@ function AchievementToasts() {
 
     // Always sync prevUnlocked & seen with the current state so that
     // achievements lost after unmarking a region/country are removed.
-    // This lets them re-trigger a toast if re-earned later.
+    // Note: re-earning a lost achievement re-grants XP but does NOT show a toast again
+    // (shownIds is an append-only lifetime gate — see writeAchShown).
     prevUnlocked.current = new Set(currentUnlocked);
     writeAchSeen(userId, currentUnlocked); // synchronous write — no async gap
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
