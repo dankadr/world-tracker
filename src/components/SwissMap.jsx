@@ -193,9 +193,10 @@ export default function RegionMap({ country, visited, onToggle, wishlist, dates,
   useEffect(() => { comparisonModeRef.current = comparisonMode; }, [comparisonMode]);
   const isPointMode = country.pointMode;
   const { dark } = useTheme();
-  const [tileUrl, setTileUrl] = useState(
-    dark ? LAYERS[0].dark : LAYERS[0].light
-  );
+  const [tileUrl, setTileUrl] = useState(() => {
+    const streets = LAYERS.find((l) => l.id === 'streets');
+    return dark ? streets.dark : streets.light;
+  });
   const [wishlistActive, setWishlistActive] = useState(true);
 
   useEffect(() => {

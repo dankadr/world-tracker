@@ -21,8 +21,8 @@ export function computeZoomFactor(zoom) {
   return (10 - zoom) / 4;
 }
 
-const VISITED_COLOR = '#c9a84c';
-const VISITED_HOVER = '#b8943a';
+const VISITED_COLOR = '#2B7A8C';
+const VISITED_HOVER = '#1E5E6E';
 
 const TRACKED_COUNTRY_IDS = {
   ch: 'ch',
@@ -325,9 +325,20 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
   const wishlistRef = useRef(wishlist);
   useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
   const { dark } = useTheme();
-  const [tileUrl, setTileUrl] = useState(
-    dark ? LAYERS[1].dark : LAYERS[1].light
-  );
+
+  // Brighter teal in dark mode so visited countries read against dark tiles
+  const visitedStyle = useMemo(() => ({
+    ...VISITED_STYLE,
+    fillColor: dark ? '#4DAEC0' : '#2B7A8C',
+  }), [dark]);
+  // Ref so Leaflet event-handler closures (set up at mount) always read the latest value
+  const visitedStyleRef = useRef(visitedStyle);
+  useEffect(() => { visitedStyleRef.current = visitedStyle; }, [visitedStyle]);
+
+  const [tileUrl, setTileUrl] = useState(() => {
+    const streets = LAYERS.find((l) => l.id === 'streets');
+    return dark ? streets.dark : streets.light;
+  });
   const [wishlistActive, setWishlistActive] = useState(true);
   const wishlistActiveRef = useRef(wishlistActive);
   useEffect(() => { wishlistActiveRef.current = wishlistActive; }, [wishlistActive]);
@@ -402,8 +413,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       const isTracked = id in TRACKED_COUNTRY_IDS;
       const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
       let style;
-      if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
-      else if (isVisited) style = VISITED_STYLE;
+      if (isVisited && isTracked) style = visitedStyle;
+      else if (isVisited) style = visitedStyle;
       else if (isWishlisted) style = WISHLIST_STYLE;
       else if (isTracked) style = TRACKED_STYLE;
       else style = UNVISITED_STYLE;
@@ -419,7 +430,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
         isGameTarget: false,
       });
     });
-  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]);
+  }, [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, visitedStyle]);
 
   const getStyle = useCallback(
     (feature) => {
@@ -439,8 +450,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
       const isGreaterIsrael = greaterIsraelEnabled && id === 'il';
 
       let style;
-      if (isVisited && isTracked) style = { ...TRACKED_VISITED_STYLE };
-      else if (isVisited) style = { ...VISITED_STYLE };
+      if (isVisited && isTracked) style = { ...visitedStyle };
+      else if (isVisited) style = { ...visitedStyle };
       else if (isWishlisted) style = { ...WISHLIST_STYLE };
       else if (isTracked) style = { ...TRACKED_STYLE };
       else style = { ...UNVISITED_STYLE };
@@ -452,7 +463,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
 
       return style;
     },
-    [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode]
+    [visited, wishlist, wishlistActive, greaterIsraelEnabled, gameMode, visitedStyle]
   );
 
   const onEachFeature = useCallback(
@@ -501,8 +512,8 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           const isVisited = visitedRef.current.has(id);
           const isWishlisted = wishlistActiveRef.current && wishlistRef.current?.has(id);
           let style;
-          if (isVisited && isTracked) style = TRACKED_VISITED_STYLE;
-          else if (isVisited) style = VISITED_STYLE;
+          if (isVisited && isTracked) style = visitedStyleRef.current;
+          else if (isVisited) style = visitedStyleRef.current;
           else if (isWishlisted) style = WISHLIST_STYLE;
           else if (isTracked) style = TRACKED_STYLE;
           else style = UNVISITED_STYLE;
@@ -521,7 +532,7 @@ export default function WorldMap({ visited, onToggle, onExploreCountry, friendsA
           const target = e.target;
           const willBeVisited = !visitedRef.current.has(id);
           const finalStyle = willBeVisited
-            ? (isTracked ? TRACKED_VISITED_STYLE : VISITED_STYLE)
+            ? visitedStyleRef.current
             : (isTracked ? TRACKED_STYLE : UNVISITED_STYLE);
           syncFeatureTestAttributes(target, {
             id,

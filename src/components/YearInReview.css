@@ -36,7 +36,7 @@
   padding: 24px;
   border-radius: 24px;
   background: linear-gradient(165deg, #0d1b2a 0%, #0a1628 40%, #061220 100%);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(201, 168, 76, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(43, 122, 140, 0.1);
   overflow: hidden;
   user-select: none;
 }
@@ -104,7 +104,7 @@
 }
 
 .yir-dot-done {
-  background: rgba(201, 168, 76, 0.6);
+  background: rgba(43, 122, 140, 0.6);
 }
 
 /* ===== Card Wrapper & Animations ===== */
@@ -178,7 +178,7 @@
   font-size: 36px;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, #fff 0%, #d4b866 100%);
+  background: linear-gradient(135deg, #fff 0%, #4DAEC0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -209,7 +209,7 @@
   font-weight: 900;
   line-height: 1;
   margin: 8px 0;
-  background: linear-gradient(135deg, #c9a84c 0%, #d4b866 50%, #e0c870 100%);
+  background: linear-gradient(135deg, #2B7A8C 0%, #4DAEC0 50%, #e0c870 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -229,7 +229,7 @@
 
 .yir-card-highlight {
   font-size: 14px;
-  color: #d4b866;
+  color: #4DAEC0;
   margin: 12px 0 4px;
   font-weight: 600;
 }
@@ -316,7 +316,7 @@
   width: 100%;
   max-width: 24px;
   min-height: 3px;
-  background: linear-gradient(to top, #c9a84c, #d4b866);
+  background: linear-gradient(to top, #2B7A8C, #4DAEC0);
   border-radius: 4px 4px 0 0;
   animation: yir-bar-grow 0.5s ease-out both;
 }
@@ -354,7 +354,7 @@
 .yir-summary-divider {
   width: 70%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(43, 122, 140, 0.6), transparent);
   margin-bottom: 20px;
 }
 
@@ -367,8 +367,8 @@
 }
 
 .yir-summary-stat {
-  background: rgba(201, 168, 76, 0.08);
-  border: 1px solid rgba(201, 168, 76, 0.22);
+  background: rgba(43, 122, 140, 0.08);
+  border: 1px solid rgba(43, 122, 140, 0.22);
   border-radius: 14px;
   padding: 16px 10px;
   display: flex;
@@ -385,7 +385,7 @@
 .yir-summary-num {
   font-size: 32px;
   font-weight: 800;
-  background: linear-gradient(135deg, #c9a84c, #d4b866);
+  background: linear-gradient(135deg, #2B7A8C, #4DAEC0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -461,7 +461,7 @@
   padding: 8px 16px;
   border: none;
   border-radius: 20px;
-  background: linear-gradient(135deg, #c9a84c, #a08030);
+  background: linear-gradient(135deg, #2B7A8C, #1E5E6E);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -472,7 +472,7 @@
 
 .yir-trigger-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.4);
+  box-shadow: 0 4px 12px rgba(43, 122, 140, 0.4);
 }
 
 .yir-year-select {
@@ -539,10 +539,10 @@
 
 .yir-format-btn {
   padding: 8px 22px;
-  border: 1px solid rgba(201, 168, 76, 0.45);
+  border: 1px solid rgba(43, 122, 140, 0.45);
   border-radius: 20px;
-  background: rgba(201, 168, 76, 0.1);
-  color: #c9a84c;
+  background: rgba(43, 122, 140, 0.1);
+  color: #2B7A8C;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -550,8 +550,8 @@
 }
 
 .yir-format-btn:hover:not(:disabled) {
-  background: rgba(201, 168, 76, 0.22);
-  border-color: #c9a84c;
+  background: rgba(43, 122, 140, 0.22);
+  border-color: #2B7A8C;
 }
 
 .yir-format-btn:disabled {
@@ -560,8 +560,8 @@
 }
 
 .yir-format-btn.active {
-  background: rgba(201, 168, 76, 0.22);
-  border-color: #c9a84c;
+  background: rgba(43, 122, 140, 0.22);
+  border-color: #2B7A8C;
   color: #fff;
 }
 
@@ -576,9 +576,9 @@
   border-radius: 22px;
   font-size: 14px;
   font-weight: 600;
-  background: linear-gradient(135deg, #c9a84c, #a08030);
+  background: linear-gradient(135deg, #2B7A8C, #1E5E6E);
 }
 
 .yir-nav-share:hover:not(:disabled) {
-  background: linear-gradient(135deg, #a08030, #c9a84c);
+  background: linear-gradient(135deg, #1E5E6E, #2B7A8C);
 }

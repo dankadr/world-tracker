@@ -12,7 +12,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 32px;
-  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  border-bottom: 1px solid rgba(43, 122, 140, 0.2);
 }
 .landing-nav-logo {
   display: flex;
@@ -43,7 +43,7 @@
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #c9a84c;
+  color: #2B7A8C;
   margin-bottom: 16px;
 }
 .landing-headline {
@@ -69,8 +69,8 @@
   margin-bottom: 32px;
 }
 .landing-stat {
-  background: rgba(201, 168, 76, 0.14);
-  border: 1px solid rgba(201, 168, 76, 0.35);
+  background: rgba(43, 122, 140, 0.14);
+  border: 1px solid rgba(43, 122, 140, 0.35);
   border-radius: 12px;
   padding: 12px 20px;
   min-width: 80px;
@@ -79,7 +79,7 @@
 .landing-stat-number {
   font-size: 22px;
   font-weight: 700;
-  color: #c9a84c;
+  color: #2B7A8C;
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -90,7 +90,7 @@
 }
 .landing-cta-btn {
   background: #0d1b2a;
-  color: #c9a84c;
+  color: #2B7A8C;
   font-size: 14px;
   font-weight: 700;
   padding: 14px 32px;
@@ -125,7 +125,7 @@
 /* Divider */
 .landing-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(43, 122, 140, 0.3), transparent);
   margin: 0 32px;
 }
 
@@ -137,7 +137,7 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #c9a84c;
+  color: #2B7A8C;
   text-align: center;
   margin-bottom: 8px;
 }
@@ -157,8 +157,8 @@
   margin: 0 auto;
 }
 .landing-feature-card {
-  background: rgba(255, 248, 220, 0.6);
-  border: 1px solid rgba(201, 168, 76, 0.2);
+  background: rgba(240, 248, 250, 0.6);
+  border: 1px solid rgba(43, 122, 140, 0.2);
   border-radius: 12px;
   padding: 20px;
 }

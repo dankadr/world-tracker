@@ -270,13 +270,13 @@ export default function WorldSidebar({
             {filteredCountries.map((c) => (
               <li key={c.id} className="world-country-item">
                 <label className={`canton-label ${visited.has(c.id) ? 'visited' : ''}`}
-                  style={visited.has(c.id) ? { '--visit-bg': '#c9a84c18', '--visit-bg-hover': '#c9a84c28', '--visit-color': '#c9a84c' } : {}}
+                  style={visited.has(c.id) ? { '--visit-bg': '#2B7A8C18', '--visit-bg-hover': '#2B7A8C28', '--visit-color': '#2B7A8C' } : {}}
                 >
                   <input
                     type="checkbox"
                     checked={visited.has(c.id)}
                     onChange={() => onToggle(c.id)}
-                    style={{ accentColor: '#c9a84c' }}
+                    style={{ accentColor: '#2B7A8C' }}
                   />
                   <span className="canton-name">{c.name}</span>
                   <span className="world-country-continent">{c.continent}</span>
@@ -368,13 +368,13 @@ export default function WorldSidebar({
                         <li key={c.id} className="world-country-item">
                           <label
                             className={`canton-label ${visited.has(c.id) ? 'visited' : ''}`}
-                            style={visited.has(c.id) ? { '--visit-bg': '#c9a84c18', '--visit-bg-hover': '#c9a84c28', '--visit-color': '#c9a84c' } : {}}
+                            style={visited.has(c.id) ? { '--visit-bg': '#2B7A8C18', '--visit-bg-hover': '#2B7A8C28', '--visit-color': '#2B7A8C' } : {}}
                           >
                             <input
                               type="checkbox"
                               checked={visited.has(c.id)}
                               onChange={() => onToggle(c.id)}
-                              style={{ accentColor: '#c9a84c' }}
+                              style={{ accentColor: '#2B7A8C' }}
                             />
                             <span className="canton-name">{c.name}</span>
                           </label>

@@ -85,13 +85,13 @@
 }
 
 .lb-row.is-self {
-  background: rgba(201, 168, 76, 0.08);
-  border: 1px solid rgba(201, 168, 76, 0.15);
+  background: rgba(43, 122, 140, 0.08);
+  border: 1px solid rgba(43, 122, 140, 0.15);
 }
 
 [data-theme="dark"] .lb-row.is-self {
-  background: rgba(201, 168, 76, 0.12);
-  border-color: rgba(201, 168, 76, 0.2);
+  background: rgba(43, 122, 140, 0.12);
+  border-color: rgba(43, 122, 140, 0.2);
 }
 
 /* Rank badges */
@@ -128,7 +128,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c9a84c, #d4b866);
+  background: linear-gradient(135deg, #2B7A8C, #4DAEC0);
   color: #fff;
   font-weight: 600;
 }
@@ -163,12 +163,12 @@
 .lb-bar {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, #d4b866, #c9a84c);
+  background: linear-gradient(90deg, #4DAEC0, #2B7A8C);
   transition: width 0.4s ease;
 }
 
 .lb-row.is-self .lb-bar {
-  background: linear-gradient(90deg, #c9a84c, #a08030);
+  background: linear-gradient(90deg, #2B7A8C, #1E5E6E);
 }
 
 /* Count */

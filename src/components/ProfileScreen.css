@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px 8px;
-  border-bottom: 1px solid var(--glass-border, rgba(201, 168, 76, 0.14));
+  border-bottom: 1px solid var(--glass-border, rgba(43, 122, 140, 0.14));
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.9));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -13,12 +13,12 @@
 
 [data-theme="dark"] .profile-seg-header {
   background: rgba(5, 14, 24, 0.92);
-  border-bottom-color: rgba(201, 168, 76, 0.1);
+  border-bottom-color: rgba(43, 122, 140, 0.1);
 }
 
 .profile-seg-control {
   display: flex;
-  background: var(--glass-bg, rgba(201, 168, 76, 0.08));
+  background: var(--glass-bg, rgba(43, 122, 140, 0.08));
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
@@ -157,7 +157,7 @@
 
 .profile-xp-bar {
   height: 6px;
-  background: var(--glass-bg, rgba(201, 168, 76, 0.15));
+  background: var(--glass-bg, rgba(43, 122, 140, 0.15));
   border-radius: 3px;
   overflow: hidden;
 }
@@ -168,7 +168,7 @@
 
 .profile-xp-fill {
   height: 100%;
-  background: var(--tab-active, #c9a84c);
+  background: var(--tab-active, #2B7A8C);
   border-radius: 3px;
   transition: width 400ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -204,14 +204,14 @@
 }
 
 .profile-stats-btn {
-  background: var(--glass-bg, rgba(201, 168, 76, 0.1));
-  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.2));
+  background: var(--glass-bg, rgba(43, 122, 140, 0.1));
+  border: 1px solid var(--glass-border, rgba(43, 122, 140, 0.2));
   border-radius: 12px;
   padding: 10px 18px;
   font-size: 15px;
   font-weight: 600;
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
-  color: var(--tab-active, #c9a84c);
+  color: var(--tab-active, #2B7A8C);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -240,10 +240,10 @@
 .profile-share-btn {
   margin-top: 8px;
   padding: 10px 20px;
-  border: 1px solid rgba(201, 168, 76, 0.4);
+  border: 1px solid rgba(43, 122, 140, 0.4);
   border-radius: 20px;
-  background: rgba(201, 168, 76, 0.08);
-  color: #c9a84c;
+  background: rgba(43, 122, 140, 0.08);
+  color: #2B7A8C;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -252,8 +252,8 @@
 }
 
 .profile-share-btn:hover:not(:disabled) {
-  background: rgba(201, 168, 76, 0.18);
-  border-color: #c9a84c;
+  background: rgba(43, 122, 140, 0.18);
+  border-color: #2B7A8C;
 }
 
 .profile-share-btn:disabled {

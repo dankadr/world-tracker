@@ -164,10 +164,10 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: var(--glass-bg-heavy, rgba(255, 248, 220, 0.88));
+  background: var(--glass-bg-heavy, rgba(240, 248, 250, 0.88));
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
-  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.35));
+  border: 1px solid var(--glass-border, rgba(43, 122, 140, 0.35));
   box-shadow: 0 4px 24px rgba(13, 27, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   animation: pillSlideDown 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
   pointer-events: auto;
@@ -215,7 +215,7 @@
 .xp-toast-xp {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #d4b866;
+  color: #4DAEC0;
 }
 
 .xp-toast-reason {
@@ -310,7 +310,7 @@
 /* Dark mode adjustments */
 .dark .xp-toast {
   background: rgba(5, 14, 24, 0.92);
-  border-color: var(--glass-border, rgba(201, 168, 76, 0.35));
+  border-color: var(--glass-border, rgba(43, 122, 140, 0.35));
   color: var(--text-on-glass);
 }
 
