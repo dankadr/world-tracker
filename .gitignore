@@ -65,13 +65,20 @@ test-results/
 
 # Git worktrees
 .worktrees/
+
+# Large geodata files (generated locally)
 scripts/gadm41_NOR_1.json
 scripts/gadm41_SJM_0.json
 scripts/gadm41_SJM_1.json
-scripts/gadm41_USA_1.json curl -L https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_USA_1.json -o /Users/dankadr/swiss-tracker/scripts/gadm41_USA_1.json
-.worktrees/
-
-# Scripts
+scripts/gadm41_USA_1.json
 /.ne_10m_countries_tmp.geojson
 /.ne_dissolve_input_tmp.json
 /.ne_dissolve_output_tmp.json
+
+# Private / internal docs (not for public repo)
+ToDos/
+docs/side-brands/
+docs/superpowers/
+docs/plans/*monetization*
+docs/plans/*buy-me*
+docs/launch-guide.md

@@ -8,6 +8,7 @@ import { FriendsProvider } from './context/FriendsContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { XpProvider } from './hooks/useXp';
 import { NavigationProvider } from './context/NavigationContext';
+import { registerServiceWorker } from './pwa/registerServiceWorker';
 import './App.css';
 
 Sentry.init({
@@ -33,3 +34,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+void registerServiceWorker();

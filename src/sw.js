@@ -1,11 +1,21 @@
-import { precacheAndRoute } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
+import { clientsClaim } from 'workbox-core';
+import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 // Injected by VitePWA at build time — do not remove
+self.skipWaiting();
+clientsClaim();
+
 precacheAndRoute(self.__WB_MANIFEST);
+
+registerRoute(
+  new NavigationRoute(createHandlerBoundToURL('index.html'), {
+    denylist: [/^\/api\//, /^\/auth\//, /^\/admin\//],
+  })
+);
 
 // OSM map tiles
 registerRoute(
@@ -19,11 +29,35 @@ registerRoute(
   })
 );
 
+// OpenTopoMap tiles
+registerRoute(
+  /^https:\/\/[a-z]\.tile\.opentopomap\.org\/.*/,
+  new CacheFirst({
+    cacheName: 'opentopomap-tiles',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
+
 // Carto map tiles
 registerRoute(
   /^https:\/\/(a|b|c|d)\.basemaps\.cartocdn\.com\/.*/,
   new CacheFirst({
     cacheName: 'carto-tiles',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
+
+// ArcGIS satellite tiles
+registerRoute(
+  /^https:\/\/server\.arcgisonline\.com\/ArcGIS\/rest\/services\/World_Imagery\/MapServer\/tile\/.*/,
+  new CacheFirst({
+    cacheName: 'arcgis-tiles',
     plugins: [
       new ExpirationPlugin({ maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
@@ -78,3 +112,31 @@ registerRoute(
   /^https:\/\/fonts\.googleapis\.com\/.*/,
   new StaleWhileRevalidate({ cacheName: 'google-fonts' })
 );
+
+registerRoute(
+  /^https:\/\/fonts\.gstatic\.com\/.*/,
+  new CacheFirst({
+    cacheName: 'google-font-files',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
+
+async function notifyClientsToFlushQueue() {
+  const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  windowClients.forEach((client) => client.postMessage({ type: 'FLUSH_BATCH_QUEUE' }));
+}
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'world-tracker-sync') {
+    event.waitUntil(notifyClientsToFlushQueue());
+  }
+});

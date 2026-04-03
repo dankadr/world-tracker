@@ -2,17 +2,20 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { readFileSync } from 'node:fs';
+const { version } = JSON.parse(readFileSync('./package.json', 'utf8'));
 
 export default defineConfig({
   plugins: [
     react(),
     process.env.ANALYZE && visualizer({ open: true, gzipSize: true, filename: 'dist/stats.html' }),
     VitePWA({
+      injectRegister: null,
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
-      includeAssets: ['favicon.png'],
+      includeAssets: ['favicon.png', 'logo.png', 'logo.webp', 'manifest.json', 'icons/*.png'],
       manifest: false, // We provide our own public/manifest.json
       injectManifest: {
         // Only pre-cache app shell files — exclude large PNGs
@@ -22,6 +25,8 @@ export default defineConfig({
     }),
   ],
   define: {
+    // Injected at build time from package.json — single source of truth for version
+    __APP_VERSION__: JSON.stringify(version),
     // Expose GOOGLE_CLIENT_ID as VITE_GOOGLE_CLIENT_ID for the frontend
     // so it works on Vercel without needing a separate VITE_ env var
     'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(

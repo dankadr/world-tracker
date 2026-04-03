@@ -14,6 +14,10 @@ describe('batchQueue persistence', () => {
     invalidateBulkCache.mockReset();
     vi.useFakeTimers();
     global.fetch = vi.fn();
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
+    });
   });
 
   it('restores queued actions from localStorage and flushes them', async () => {
@@ -119,5 +123,44 @@ describe('batchQueue persistence', () => {
 
     // Only one fetch should have been made
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('flushes a persisted queue when the browser comes back online', async () => {
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: false,
+    });
+    localStorage.setItem(
+      'swiss-tracker-batch-queue',
+      JSON.stringify([{ action: 'world_toggle', payload: { country: 'il', action: 'add' }, token: 'jwt-token' }])
+    );
+    await loadQueueModule();
+
+    fetch.mockResolvedValue({ ok: true });
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
+    });
+    window.dispatchEvent(new Event('online'));
+    await vi.runAllTimersAsync();
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('swiss-tracker-batch-queue')).toBe('[]');
+  });
+
+  it('requests a background sync when a queue is created', async () => {
+    const syncRegister = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'serviceWorker', {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({ sync: { register: syncRegister } }),
+      },
+    });
+
+    const { addToBatch } = await loadQueueModule();
+    addToBatch('world_toggle', { country: 'il', action: 'add' }, 'jwt-token');
+    await Promise.resolve();
+
+    expect(syncRegister).toHaveBeenCalledWith('world-tracker-sync');
   });
 });

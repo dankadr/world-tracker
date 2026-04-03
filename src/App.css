@@ -1191,6 +1191,56 @@ body {
   font-size: 0.7rem;
   margin-top: 4px;
 }
+.sidebar-kofi-link {
+  display: block;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  border-top: 1px solid var(--divider);
+  transition: color 120ms ease;
+  flex-shrink: 0;
+}
+
+.sidebar-kofi-link:hover {
+  color: var(--text-secondary);
+}
+
+/* Floating Ko-fi button — mobile only, floats above the bottom sheet */
+.kofi-fab {
+  position: fixed;
+  bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height, 56px) + 12px);
+  left: 16px;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.88));
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.25));
+  box-shadow: 0 2px 12px rgba(13, 27, 42, 0.15);
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.kofi-fab:active {
+  transform: scale(0.94);
+  box-shadow: 0 1px 6px rgba(13, 27, 42, 0.1);
+}
+
+.dark .kofi-fab {
+  background: rgba(5, 14, 24, 0.88);
+  border-color: rgba(201, 168, 76, 0.2);
+}
+
 .sidebar-settings-footer {
   border-top: 1px solid var(--divider);
   flex-shrink: 0;

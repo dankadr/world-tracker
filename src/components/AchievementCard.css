@@ -1,5 +1,18 @@
 /* ======== Achievement Detail (Expand In Place) ======== */
 
+.badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.badge-icon-asset {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
 /* Touch UX on the badge itself */
 .achievement-badge {
   cursor: pointer;
