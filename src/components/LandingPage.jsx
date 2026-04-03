@@ -54,14 +54,16 @@ export default function LandingPage() {
   // Wait for Google Identity Services SDK to load
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
+    let timerId;
     function checkGsi() {
       if (window.google?.accounts?.id) {
         setGsiReady(true);
       } else {
-        setTimeout(checkGsi, 200);
+        timerId = setTimeout(checkGsi, 200);
       }
     }
     checkGsi();
+    return () => clearTimeout(timerId);
   }, []);
 
   // Render the official Google Sign-In button in the hero
@@ -158,7 +160,7 @@ export default function LandingPage() {
           disabled={loading}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          {loading ? 'Signing in…' : 'Start tracking free →'}
+          {loading ? 'Signing in…' : 'Sign in to get started →'}
         </button>
       </section>
     </div>
