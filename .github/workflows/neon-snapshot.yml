@@ -8,10 +8,15 @@ on:
         required: false
         default: ''
 
+permissions:
+  contents: read
+
 jobs:
   snapshot:
     name: Snapshot main branch
     runs-on: ubuntu-latest
+    # Only the repo owner can run this
+    if: github.actor == 'dankadr'
     env:
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
@@ -22,14 +27,13 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%d-%H%M%S")
           SNAPSHOT_NAME="snapshot-${TIMESTAMP}${SNAPSHOT_LABEL:+-$SNAPSHOT_LABEL}"
 
-          # Find the default (main) branch ID
           MAIN_BRANCH_ID=$(curl -sf \
             -H "Authorization: Bearer $NEON_API_KEY" \
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
             | jq -r '.branches[] | select(.default == true) | .id')
 
           if [ -z "$MAIN_BRANCH_ID" ]; then
-            echo "Error: could not find default branch in project $NEON_PROJECT_ID"
+            echo "Error: could not find default branch"
             exit 1
           fi
 

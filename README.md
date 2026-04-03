@@ -1,6 +1,14 @@
 # Right World Tracker
 
-Your world. Your journey. — An interactive travel tracker where you mark countries, explore detailed region maps, track capitals and UNESCO sites, set goals, and unlock achievements. Supports optional Google login for cross-device sync.
+**Your world. Your journey.**
+
+An interactive travel tracker where you mark countries, explore detailed region maps, track capitals and UNESCO sites, set goals, and unlock achievements.
+
+**[→ Live App](https://world-tracker-eight.vercel.app)** · [![CI](https://github.com/dankadr/world-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/dankadr/world-tracker/actions/workflows/ci.yml) · [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/dantracker)
+
+---
 
 ## Supported Trackers
 
@@ -29,66 +37,34 @@ Your world. Your journey. — An interactive travel tracker where you mark count
 
 ## Feature Highlights
 
-- **World + Regional Maps** — 20 tracker/map views across world, capitals, and country sub-trackers.
-- **UNESCO Overlay** — optional UNESCO World Heritage layer with **270 sites**.
-- **Bucket List Planner** — add planned trips, target dates, and mark destinations complete.
-- **Travel Challenges** — create personal or friend challenges with streak-friendly progress.
-- **XP + Levels** — gain XP for visits, achievements, and milestones.
-- **Achievements** — **173** unlockable badges spanning global and tracker-specific goals.
-- **Friends + Comparison** — share progress, compare maps, and use friend overlays.
-- **Stats Dashboard** — timeline, continent stats, totals, and progress summaries.
-- **Year in Review** — generate annual travel summaries and sharing cards.
-- **Trip Notes & Dates** — attach notes and dates to any visited destination.
-- **Wishlist / Planned** — mark places to visit next and manage a global wish list.
-- **Map Layer Controls** — switch map layers and toggle wishlist, friends, and UNESCO overlays.
-- **Export + Import** — PNG map export, share cards, JSON backup/restore, and CSV exports.
-- **Geography Mini Games** — Map Quiz, Flag Quiz, Capital Quiz, and Shape Quiz with scored rounds and local high scores.
-- **PWA Foundation** — manifest, install prompt, service worker, and offline indicator are in place.
-- **Dark Mode + Mobile UX** — optimized for desktop and touch devices.
-- **Google Sign-In or Guest Mode** — local-only mode or account sync.
+- **World + Regional Maps** — 20 tracker/map views across world, capitals, and country sub-trackers
+- **UNESCO Overlay** — optional UNESCO World Heritage layer with 270 sites
+- **Bucket List Planner** — add planned trips, target dates, and mark destinations complete
+- **Travel Challenges** — create personal or friend challenges with streak-friendly progress
+- **XP + Levels** — gain XP for visits, achievements, and milestones
+- **Achievements** — 173 unlockable badges spanning global and tracker-specific goals
+- **Friends + Comparison** — share progress, compare maps, and use friend overlays
+- **Stats Dashboard** — timeline, continent stats, totals, and progress summaries
+- **Year in Review** — generate annual travel summaries and sharing cards
+- **Trip Notes & Dates** — attach notes and dates to any visited destination
+- **Wishlist / Planned** — mark places to visit next and manage a global wish list
+- **Geography Mini Games** — Map Quiz, Flag Quiz, Capital Quiz, and Shape Quiz
+- **Export + Import** — PNG map export, share cards, JSON backup/restore, and CSV exports
+- **Dark Mode + Mobile UX** — optimized for desktop and touch devices with PWA support
+- **Google Sign-In or Guest Mode** — local-only mode or account sync
 
-## Geography Mini Games
+## Tech Stack
 
-An interactive games section accessible from the Explore tab that tests your geographical knowledge using the app's existing map infrastructure.
-
-### Game Modes
-
-| Mode | Description |
-|------|-------------|
-| 🗺️ **Map Quiz** | A blank world map highlights a random country — type or select its name |
-| 🚩 **Flag Quiz** | Identify a country from its flag (or pick the correct flag for a country name) |
-| 🏛️ **Capital Quiz** | Name the capital of a highlighted country, or identify the country from its capital |
-| 🧩 **Shape Quiz** | Identify the country from its highlighted outline/shape on the map |
-
-### How It Works
-
-- All three modes share a common game engine (`useGeographyGame` hook) that handles shuffling, scoring, timer, and state transitions
-- **Score tracking:** correct / incorrect / skipped counts per session
-- **High scores** saved to localStorage per mode
-- **Quiz pools** can be scoped: all countries, only visited, only unvisited — integrating with your personal tracker data
-- **Result screen** shows score breakdown and a replay button after each session
-
-### Architecture
-
-```
-GamesPanel (mode selector)
-├── MapQuiz      → useGeographyGame(worldPool, options)
-├── FlagQuiz     → useGeographyGame(worldPool, options)
-├── CapitalQuiz  → useGeographyGame(capitalPool, options)
-└── ShapeQuiz    → useGeographyGame(worldPool, options)
-                        └── GameResultScreen (shared)
-```
-
-**Key files:**
-- `src/hooks/useGeographyGame.js` — shared game engine (shuffling, scoring, timer, state machine)
-- `src/components/GamesPanel.jsx` — mode selection screen
-- `src/components/games/MapQuiz.jsx` — blank map click-to-guess UI using Leaflet
-- `src/components/games/FlagQuiz.jsx` — flag display + multiple choice or text input
-- `src/components/games/CapitalQuiz.jsx` — capital city round
-- `src/components/games/ShapeQuiz.jsx` — identify countries by their outline
-- `src/components/games/GameResultScreen.jsx` — shared end screen with score breakdown
-
----
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite 6, Leaflet + react-leaflet |
+| Backend | Python FastAPI, SQLAlchemy (async), PostgreSQL |
+| Auth | Google Identity Services + JWT |
+| Database (local) | PostgreSQL 16 (Docker) with asyncpg |
+| Database (prod) | [Neon](https://neon.tech) serverless PostgreSQL with psycopg |
+| Hosting | [Vercel](https://vercel.com) (frontend CDN + Python serverless functions) |
+| Monitoring | Sentry (frontend), Vercel Analytics & Speed Insights |
+| Container | Docker Compose (nginx + FastAPI + PostgreSQL) |
 
 ## Architecture
 
@@ -105,19 +81,6 @@ GamesPanel (mode selector)
 │            └─ PG 16  │            └─ Neon PostgreSQL     │
 └──────────────────────┴──────────────────────────────────┘
 ```
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite 6, Leaflet + react-leaflet |
-| Backend | Python FastAPI, SQLAlchemy (async), PostgreSQL |
-| Auth | Google Identity Services + JWT |
-| Database (local) | PostgreSQL 16 (Docker) with asyncpg |
-| Database (prod) | [Neon](https://neon.tech) serverless PostgreSQL with psycopg |
-| Hosting | [Vercel](https://vercel.com) (frontend CDN + Python serverless functions) |
-| Monitoring | Sentry (frontend), Vercel Analytics & Speed Insights |
-| Container | Docker Compose (nginx + FastAPI + PostgreSQL) |
 
 ## Quick Start (Docker)
 
@@ -150,83 +113,54 @@ Open [http://localhost:8088](http://localhost:8088) in your browser.
 
 ## Running Tests
 
-### Frontend (Vitest)
-
 ```bash
+# Frontend (Vitest)
 npm test
-```
 
-### Browser smoke tests (Playwright)
-
-```bash
-# first-time browser install
-npx playwright install chromium
-
-# run browser smoke tests
-npm run test:e2e
-```
-
-The browser smoke suite covers deterministic world-map and Geography Games flows. See `docs/qa/testing-strategy.md` for the layered QA setup.
-
-### Backend (pytest)
-
-```bash
-# Install test dependencies (once)
+# Backend (pytest)
 pip install -r backend/requirements-dev.txt
-
-# Run the test suite
 cd backend && pytest -v
+
+# E2E (Playwright)
+npx playwright install chromium
+npm run test:e2e
 ```
 
 ## Deploy to Vercel
 
 ### 1. Set up Neon PostgreSQL
 
-1. Create a free project at [neon.tech](https://neon.tech)
-2. Copy the **pooled** connection string from **Connection Details**:
-   ```
-   postgresql://user:pass@ep-xyz-pooler.region.aws.neon.tech/neondb?sslmode=require
-   ```
+Create a free project at [neon.tech](https://neon.tech) and copy the **pooled** connection string from **Connection Details**.
 
-> **Tip:** You can also add Neon as a Vercel Storage integration — it will auto-populate `POSTGRES_URL` and `PG*` env vars.
+### 2. Configure environment variables
 
-### 2. Configure Vercel environment variables
-
-In your Vercel project → **Settings** → **Environment Variables**, add:
+In your Vercel project → **Settings** → **Environment Variables**:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | Neon pooled connection string (see above) |
+| `DATABASE_URL` | Yes | Neon pooled connection string |
 | `GOOGLE_CLIENT_ID` | Yes | Google OAuth 2.0 Client ID |
-| `JWT_SECRET` | Yes | Random secret for signing JWTs (`openssl rand -hex 32`) |
-| `VITE_SENTRY_DSN` | No | Sentry DSN for frontend error tracking |
-
-> **Note:** `VERCEL=1` is set automatically by Vercel — do not set it manually.
+| `JWT_SECRET` | Yes | Random secret (`openssl rand -hex 32`) |
+| `ENCRYPTION_MASTER_KEY` | Yes | Master key for data encryption (`openssl rand -hex 32`) |
+| `ADMIN_EMAIL` | Yes | Your email address (grants admin access) |
+| `FRONTEND_URL` | Yes | Your Vercel production URL |
+| `VITE_SENTRY_DSN` | No | Sentry DSN for error tracking |
 
 ### 3. Add your Vercel URL to Google OAuth
 
-In the [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** → your OAuth Client ID, add your Vercel production URL to **Authorized JavaScript origins**:
-```
-https://your-app.vercel.app
-```
+In [Google Cloud Console](https://console.cloud.google.com/) → **Credentials** → your OAuth Client ID, add your production URL to **Authorized JavaScript origins**.
 
 ### 4. Deploy
 
 ```bash
-# Install Vercel CLI (if needed)
-npm i -g vercel
-
-# Deploy
 vercel --prod
 ```
 
-Or just push to your connected Git repo — Vercel deploys automatically.
+Or push to your connected Git repo — Vercel deploys automatically.
 
 ### 5. Verify
 
-- Visit `https://your-app.vercel.app/api/health` — should return `{"status":"ok","database":"connected"}`
-- Try logging in with Google
-- Check **Vercel → Logs** for structured log output from the serverless function
+Visit `https://your-app.vercel.app/api/health` — should return `{"status":"ok","database":"connected"}`
 
 ## Environment Variables Reference
 
@@ -234,31 +168,35 @@ Or just push to your connected Git repo — Vercel deploys automatically.
 |----------|---------|---------|
 | `DATABASE_URL` | Backend | PostgreSQL connection string |
 | `POSTGRES_URL` | Backend (fallback) | Auto-set by Vercel Neon integration |
-| `PGHOST` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Backend (fallback) | Individual PG vars |
 | `GOOGLE_CLIENT_ID` | Backend + Vite | Google OAuth verification |
-| `VITE_GOOGLE_CLIENT_ID` | Vite build | Exposed to frontend (auto-mapped from `GOOGLE_CLIENT_ID` in `vite.config.js`) |
+| `VITE_GOOGLE_CLIENT_ID` | Vite build | Auto-mapped from `GOOGLE_CLIENT_ID` in `vite.config.js` |
 | `JWT_SECRET` | Backend | JWT signing key |
-| `VERCEL` | Backend | Auto-set by Vercel to `"1"` — do not set manually |
+| `ENCRYPTION_MASTER_KEY` | Backend | Master key for encrypting user data |
+| `ADMIN_EMAIL` | Backend | Email address that gets admin access |
+| `FRONTEND_URL` | Backend | Allowed CORS origin |
+| `VERCEL` | Backend | Auto-set by Vercel — do not set manually |
 | `VITE_SENTRY_DSN` | Vite build | Sentry frontend error tracking |
 
 ## Troubleshooting
 
-### `fe_sendauth: no password supplied`
-Your `DATABASE_URL` is missing the password or pointing to the wrong host. Double-check the Neon connection string in Vercel env vars.
+**`fe_sendauth: no password supplied`** — Your `DATABASE_URL` is missing the password. Double-check the Neon connection string.
 
-### `init_db skipped on serverless cold start`
-This warning is expected on the very first request after a cold start if the database is momentarily unreachable. Tables should already exist in Neon. If it persists, check your `DATABASE_URL`.
+**`init_db skipped on serverless cold start`** — Expected on the very first cold-start request. Tables should already exist in Neon.
 
-### `Cannot assign requested address` (IPv6)
-Vercel's Lambda runtime may not support IPv6. Use Neon's **pooled** connection string (contains `-pooler` in the hostname) which resolves to IPv4.
+**`Cannot assign requested address` (IPv6)** — Use Neon's **pooled** connection string (contains `-pooler` in the hostname).
 
-### Health check returns `"database": "unreachable"`
-Verify `DATABASE_URL` is set correctly in Vercel env vars and that your Neon project is active (free-tier projects suspend after 5 minutes of inactivity — the first request wakes them up).
+**Health check returns `"database": "unreachable"`** — Verify `DATABASE_URL` in Vercel env vars and that your Neon project is active.
+
+## Contributing
+
+Bug reports and pull requests are welcome! Please [open an issue](https://github.com/dankadr/world-tracker/issues) first to discuss major changes.
+
+See [SECURITY.md](.github/SECURITY.md) to report security vulnerabilities privately.
 
 ## Data Attribution
 
 - World boundaries: [Natural Earth](https://www.naturalearthdata.com/) 1:50m Cultural Vectors
-- Switzerland: [swisstopo](https://www.swisstopo.admin.ch/) swissBOUNDARIES3D, via [swiss-boundaries-geojson](https://github.com/rkaravia/swiss-boundaries-geojson)
+- Switzerland: [swisstopo](https://www.swisstopo.admin.ch/) via [swiss-boundaries-geojson](https://github.com/rkaravia/swiss-boundaries-geojson)
 - Norway: [Kartverket](https://www.kartverket.no/) via [Kart-fylker-og-kommuner-json](https://github.com/AnalyseABO/Kart-fylker-og-kommuner-json), Svalbard from OpenStreetMap
 - USA & Canada: publicly available GeoJSON boundary data
 - US National Parks: NPS boundary data
@@ -266,6 +204,12 @@ Verify `DATABASE_URL` is set correctly in Vercel env vars and that your Neon pro
 - Japan, Australia, Philippines: public administrative boundary datasets
 - UNESCO points: [UNESCO World Heritage List](https://whc.unesco.org/)
 
+## Support
+
+If you find this project useful, consider buying me a tea ☕
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/dantracker)
+
 ## License
 
-MIT
+[MIT](LICENSE)
