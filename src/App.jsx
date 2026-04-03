@@ -46,6 +46,7 @@ import ProfileScreen from './components/ProfileScreen';
 import ExploreScreen from './components/ExploreScreen';
 import AdminPanel from './components/AdminPanel';
 import OfflineIndicator from './components/OfflineIndicator';
+import LandingPage from './components/LandingPage';
 import InstallPrompt from './components/InstallPrompt';
 import { useNavigation } from './context/NavigationContext';
 import { emitVisitedChange } from './utils/events';
@@ -210,7 +211,7 @@ export default function App() {
   const searchRef = useRef(null);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [flyToTarget, setFlyToTarget] = useState(null);
-  const { token, isLoggedIn, user, isSyncingLocalData } = useAuth();
+  const { token, isLoggedIn, user, isSyncingLocalData, loading: authLoading } = useAuth();
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
   const { activeTab, switchTab, push, pop } = useNavigation();
@@ -611,6 +612,9 @@ export default function App() {
 
   const [peekStatsOpen, setPeekStatsOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
+
+  // Show landing page to unauthenticated visitors (also hides during auth-check)
+  if (!isLoggedIn && !authLoading) return <LandingPage />;
 
   return (
     <ActionSheetProvider>
