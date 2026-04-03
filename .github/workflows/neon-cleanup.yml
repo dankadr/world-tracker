@@ -4,10 +4,15 @@ on:
   pull_request:
     types: [closed]
 
+permissions:
+  contents: read
+
 jobs:
   delete-neon-branch:
     name: Delete Neon preview branch
     runs-on: ubuntu-latest
+    # Only run for PRs from this repo — fork PRs can't access secrets anyway
+    if: github.event.pull_request.head.repo.full_name == github.repository
     env:
       # Safe: PR head ref is set as an env var, never interpolated inline into run commands
       BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
