@@ -104,13 +104,14 @@ export default function LandingPage({ onGuest }) {
 
       {/* Hero */}
       <section className="landing-hero">
-        <p className="landing-eyebrow">Free travel tracker</p>
+        <p className="landing-eyebrow">Free travel tracker app</p>
         <h1 className="landing-headline">
           Your travels,{' '}<br />beautifully mapped.
         </h1>
         <p className="landing-sub">
-          Track every country, Swiss canton, US state, national park, and region
-          you've visited — with friends, challenges, achievements, and offline support.
+          The travel tracker app that builds your personal visited countries map —
+          across countries, Swiss cantons, US states, national parks, and UNESCO sites.
+          Track where you've been, plan where you're going, and share it with friends.
         </p>
         <div className="landing-stats">
           {STATS.map(({ number, label }) => (
@@ -138,7 +139,7 @@ export default function LandingPage({ onGuest }) {
       {/* Features */}
       <section className="landing-features">
         <p className="landing-section-eyebrow">Everything in one place</p>
-        <h2 className="landing-section-title">Track more than just countries.</h2>
+        <h2 className="landing-section-title">More than a places I've been app.</h2>
         <div className="landing-feature-grid">
           {FEATURES.map(({ icon, title, desc }) => (
             <div key={title} className="landing-feature-card">
@@ -154,7 +155,7 @@ export default function LandingPage({ onGuest }) {
 
       {/* Closing CTA */}
       <section className="landing-closing">
-        <h2 className="landing-closing-title">Ready to see your world?</h2>
+        <h2 className="landing-closing-title">Start building your visited countries map.</h2>
         <p className="landing-closing-sub">
           Free forever · No ads · Works offline · Sign in with Google
         </p>

@@ -37,7 +37,7 @@ describe('LandingPage', () => {
   it('renders the closing CTA headline', () => {
     render(<LandingPage />);
     expect(
-      screen.getByRole('heading', { name: /ready to see your world/i })
+      screen.getByRole('heading', { name: /start building your visited countries map/i })
     ).toBeInTheDocument();
   });
 
