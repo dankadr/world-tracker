@@ -2,9 +2,12 @@ import {
   checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
+  getAchShownKey,
   getNewlyUnlockedIds,
   markMilestoneShown,
   parseStoredIdList,
+  readAchShown,
+  writeAchShown,
 } from '../progressCelebrations';
 
 describe('progressCelebrations', () => {
@@ -71,5 +74,33 @@ describe('progressCelebrations', () => {
       expect(checkToggleCooldown(map, 'jp', 3999)).toBe(false); // blocked: 3999 - 2500 = 1499
       expect(checkToggleCooldown(map, 'jp', 4000)).toBe(true);  // allowed: 4000 - 2500 = 1500
     });
+  });
+});
+
+describe('achievement shown helpers', () => {
+  it('getAchShownKey returns a user-scoped key when userId is provided', () => {
+    expect(getAchShownKey('u42')).toBe('swiss-tracker-shown-ach-u42');
+  });
+
+  it('getAchShownKey returns a guest key when userId is null', () => {
+    expect(getAchShownKey(null)).toBe('swiss-tracker-shown-ach');
+  });
+
+  it('readAchShown returns empty array when nothing is stored', () => {
+    expect(readAchShown('u1')).toEqual([]);
+  });
+
+  it('writeAchShown persists and readAchShown retrieves a Set of ids', () => {
+    const ids = new Set(['first-country', 'globe-trotter']);
+    writeAchShown('u1', ids);
+    expect(readAchShown('u1')).toEqual(expect.arrayContaining(['first-country', 'globe-trotter']));
+    expect(readAchShown('u1')).toHaveLength(2);
+  });
+
+  it('readAchShown is isolated per userId', () => {
+    writeAchShown('u1', new Set(['ach-a']));
+    writeAchShown('u2', new Set(['ach-b']));
+    expect(readAchShown('u1')).toEqual(['ach-a']);
+    expect(readAchShown('u2')).toEqual(['ach-b']);
   });
 });

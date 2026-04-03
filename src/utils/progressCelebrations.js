@@ -64,3 +64,16 @@ export function checkToggleCooldown(cooldownMap, countryCode, now = Date.now()) 
   cooldownMap.set(countryCode, now);
   return true;
 }
+
+export function getAchShownKey(userId) {
+  return userId ? `swiss-tracker-shown-ach-${userId}` : 'swiss-tracker-shown-ach';
+}
+
+export function readAchShown(userId) {
+  const plain = localStorage.getItem(getAchShownKey(userId));
+  return plain ? parseStoredIdList(plain) : [];
+}
+
+export function writeAchShown(userId, ids) {
+  localStorage.setItem(getAchShownKey(userId), JSON.stringify([...ids]));
+}

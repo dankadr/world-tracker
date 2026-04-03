@@ -60,9 +60,12 @@ import {
   checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
+  getAchShownKey,
   getNewlyUnlockedIds,
   markMilestoneShown,
   parseStoredIdList,
+  readAchShown,
+  writeAchShown,
 } from './utils/progressCelebrations';
 
 
@@ -113,6 +116,7 @@ function AchievementToasts() {
   const seenKey = getAchSeenKey(userId); // used only as useEffect dependency
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
+  const shownIds = useRef(new Set(readAchShown(userId)));
   const { grantXpOnce, revokeXpIfGranted, XP_RULES: xpRules } = useXp();
 
   const checkAchievements = useCallback(() => {
@@ -133,14 +137,23 @@ function AchievementToasts() {
 
     const newlyUnlocked = getNewlyUnlockedIds(prevUnlocked.current, currentUnlocked);
     if (newlyUnlocked.length > 0) {
-      haptics.achievementUnlock();
-      const newToasts = newlyUnlocked.map((id) => {
-        const a = achievements.find((x) => x.id === id);
-        // Grant XP once per achievement (keyed by achievement id — never double-awarded)
+      // Grant XP for every newly-unlocked achievement regardless of toast visibility.
+      newlyUnlocked.forEach((id) => {
         grantXpOnce(`achievement:${id}`, xpRules.UNLOCK_ACHIEVEMENT, 'unlock_achievement');
-        return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
       });
-      setToasts((prev) => [...prev, ...newToasts]);
+
+      // Only show a toast for achievements the user has never seen before (lifetime gate).
+      const toShowIds = newlyUnlocked.filter((id) => !shownIds.current.has(id));
+      if (toShowIds.length > 0) {
+        haptics.achievementUnlock();
+        const newToasts = toShowIds.map((id) => {
+          const a = achievements.find((x) => x.id === id);
+          return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
+        });
+        setToasts((prev) => [...prev, ...newToasts]);
+        toShowIds.forEach((id) => shownIds.current.add(id));
+        writeAchShown(userId, shownIds.current);
+      }
     }
 
     // Revoke XP only for achievements that were actually granted before.
@@ -158,6 +171,7 @@ function AchievementToasts() {
 
   useEffect(() => {
     prevUnlocked.current = null;
+    shownIds.current = new Set(readAchShown(userId));
     setToasts([]);
   }, [seenKey]);
 
