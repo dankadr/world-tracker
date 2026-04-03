@@ -18,7 +18,6 @@ import StatsModal from './components/StatsModal';
 import FriendsPanel from './components/FriendsPanel';
 import ComparisonStats from './components/ComparisonStats';
 import './components/ComparisonView.css';
-import XpNotification from './components/XpNotification';
 import BucketListPanel from './components/BucketListPanel';
 import MapSkeleton from './components/MapSkeleton';
 import { useFriends } from './context/FriendsContext';
@@ -627,7 +626,6 @@ export default function App() {
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
-      {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       {showGlobalSearch && (
