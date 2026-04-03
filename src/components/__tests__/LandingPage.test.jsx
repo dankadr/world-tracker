@@ -48,6 +48,7 @@ describe('LandingPage', () => {
     expect(onGuest).toHaveBeenCalledOnce();
   });
 
+
   it('shows a loading state on the CTA button while login is in progress', async () => {
     const { useAuth } = await import('../../context/AuthContext');
     vi.mocked(useAuth).mockReturnValueOnce({ login: vi.fn(), loading: true });
