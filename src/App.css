@@ -1207,10 +1207,10 @@ body {
   color: var(--text-secondary);
 }
 
-/* Floating Ko-fi button — mobile only, bottom-left above tab bar */
+/* Floating Ko-fi button — mobile only, floats above the bottom sheet */
 .kofi-fab {
   position: fixed;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(var(--sheet-height, 20vh) + var(--tab-bar-safe-height, 56px) + 12px);
   left: 16px;
   z-index: 2100;
   display: flex;

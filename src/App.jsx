@@ -1026,8 +1026,8 @@ export default function App() {
         />
       )}
 
-      {/* Ko-fi floating button (mobile only) */}
-      {isMobile && !isShareMode && (
+      {/* Ko-fi floating button (mobile only, map tab only) */}
+      {isMobile && !isShareMode && activeTab === 'map' && (
         <a
           className="kofi-fab"
           href="https://ko-fi.com/dantracker"
