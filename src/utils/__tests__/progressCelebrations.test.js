@@ -1,4 +1,5 @@
 import {
+  checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
   getNewlyUnlockedIds,
@@ -37,5 +38,38 @@ describe('progressCelebrations', () => {
     const second = markMilestoneShown(first.shownMilestones, 'ch', 25);
     expect(second.shouldFire).toBe(false);
     expect([...second.shownMilestones]).toEqual(['ch-25']);
+  });
+
+  describe('checkToggleCooldown', () => {
+    it('allows the first toggle for a country', () => {
+      const map = new Map();
+      expect(checkToggleCooldown(map, 'jp', 1000)).toBe(true);
+    });
+
+    it('blocks a second toggle within 1500ms', () => {
+      const map = new Map();
+      checkToggleCooldown(map, 'jp', 1000);
+      expect(checkToggleCooldown(map, 'jp', 2499)).toBe(false);
+    });
+
+    it('allows a toggle after 1500ms have elapsed', () => {
+      const map = new Map();
+      checkToggleCooldown(map, 'jp', 1000);
+      expect(checkToggleCooldown(map, 'jp', 2500)).toBe(true);
+    });
+
+    it('does not block a different country during the cooldown', () => {
+      const map = new Map();
+      checkToggleCooldown(map, 'jp', 1000);
+      expect(checkToggleCooldown(map, 'fr', 1001)).toBe(true);
+    });
+
+    it('updates the timestamp on an allowed toggle', () => {
+      const map = new Map();
+      checkToggleCooldown(map, 'jp', 1000);
+      checkToggleCooldown(map, 'jp', 2500); // allowed, resets clock
+      expect(checkToggleCooldown(map, 'jp', 3999)).toBe(false); // blocked: 3999 - 2500 = 1499
+      expect(checkToggleCooldown(map, 'jp', 4000)).toBe(true);  // allowed: 4000 - 2500 = 1500
+    });
   });
 });

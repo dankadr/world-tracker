@@ -57,6 +57,7 @@ import useComparisonMode from './hooks/useComparisonMode';
 import useShareMode from './hooks/useShareMode';
 import GlobalSearch from './components/GlobalSearch';
 import {
+  checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
   getNewlyUnlockedIds,
@@ -348,7 +349,10 @@ export default function App() {
     setPendingBucketVisit(null);
   }, [pendingBucketVisit, countryId, visited, wishlist, handleToggleRegion, handleToggleWishlist, removeFromWishlist]);
 
+  const toggleCooldowns = useRef(new Map());
+
   const handleToggleWorldCountry = useCallback((countryCode) => {
+    if (!checkToggleCooldown(toggleCooldowns.current, countryCode)) return;
     const wasVisited = worldVisited.has(countryCode);
     haptics.visitToggle(wasVisited);
     toggleWorldCountry(countryCode);

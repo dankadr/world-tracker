@@ -46,3 +46,21 @@ export function markMilestoneShown(shownMilestones, trackerId, milestone) {
   nextShown.add(milestoneId);
   return { shouldFire: true, shownMilestones: nextShown, milestoneId };
 }
+
+const TOGGLE_COOLDOWN_MS = 1500;
+
+/**
+ * Returns true and records the timestamp if the country can be toggled.
+ * Returns false (blocking the toggle) if the same country was toggled
+ * within TOGGLE_COOLDOWN_MS milliseconds.
+ *
+ * @param {Map<string, number>} cooldownMap - shared mutable Map (from useRef)
+ * @param {string} countryCode
+ * @param {number} [now=Date.now()]
+ */
+export function checkToggleCooldown(cooldownMap, countryCode, now = Date.now()) {
+  const lastToggle = cooldownMap.get(countryCode);
+  if (lastToggle !== undefined && now - lastToggle < TOGGLE_COOLDOWN_MS) return false;
+  cooldownMap.set(countryCode, now);
+  return true;
+}
