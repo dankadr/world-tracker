@@ -20,19 +20,19 @@
 }
 
 .action-sheet-main {
-  background: var(--glass-bg-heavy, rgba(255, 248, 220, 0.92));
+  background: var(--glass-bg-heavy, rgba(240, 248, 250, 0.92));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.35));
+  border: 1px solid var(--glass-border, rgba(43, 122, 140, 0.35));
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
 }
 
 .action-sheet-header {
   padding: 14px 16px 10px;
   text-align: center;
-  border-bottom: 1px solid var(--divider, rgba(201, 168, 76, 0.3));
+  border-bottom: 1px solid var(--divider, rgba(43, 122, 140, 0.3));
 }
 
 .action-sheet-title {
@@ -65,7 +65,7 @@
   padding: 0 16px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--divider, rgba(201, 168, 76, 0.3));
+  border-bottom: 1px solid var(--divider, rgba(43, 122, 140, 0.3));
   font-family: inherit;
   font-size: 1rem;
   font-weight: 400;
@@ -94,12 +94,12 @@
 }
 
 .action-sheet-cancel {
-  background: var(--glass-bg-heavy, rgba(255, 248, 220, 0.92));
+  background: var(--glass-bg-heavy, rgba(240, 248, 250, 0.92));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid var(--glass-border, rgba(201, 168, 76, 0.35));
+  border: 1px solid var(--glass-border, rgba(43, 122, 140, 0.35));
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
@@ -107,7 +107,7 @@
   height: 56px;
   width: 100%;
   padding: 0 16px;
-  background-color: var(--glass-bg-heavy, rgba(255, 248, 220, 0.92));
+  background-color: var(--glass-bg-heavy, rgba(240, 248, 250, 0.92));
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;

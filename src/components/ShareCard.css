@@ -27,10 +27,10 @@
 .share-card-dark {
   background: linear-gradient(160deg, #040d1a 0%, #091629 50%, #040d1a 100%);
   color: #fff;
-  border: 1px solid rgba(201, 168, 76, 0.2);
+  border: 1px solid rgba(43, 122, 140, 0.2);
   box-shadow:
-    inset 0 0 80px rgba(201, 168, 76, 0.04),
-    0 0 0 1px rgba(201, 168, 76, 0.08);
+    inset 0 0 80px rgba(43, 122, 140, 0.04),
+    0 0 0 1px rgba(43, 122, 140, 0.08);
 }
 
 /* Subtle dot grid overlay — dark */
@@ -38,7 +38,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(201, 168, 76, 0.045) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(43, 122, 140, 0.045) 1px, transparent 1px);
   background-size: 26px 26px;
   pointer-events: none;
   z-index: 0;
@@ -109,7 +109,7 @@
   flex-shrink: 0;
 }
 
-.share-card-dark  .sc-brand-mark { color: #c9a84c; }
+.share-card-dark  .sc-brand-mark { color: #2B7A8C; }
 .share-card-light .sc-brand-mark { color: #0a1628; }
 
 .sc-brand {
@@ -120,7 +120,7 @@
   flex: 1;
 }
 
-.share-card-dark .sc-brand  { color: #c9a84c; }
+.share-card-dark .sc-brand  { color: #2B7A8C; }
 .share-card-light .sc-brand { color: #0a1628; }
 
 .sc-year-tag {
@@ -134,9 +134,9 @@
 }
 
 .share-card-dark .sc-year-tag {
-  background: rgba(201, 168, 76, 0.12);
-  color: #c9a84c;
-  border: 1px solid rgba(201, 168, 76, 0.3);
+  background: rgba(43, 122, 140, 0.12);
+  color: #2B7A8C;
+  border: 1px solid rgba(43, 122, 140, 0.3);
 }
 
 .share-card-light .sc-year-tag {
@@ -164,7 +164,7 @@
   transform: translate(-50%, -60%);
   width: 340px;
   height: 240px;
-  background: radial-gradient(ellipse, rgba(201, 168, 76, 0.13) 0%, transparent 68%);
+  background: radial-gradient(ellipse, rgba(43, 122, 140, 0.13) 0%, transparent 68%);
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
@@ -199,7 +199,7 @@
 }
 
 .share-card-square .sc-pct-symbol { font-size: 34px; margin-top: 10px; }
-.share-card-dark  .sc-pct-symbol  { color: #c9a84c; }
+.share-card-dark  .sc-pct-symbol  { color: #2B7A8C; }
 .share-card-light .sc-pct-symbol  { color: #b8862a; }
 
 .sc-pct-label {
@@ -236,8 +236,8 @@
   min-width: 2px;
 }
 
-.share-card-dark  .sc-prog-fill { background: linear-gradient(90deg, #c9a84c, #e0c870); }
-.share-card-light .sc-prog-fill { background: linear-gradient(90deg, #b8862a, #c9a84c); }
+.share-card-dark  .sc-prog-fill { background: linear-gradient(90deg, #2B7A8C, #e0c870); }
+.share-card-light .sc-prog-fill { background: linear-gradient(90deg, #b8862a, #2B7A8C); }
 
 .sc-pct-detail {
   font-size: 11px;
@@ -278,9 +278,9 @@
 }
 
 .share-card-dark .sc-flag-more {
-  color: #c9a84c;
-  background: rgba(201, 168, 76, 0.12);
-  border: 1px solid rgba(201, 168, 76, 0.25);
+  color: #2B7A8C;
+  background: rgba(43, 122, 140, 0.12);
+  border: 1px solid rgba(43, 122, 140, 0.25);
 }
 
 .share-card-light .sc-flag-more {
@@ -297,7 +297,7 @@
   flex-shrink: 0;
 }
 
-.share-card-dark  .sc-divider { background: linear-gradient(90deg, transparent, rgba(201,168,76,0.45), transparent); }
+.share-card-dark  .sc-divider { background: linear-gradient(90deg, transparent, rgba(43,122,140,0.45), transparent); }
 .share-card-light .sc-divider { background: linear-gradient(90deg, transparent, rgba(10,22,40,0.18), transparent); }
 
 /* ── Continent pills (yearly portrait) ── */
@@ -320,8 +320,8 @@
 }
 
 .share-card-dark .sc-continent-pill {
-  background: rgba(201, 168, 76, 0.08);
-  border: 1px solid rgba(201, 168, 76, 0.22);
+  background: rgba(43, 122, 140, 0.08);
+  border: 1px solid rgba(43, 122, 140, 0.22);
 }
 
 .share-card-light .sc-continent-pill {
@@ -336,7 +336,7 @@
   text-transform: uppercase;
 }
 
-.share-card-dark  .sc-continent-abbrev { color: rgba(201, 168, 76, 0.7); }
+.share-card-dark  .sc-continent-abbrev { color: rgba(43, 122, 140, 0.7); }
 .share-card-light .sc-continent-abbrev { color: rgba(10, 22, 40, 0.5); }
 
 .sc-continent-count {
@@ -366,8 +366,8 @@
 }
 
 .share-card-dark .sc-stat {
-  background: rgba(201, 168, 76, 0.06);
-  border: 1px solid rgba(201, 168, 76, 0.16);
+  background: rgba(43, 122, 140, 0.06);
+  border: 1px solid rgba(43, 122, 140, 0.16);
 }
 
 .share-card-light .sc-stat {
@@ -384,7 +384,7 @@
 }
 
 .share-card-square .sc-stat-num { font-size: 22px; }
-.share-card-dark  .sc-stat-num  { color: #c9a84c; }
+.share-card-dark  .sc-stat-num  { color: #2B7A8C; }
 .share-card-light .sc-stat-num  { color: #0a1628; }
 
 .sc-stat-label {
@@ -413,7 +413,7 @@
 
 .share-card-dark .sc-top-tracker {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 168, 76, 0.14);
+  border: 1px solid rgba(43, 122, 140, 0.14);
 }
 
 .share-card-light .sc-top-tracker {
@@ -441,7 +441,7 @@
   text-transform: uppercase;
 }
 
-.share-card-dark  .sc-top-tracker-label { color: rgba(201, 168, 76, 0.6); }
+.share-card-dark  .sc-top-tracker-label { color: rgba(43, 122, 140, 0.6); }
 .share-card-light .sc-top-tracker-label { color: rgba(10, 22, 40, 0.45); }
 
 .sc-top-tracker-name {
@@ -459,7 +459,7 @@
   text-align: right;
 }
 
-.share-card-dark  .sc-top-tracker-count { color: #c9a84c; }
+.share-card-dark  .sc-top-tracker-count { color: #2B7A8C; }
 .share-card-light .sc-top-tracker-count { color: #b8862a; }
 
 /* ── Year comparison badge ── */
@@ -487,9 +487,9 @@
 }
 
 .share-card-dark .sc-vs-first {
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(201, 168, 76, 0.28);
-  color: #c9a84c;
+  background: rgba(43, 122, 140, 0.1);
+  border: 1px solid rgba(43, 122, 140, 0.28);
+  color: #2B7A8C;
 }
 
 .share-card-light .sc-vs-up {

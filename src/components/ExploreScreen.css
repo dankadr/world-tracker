@@ -17,7 +17,7 @@
 .explore-large-icon {
   width: 28px;
   height: 28px;
-  color: var(--tab-active, #c9a84c);
+  color: var(--tab-active, #2B7A8C);
 }
 
 .explore-large-icon svg {
@@ -65,7 +65,7 @@
   align-items: center;
   justify-content: center;
   padding: 6px 16px 8px;
-  border-bottom: 1px solid var(--glass-border, rgba(201, 168, 76, 0.14));
+  border-bottom: 1px solid var(--glass-border, rgba(43, 122, 140, 0.14));
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.9));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -73,12 +73,12 @@
 
 [data-theme="dark"] .explore-seg-header {
   background: rgba(5, 14, 24, 0.92);
-  border-bottom-color: rgba(201, 168, 76, 0.1);
+  border-bottom-color: rgba(43, 122, 140, 0.1);
 }
 
 .explore-seg-control {
   display: flex;
-  background: var(--glass-bg, rgba(201, 168, 76, 0.08));
+  background: var(--glass-bg, rgba(43, 122, 140, 0.08));
   border-radius: 10px;
   padding: 3px;
   gap: 2px;
@@ -144,9 +144,9 @@
 }
 
 .explore-progress-card {
-  border: 1px solid rgba(201, 168, 76, 0.26);
+  border: 1px solid rgba(43, 122, 140, 0.26);
   border-radius: 14px;
-  background: rgba(201, 168, 76, 0.1);
+  background: rgba(43, 122, 140, 0.1);
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -168,8 +168,8 @@ button.explore-progress-card {
 }
 
 [data-theme="dark"] .explore-progress-card {
-  background: rgba(201, 168, 76, 0.14);
-  border-color: rgba(201, 168, 76, 0.34);
+  background: rgba(43, 122, 140, 0.14);
+  border-color: rgba(43, 122, 140, 0.34);
 }
 
 [data-theme="dark"] .explore-progress-card.tracker {
@@ -210,7 +210,7 @@ button.explore-progress-card {
 .explore-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #c9a84c, #d4b866);
+  background: linear-gradient(90deg, #2B7A8C, #4DAEC0);
 }
 
 [data-theme="dark"] .explore-card-kicker,
@@ -235,7 +235,7 @@ button.explore-progress-card {
 
 .explore-search-input {
   width: 100%;
-  border: 1px solid rgba(201, 168, 76, 0.22);
+  border: 1px solid rgba(43, 122, 140, 0.22);
   border-radius: 12px;
   padding: 10px 36px 10px 12px;
   font-size: 15px;
@@ -246,13 +246,13 @@ button.explore-progress-card {
 
 .explore-search-input:focus {
   outline: none;
-  border-color: rgba(201, 168, 76, 0.56);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.16);
+  border-color: rgba(43, 122, 140, 0.56);
+  box-shadow: 0 0 0 2px rgba(43, 122, 140, 0.16);
 }
 
 [data-theme="dark"] .explore-search-input {
   background: rgba(8, 20, 32, 0.92);
-  border-color: rgba(201, 168, 76, 0.26);
+  border-color: rgba(43, 122, 140, 0.26);
   color: #f2e7c8;
 }
 
@@ -329,7 +329,7 @@ button.explore-progress-card {
 }
 
 .explore-country-item {
-  border: 1px solid rgba(201, 168, 76, 0.18);
+  border: 1px solid rgba(43, 122, 140, 0.18);
   border-radius: 12px;
   overflow: hidden;
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.72));
@@ -337,7 +337,7 @@ button.explore-progress-card {
 
 [data-theme="dark"] .explore-country-item {
   background: rgba(8, 20, 32, 0.78);
-  border-color: rgba(201, 168, 76, 0.2);
+  border-color: rgba(43, 122, 140, 0.2);
 }
 
 .explore-country-toggle {
@@ -356,8 +356,8 @@ button.explore-progress-card {
 }
 
 .explore-country-toggle.is-visited {
-  background: var(--explore-country-bg, rgba(201, 168, 76, 0.12));
-  box-shadow: inset 2px 0 0 var(--explore-country-accent, #c9a84c);
+  background: var(--explore-country-bg, rgba(43, 122, 140, 0.12));
+  box-shadow: inset 2px 0 0 var(--explore-country-accent, #2B7A8C);
 }
 
 .explore-country-name {
@@ -380,13 +380,13 @@ button.explore-progress-card {
 .explore-country-action {
   width: calc(100% - 16px);
   margin: 0 8px 8px;
-  border: 1px solid rgba(201, 168, 76, 0.32);
+  border: 1px solid rgba(43, 122, 140, 0.32);
   border-radius: 10px;
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 600;
   font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
-  background: rgba(201, 168, 76, 0.12);
+  background: rgba(43, 122, 140, 0.12);
   color: #8f6f17;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -407,8 +407,8 @@ button.explore-progress-card {
 
 [data-theme="dark"] .explore-country-action {
   color: #efdda6;
-  border-color: rgba(201, 168, 76, 0.42);
-  background: rgba(201, 168, 76, 0.18);
+  border-color: rgba(43, 122, 140, 0.42);
+  background: rgba(43, 122, 140, 0.18);
 }
 
 .explore-tracker-grid {
@@ -419,7 +419,7 @@ button.explore-progress-card {
 
 .explore-tracker-card {
   width: 100%;
-  border: 1px solid rgba(201, 168, 76, 0.2);
+  border: 1px solid rgba(43, 122, 140, 0.2);
   border-radius: 12px;
   background: var(--glass-bg-heavy, rgba(255, 248, 240, 0.72));
   padding: 10px 12px;
@@ -434,7 +434,7 @@ button.explore-progress-card {
 
 [data-theme="dark"] .explore-tracker-card {
   background: rgba(8, 20, 32, 0.8);
-  border-color: rgba(201, 168, 76, 0.24);
+  border-color: rgba(43, 122, 140, 0.24);
 }
 
 .explore-tracker-head {
@@ -470,7 +470,7 @@ button.explore-progress-card {
 .explore-tracker-pct {
   font-size: 15px;
   font-weight: 700;
-  color: var(--tab-active, #c9a84c);
+  color: var(--tab-active, #2B7A8C);
 }
 
 .explore-tracker-bar {

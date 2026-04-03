@@ -13,8 +13,8 @@
     "zoom": 8,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
-    "visitedHover": "#b8943a"
+    "visitedColor": "#2B7A8C",
+    "visitedHover": "#1E5E6E"
   },
   {
     "id": "us",
@@ -30,8 +30,8 @@
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
-    "visitedHover": "#b8943a"
+    "visitedColor": "#2B7A8C",
+    "visitedHover": "#1E5E6E"
   },
   {
     "id": "usparks",
@@ -47,8 +47,8 @@
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 15,
-    "visitedColor": "#c9a84c",
-    "visitedHover": "#b8943a",
+    "visitedColor": "#2B7A8C",
+    "visitedHover": "#1E5E6E",
     "pointMode": true
   },
   {
@@ -168,8 +168,8 @@
     "zoom": 5,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
-    "visitedHover": "#b8943a"
+    "visitedColor": "#2B7A8C",
+    "visitedHover": "#1E5E6E"
   },
   {
     "id": "br",

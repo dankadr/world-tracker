@@ -123,8 +123,8 @@
 }
 
 .cip-action-visited.active {
-  background: rgba(201, 168, 76, 0.15);
-  border-color: rgba(201, 168, 76, 0.4);
+  background: rgba(43, 122, 140, 0.15);
+  border-color: rgba(43, 122, 140, 0.4);
   color: #b8862a;
 }
 

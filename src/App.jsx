@@ -685,7 +685,7 @@ export default function App() {
                         className="sheet-peek-progress-fill"
                         style={{
                           width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
-                          background: 'linear-gradient(90deg, #c9a84c, #d4b866)',
+                          background: 'linear-gradient(90deg, #2B7A8C, #4DAEC0)',
                         }}
                       />
                     </div>
@@ -763,7 +763,7 @@ export default function App() {
               />
             </MapErrorBoundary>
             {!isMobile && (
-              <div className="floating-stats world-floating-stats" style={{ '--accent': '#d4b866' }}>
+              <div className="floating-stats world-floating-stats" style={{ '--accent': '#4DAEC0' }}>
                 <div className="stats-card-header">
                   <div className="stats-numbers">
                     <span className="stats-count"><AnimatedNumber value={worldVisited.size} /></span>
@@ -777,11 +777,11 @@ export default function App() {
                     className="progress-fill"
                     style={{
                       width: `${Math.round((worldVisited.size / worldData.features.length) * 100)}%`,
-                      background: 'linear-gradient(90deg, #c9a84c, #d4b866)',
+                      background: 'linear-gradient(90deg, #2B7A8C, #4DAEC0)',
                     }}
                   />
                 </div>
-                <p className="stats-pct" style={{ color: '#d4b866' }}>
+                <p className="stats-pct" style={{ color: '#4DAEC0' }}>
                   <AnimatedNumber value={Math.round((worldVisited.size / worldData.features.length) * 100)} suffix="%" />
                 </p>
               </div>
