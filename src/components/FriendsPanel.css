@@ -28,7 +28,7 @@
 .fp-title-icon {
   width: 18px;
   height: 18px;
-  color: var(--tab-active, #c9a84c);
+  color: var(--tab-active, #0d9488);
 }
 
 .fp-title-icon svg {
@@ -96,9 +96,9 @@
 }
 
 .fp-tab.active {
-  border-color: rgba(201, 168, 76, 0.45);
+  border-color: rgba(13, 148, 136, 0.45);
   color: var(--text-primary);
-  background: rgba(201, 168, 76, 0.14);
+  background: rgba(13, 148, 136, 0.14);
 }
 
 .fp-tab-icon {
@@ -192,9 +192,9 @@
 }
 
 .fp-copy-btn.copied {
-  background: rgba(201, 168, 76, 0.2);
-  border-color: rgba(201, 168, 76, 0.3);
-  color: #d4b866;
+  background: rgba(13, 148, 136, 0.2);
+  border-color: rgba(13, 148, 136, 0.3);
+  color: #14b8a6;
 }
 
 /* Add Friend */
@@ -224,8 +224,8 @@
 }
 
 .fp-input:focus {
-  border-color: rgba(201, 168, 76, 0.4);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.1);
+  border-color: rgba(13, 148, 136, 0.4);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
 }
 
 .fp-search-btn {
@@ -278,7 +278,7 @@
 
 .fp-add-btn {
   border: none;
-  background: #c9a84c;
+  background: #0d9488;
   color: #fff;
   padding: 5px 14px;
   border-radius: 6px;
@@ -289,8 +289,8 @@
 }
 
 .fp-add-btn:hover:not(:disabled) {
-  background: #a08030;
-  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
+  background: #0f766e;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
 }
 
 .fp-add-btn:disabled {
@@ -336,8 +336,8 @@
 
 .fp-accept-btn {
   border: none;
-  background: rgba(201, 168, 76, 0.15);
-  color: #c9a84c;
+  background: rgba(13, 148, 136, 0.15);
+  color: #0d9488;
   padding: 4px 10px;
   border-radius: 5px;
   font-size: 0.75rem;
@@ -347,7 +347,7 @@
 }
 
 .fp-accept-btn:hover:not(:disabled) {
-  background: rgba(201, 168, 76, 0.3);
+  background: rgba(13, 148, 136, 0.3);
 }
 
 .fp-decline-btn {
@@ -413,9 +413,9 @@
 }
 
 .fp-compare-btn.active {
-  border-color: rgba(201, 168, 76, 0.45);
+  border-color: rgba(13, 148, 136, 0.45);
   color: var(--text-primary);
-  background: rgba(201, 168, 76, 0.16);
+  background: rgba(13, 148, 136, 0.16);
 }
 
 .fp-compare-icon {
@@ -532,7 +532,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c9a84c, #d4b866);
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
   color: #fff;
   font-weight: 600;
 }
@@ -562,7 +562,7 @@
 
 /* Dark mode */
 [data-theme="dark"] .fp-accept-btn {
-  color: #d4b866;
+  color: #14b8a6;
 }
 
 [data-theme="dark"] .fp-decline-btn {
@@ -570,12 +570,12 @@
 }
 
 [data-theme="dark"] .fp-copy-btn.copied {
-  background: rgba(201, 168, 76, 0.15);
+  background: rgba(13, 148, 136, 0.15);
 }
 
 [data-theme="dark"] .fp-input:focus {
-  border-color: rgba(201, 168, 76, 0.5);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15);
+  border-color: rgba(13, 148, 136, 0.5);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
 }
 
 /* Mobile */

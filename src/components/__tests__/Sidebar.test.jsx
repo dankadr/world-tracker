@@ -66,7 +66,7 @@ const country = {
   name: 'Switzerland',
   flag: '🇨🇭',
   regionLabel: 'Cantons',
-  visitedColor: '#c9a84c',
+  visitedColor: '#0d9488',
   visitedHover: '#b08c2a',
   data: {
     features: [

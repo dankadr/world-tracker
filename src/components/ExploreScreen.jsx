@@ -355,13 +355,13 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
                       <li key={country.id} className="explore-country-item">
                         <label
                           className={`explore-country-toggle${isVisited ? ' is-visited' : ''}`}
-                          style={isVisited ? { '--explore-country-accent': '#c9a84c', '--explore-country-bg': '#c9a84c1f' } : undefined}
+                          style={isVisited ? { '--explore-country-accent': '#0d9488', '--explore-country-bg': '#0d94881f' } : undefined}
                         >
                           <input
                             type="checkbox"
                             checked={isVisited}
                             onChange={() => onToggleWorld(country.id)}
-                            style={{ accentColor: '#c9a84c' }}
+                            style={{ accentColor: '#0d9488' }}
                           />
                           <span className="explore-country-name">{country.name}</span>
                           <span className="explore-country-continent">{country.continent}</span>
@@ -395,13 +395,13 @@ export default function ExploreScreen({ worldVisited, onToggleWorld, onExploreCo
                           <li key={country.id} className="explore-country-item">
                             <label
                               className={`explore-country-toggle${isVisited ? ' is-visited' : ''}`}
-                              style={isVisited ? { '--explore-country-accent': '#c9a84c', '--explore-country-bg': '#c9a84c1f' } : undefined}
+                              style={isVisited ? { '--explore-country-accent': '#0d9488', '--explore-country-bg': '#0d94881f' } : undefined}
                             >
                               <input
                                 type="checkbox"
                                 checked={isVisited}
                                 onChange={() => onToggleWorld(country.id)}
-                                style={{ accentColor: '#c9a84c' }}
+                                style={{ accentColor: '#0d9488' }}
                               />
                               <span className="explore-country-name">{country.name}</span>
                               <span className="explore-country-continent">{country.continent}</span>

@@ -13,7 +13,7 @@
     "zoom": 8,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
+    "visitedColor": "#0d9488",
     "visitedHover": "#b8943a"
   },
   {
@@ -30,7 +30,7 @@
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
+    "visitedColor": "#0d9488",
     "visitedHover": "#b8943a"
   },
   {
@@ -47,7 +47,7 @@
     "zoom": 4,
     "minZoom": 2,
     "maxZoom": 15,
-    "visitedColor": "#c9a84c",
+    "visitedColor": "#0d9488",
     "visitedHover": "#b8943a",
     "pointMode": true
   },
@@ -168,7 +168,7 @@
     "zoom": 5,
     "minZoom": 2,
     "maxZoom": 18,
-    "visitedColor": "#c9a84c",
+    "visitedColor": "#0d9488",
     "visitedHover": "#b8943a"
   },
   {

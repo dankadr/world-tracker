@@ -25,8 +25,8 @@
 /* Expanded badge spans full grid width */
 .achievement-badge.achievement-badge-expanded {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(201, 168, 76, 0.04));
-  border: 1.5px solid rgba(201, 168, 76, 0.4);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(13, 148, 136, 0.04));
+  border: 1.5px solid rgba(13, 148, 136, 0.4);
   border-radius: 14px;
   padding: 14px 16px;
   position: relative;
@@ -89,9 +89,9 @@
   border: 1px solid rgba(80, 180, 100, 0.25);
 }
 .achievement-detail-pill-in-progress {
-  background: rgba(201, 168, 76, 0.12);
-  color: #c9a84c;
-  border: 1px solid rgba(201, 168, 76, 0.25);
+  background: rgba(13, 148, 136, 0.12);
+  color: #0d9488;
+  border: 1px solid rgba(13, 148, 136, 0.25);
 }
 .achievement-detail-pill-locked {
   background: rgba(255, 255, 255, 0.05);
@@ -108,7 +108,7 @@
   overflow: hidden;
 }
 .achievement-detail-bar-fill {
-  background: linear-gradient(90deg, #c9a84c, #d4b866);
+  background: linear-gradient(90deg, #0d9488, #14b8a6);
   height: 100%;
   border-radius: 4px;
   transition: width 0.4s ease-out;
@@ -116,7 +116,7 @@
 .achievement-detail-bar-label {
   display: block;
   font-size: 12px;
-  color: #c9a84c;
+  color: #0d9488;
   font-weight: 600;
   margin-top: 5px;
 }

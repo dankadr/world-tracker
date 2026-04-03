@@ -21,7 +21,7 @@ export function computeZoomFactor(zoom) {
   return (10 - zoom) / 4;
 }
 
-const VISITED_COLOR = '#c9a84c';
+const VISITED_COLOR = '#0d9488';
 const VISITED_HOVER = '#b8943a';
 
 const TRACKED_COUNTRY_IDS = {
