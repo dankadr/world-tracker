@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import LandingPage from '../LandingPage';
 
@@ -39,6 +39,13 @@ describe('LandingPage', () => {
     expect(
       screen.getByRole('heading', { name: /ready to see your world/i })
     ).toBeInTheDocument();
+  });
+
+  it('calls onGuest when "Continue without account" is clicked', () => {
+    const onGuest = vi.fn();
+    render(<LandingPage onGuest={onGuest} />);
+    fireEvent.click(screen.getByText('Continue without account'));
+    expect(onGuest).toHaveBeenCalledOnce();
   });
 
   it('shows a loading state on the CTA button while login is in progress', async () => {

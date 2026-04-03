@@ -212,6 +212,7 @@ export default function App() {
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [flyToTarget, setFlyToTarget] = useState(null);
   const { token, isLoggedIn, user, isSyncingLocalData, loading: authLoading } = useAuth();
+  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('swiss-tracker-guest') === 'true');
   const userId = user?.id || null;
   const { isMobile, isTablet, isTouch, isPortrait } = useDeviceType();
   const { activeTab, switchTab, push, pop } = useNavigation();
@@ -614,7 +615,10 @@ export default function App() {
   const [gamesOpen, setGamesOpen] = useState(false);
 
   // Show landing page to unauthenticated visitors (also hides during auth-check)
-  if (!isLoggedIn && !authLoading) return <LandingPage />;
+  if (!isLoggedIn && !authLoading && !guestMode) return <LandingPage onGuest={() => {
+    localStorage.setItem('swiss-tracker-guest', 'true');
+    setGuestMode(true);
+  }} />;
 
   return (
     <ActionSheetProvider>

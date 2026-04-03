@@ -45,7 +45,7 @@ const FEATURES = [
   },
 ];
 
-export default function LandingPage() {
+export default function LandingPage({ onGuest }) {
   const { login, loading } = useAuth();
   const googleBtnRef = useRef(null);
   const [gsiReady, setGsiReady] = useState(false);
@@ -128,6 +128,9 @@ export default function LandingPage() {
           )}
         </div>
         {error && <p style={{ color: 'red', fontSize: 13, marginTop: 8 }}>{error}</p>}
+        <button className="landing-guest-btn" onClick={onGuest}>
+          Continue without account
+        </button>
       </section>
 
       <div className="landing-divider" />

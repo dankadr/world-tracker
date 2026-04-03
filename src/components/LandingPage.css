@@ -108,6 +108,19 @@
   justify-content: center;
   min-height: 44px;
 }
+.landing-guest-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary, #4a6a8a);
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 4px 8px;
+  transition: color 0.15s;
+}
+.landing-guest-btn:hover { color: var(--text-secondary, #1b3a5c); }
 
 /* Divider */
 .landing-divider {
