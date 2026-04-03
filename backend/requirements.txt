@@ -2,7 +2,7 @@
 # Also includes psycopg for local dev parity when testing against Neon.
 # Versions pinned to prevent surprise breaking changes from upstream packages.
 fastapi==0.135.1
-uvicorn[standard]==0.41.0
+uvicorn[standard]==0.42.0
 sqlalchemy[asyncio]==2.0.48
 asyncpg==0.31.0
 psycopg[binary]==3.3.3
