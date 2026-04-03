@@ -412,6 +412,16 @@ export default function WorldSidebar({
         />
       )}
       {!isMobile && (
+        <a
+          className="sidebar-kofi-link"
+          href="https://ko-fi.com/dantracker"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ☕ Buy me a tea
+        </a>
+      )}
+      {!isMobile && (
         <div className="sidebar-settings-footer">
           <button
             className={`sidebar-settings-toggle${showSettings ? ' is-open' : ''}`}

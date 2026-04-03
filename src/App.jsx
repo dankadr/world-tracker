@@ -1026,6 +1026,19 @@ export default function App() {
         />
       )}
 
+      {/* Ko-fi floating button (mobile only, map tab only) */}
+      {isMobile && !isShareMode && activeTab === 'map' && (
+        <a
+          className="kofi-fab"
+          href="https://ko-fi.com/dantracker"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Buy me a tea"
+        >
+          ☕
+        </a>
+      )}
+
       {!isMobile && showBucketList && (
         <SwipeableModal
           onClose={handleCloseBucketList}
