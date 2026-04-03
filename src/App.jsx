@@ -18,7 +18,6 @@ import StatsModal from './components/StatsModal';
 import FriendsPanel from './components/FriendsPanel';
 import ComparisonStats from './components/ComparisonStats';
 import './components/ComparisonView.css';
-import XpNotification from './components/XpNotification';
 import BucketListPanel from './components/BucketListPanel';
 import MapSkeleton from './components/MapSkeleton';
 import { useFriends } from './context/FriendsContext';
@@ -58,11 +57,14 @@ import useComparisonMode from './hooks/useComparisonMode';
 import useShareMode from './hooks/useShareMode';
 import GlobalSearch from './components/GlobalSearch';
 import {
+  checkToggleCooldown,
   createAchievementBaseline,
   getCrossedMilestone,
   getNewlyUnlockedIds,
   markMilestoneShown,
   parseStoredIdList,
+  readAchShown,
+  writeAchShown,
 } from './utils/progressCelebrations';
 
 
@@ -113,6 +115,7 @@ function AchievementToasts() {
   const seenKey = getAchSeenKey(userId); // used only as useEffect dependency
   const [toasts, setToasts] = useState([]);
   const prevUnlocked = useRef(null);
+  const shownIds = useRef(new Set(readAchShown(userId)));
   const { grantXpOnce, revokeXpIfGranted, XP_RULES: xpRules } = useXp();
 
   const checkAchievements = useCallback(() => {
@@ -133,14 +136,23 @@ function AchievementToasts() {
 
     const newlyUnlocked = getNewlyUnlockedIds(prevUnlocked.current, currentUnlocked);
     if (newlyUnlocked.length > 0) {
-      haptics.achievementUnlock();
-      const newToasts = newlyUnlocked.map((id) => {
-        const a = achievements.find((x) => x.id === id);
-        // Grant XP once per achievement (keyed by achievement id — never double-awarded)
+      // Grant XP for every newly-unlocked achievement regardless of toast visibility.
+      newlyUnlocked.forEach((id) => {
         grantXpOnce(`achievement:${id}`, xpRules.UNLOCK_ACHIEVEMENT, 'unlock_achievement');
-        return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
       });
-      setToasts((prev) => [...prev, ...newToasts]);
+
+      // Only show a toast for achievements the user has never seen before (lifetime gate).
+      const toShowIds = newlyUnlocked.filter((id) => !shownIds.current.has(id));
+      if (toShowIds.length > 0) {
+        haptics.achievementUnlock();
+        const newToasts = toShowIds.map((id) => {
+          const a = achievements.find((x) => x.id === id);
+          return { id, icon: a?.icon || '', title: a?.title || '', desc: a?.desc || '', ts: Date.now() + Math.random() };
+        });
+        setToasts((prev) => [...prev, ...newToasts]);
+        toShowIds.forEach((id) => shownIds.current.add(id));
+        writeAchShown(userId, shownIds.current);
+      }
     }
 
     // Revoke XP only for achievements that were actually granted before.
@@ -151,13 +163,15 @@ function AchievementToasts() {
 
     // Always sync prevUnlocked & seen with the current state so that
     // achievements lost after unmarking a region/country are removed.
-    // This lets them re-trigger a toast if re-earned later.
+    // Note: re-earning a lost achievement re-grants XP but does NOT show a toast again
+    // (shownIds is an append-only lifetime gate — see writeAchShown).
     prevUnlocked.current = new Set(currentUnlocked);
     writeAchSeen(userId, currentUnlocked); // synchronous write — no async gap
   }, [seenKey, userId, grantXpOnce, revokeXpIfGranted, xpRules]);
 
   useEffect(() => {
     prevUnlocked.current = null;
+    shownIds.current = new Set(readAchShown(userId));
     setToasts([]);
   }, [seenKey]);
 
@@ -349,7 +363,10 @@ export default function App() {
     setPendingBucketVisit(null);
   }, [pendingBucketVisit, countryId, visited, wishlist, handleToggleRegion, handleToggleWishlist, removeFromWishlist]);
 
+  const toggleCooldowns = useRef(new Map());
+
   const handleToggleWorldCountry = useCallback((countryCode) => {
+    if (!checkToggleCooldown(toggleCooldowns.current, countryCode)) return;
     const wasVisited = worldVisited.has(countryCode);
     haptics.visitToggle(wasVisited);
     toggleWorldCountry(countryCode);
@@ -627,7 +644,6 @@ export default function App() {
       <OfflineIndicator />
       {!isShareMode && <InstallPrompt />}
       {!isShareMode && <AchievementToasts />}
-      {!isShareMode && <XpNotification />}
       {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
       <EasterEggPrompt isOpen={showEasterEggPrompt} onClose={() => setShowEasterEggPrompt(false)} />
       {showGlobalSearch && (
