@@ -6,6 +6,7 @@ test.beforeEach(async ({ page }) => {
     window.sessionStorage.clear();
     window.localStorage.setItem('swiss-tracker-onboarding-done', 'true');
     window.localStorage.setItem('onboarding-dismissed', 'true');
+    window.localStorage.setItem('swiss-tracker-guest', 'true');
   });
 
   await page.goto('/');
