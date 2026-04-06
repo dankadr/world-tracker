@@ -3,7 +3,7 @@
 # Versions pinned to prevent surprise breaking changes from upstream packages.
 fastapi==0.135.3
 uvicorn[standard]==0.42.0
-sqlalchemy[asyncio]==2.0.48
+sqlalchemy[asyncio]==2.0.49
 asyncpg==0.31.0
 psycopg[binary]==3.3.3
 python-jose[cryptography]==3.5.0
