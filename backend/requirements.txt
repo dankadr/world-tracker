@@ -8,7 +8,7 @@ asyncpg==0.31.0
 psycopg[binary]==3.3.3
 python-jose[cryptography]==3.5.0
 cryptography>=42.0.0
-google-auth==2.49.1
+google-auth==2.49.2
 requests==2.33.1
 pydantic==2.12.5
 slowapi==0.1.9
