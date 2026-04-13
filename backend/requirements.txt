@@ -10,7 +10,7 @@ python-jose[cryptography]==3.5.0
 cryptography>=42.0.0
 google-auth==2.49.1
 requests==2.33.1
-pydantic==2.12.5
+pydantic==2.13.0
 slowapi==0.1.9
 # sentry-sdk is optional — install separately if needed (not bundled to stay
 # under Vercel's 249 MB Lambda limit). The backend handles ImportError gracefully.
