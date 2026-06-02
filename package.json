@@ -28,7 +28,7 @@
     "leaflet.markercluster": "^1.5.3",
     "lz-string": "^1.5.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.2.4",
     "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
